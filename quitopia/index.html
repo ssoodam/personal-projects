@@ -76,6 +76,11 @@ button,input{font:inherit;color:inherit}
 .stage.word-mode .bigtype{opacity:.28}
 #scene,#fx{position:absolute;inset:0;width:100%;height:100%}
 #scene{z-index:2;cursor:pointer}
+@media (pointer:fine){.stage.mk #scene{cursor:none}}
+#mallet{position:absolute;left:0;top:0;width:170px;height:170px;z-index:4;pointer-events:none;opacity:0;transform-origin:92.5% 12.5%;transform:rotate(7deg);transition:opacity .15s;will-change:transform,left,top}
+.stage.mk #mallet.on{opacity:1}
+#mallet.strike{animation:strike .2s cubic-bezier(.3,0,.3,1)}
+@keyframes strike{0%{transform:rotate(7deg)}20%{transform:rotate(15deg)}55%{transform:rotate(0deg)}100%{transform:rotate(7deg)}}
 #fx{z-index:4;pointer-events:none}
 .pops{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
 .pop{position:absolute;font-family:var(--en);font-weight:900;letter-spacing:-0.03em;color:var(--ink);transform:translate(-50%,-50%);animation:rise .75s cubic-bezier(.2,.8,.3,1) forwards;white-space:nowrap;text-shadow:0 2px 0 var(--bg)}
@@ -186,6 +191,7 @@ button,input{font:inherit;color:inherit}
     </div>
   </div>
   <div class="stage" id="stage" tabindex="0" role="button" aria-label="두드리기. 클릭, 탭, 또는 아무 키나 누르세요">
+    <svg id="mallet" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="mlS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dfc2"/><stop offset="1" stop-color="#c79a6a"/></linearGradient><radialGradient id="mlH" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#e48a5a"/><stop offset=".45" stop-color="#a5401c"/><stop offset="1" stop-color="#4a1608"/></radialGradient></defs><line x1="44" y1="156" x2="186" y2="24" stroke="#3a2412" stroke-opacity=".35" stroke-width="15" stroke-linecap="round" transform="translate(3 4)"/><line x1="44" y1="156" x2="186" y2="24" stroke="url(#mlS)" stroke-width="12" stroke-linecap="round"/><circle cx="36" cy="164" r="27" fill="url(#mlH)"/><ellipse cx="27" cy="153" rx="9" ry="6" fill="#fff" opacity=".45" transform="rotate(-30 27 153)"/></svg>
     <svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
     <div class="bigtype" aria-hidden="true"><span class="l1">GO</span><span class="l2">HOME</span><span class="l3">집에 가고 싶다</span></div>
     <canvas id="scene"></canvas>
@@ -481,6 +487,11 @@ function glyph(ch){
 
 /* ================= three setup ================= */
 const stage=$('#stage'),canvas=$('#scene'),fx=$('#fx'),fctx=fx.getContext('2d'),pops=$('#pops');
+const malletEl=$('#mallet');const MS=170/200;
+function malletAt(x,y){malletEl.style.left=(x-36*MS)+'px';malletEl.style.top=(y-164*MS)+'px'}
+function malletStrike(x,y){malletAt(x,y);malletEl.classList.add('on');malletEl.classList.remove('strike');void malletEl.getBoundingClientRect();malletEl.classList.add('strike');clearTimeout(malletStrike.to);if(!matchMedia('(pointer:fine)').matches)malletStrike.to=setTimeout(()=>malletEl.classList.remove('on'),450)}
+stage.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||!stage.classList.contains('mk'))return;const r=stage.getBoundingClientRect();malletAt(e.clientX-r.left,e.clientY-r.top);malletEl.classList.add('on')});
+stage.addEventListener('pointerleave',()=>malletEl.classList.remove('on'));
 const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true});
 renderer.setClearColor(0x000000,0);renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.82;
 function makeEnv(r){const pm=new T.PMREMGenerator(r);const t=pm.fromScene(new T.RoomEnvironment(),.04).texture;pm.dispose();return t}
@@ -799,8 +810,8 @@ function buildMoktak(){
   const hg=new T.TorusGeometry(.2,.075,18,40,Math.PI);const handle=new T.Mesh(hg,woodMat);handle.rotation.y=Math.PI/2;handle.position.set(0,.5,-.5);handle.rotation.x=0;body.add(handle);
   const stick=new T.Mesh(new T.CylinderGeometry(.03,.034,1.05,14),new T.MeshStandardMaterial({map:tex(legCanvas()),color:0xe9d3b5,roughness:.55}));
   const mallet=new T.Group();stick.rotation.z=Math.PI/2;mallet.add(stick);const head=new T.Mesh(new T.SphereGeometry(.12,24,16),woodMat);head.position.x=.56;mallet.add(head);
-  mallet.position.set(.15,.17,.72);mallet.rotation.y=.38;g.add(mallet);
-  return base({kind:'moktak',group:g,hittables:[body,cush,head,stick],center:new T.Vector3(0,.52,0),radius:1.25,camDir:new T.Vector3(.12,.42,1),floor:-.14,fill:.7,fillN:.66,
+  mallet.position.set(.15,.17,.72);mallet.rotation.y=.38;
+  return base({kind:'moktak',group:g,hittables:[body,cush],center:new T.Vector3(0,.52,0),radius:1.25,camDir:new T.Vector3(.12,.42,1),floor:-.14,fill:.7,fillN:.66,
     onHit(h,k,px,py){if(h.object===cush){sound('soft');this.sp.vsy-=.01*k;return 'nosound'}
       ringPuff(px,py);this.sp.vsy-=.045*k;this.sp.vy-=.006*k;mallet.userData.hop=Math.min(.05,(mallet.userData.hop||0)+.018*k)},
     update(dt){const m=mallet.userData;m.v=(m.v||0)+(m.hop||0);m.hop=0;m.y=(m.y||0)+m.v;m.v-=.012;if(m.y<0){m.y=0;m.v=-m.v*.3;if(Math.abs(m.v)<.003)m.v=0}mallet.position.y=.17+m.y;mallet.rotation.z=m.y*.6}});
@@ -950,7 +961,7 @@ function sound(kind,k=1){
     case 'jelly':squelch(t,v);break;
     case 'paper':crackle(t,.16,rnd(2600,3400),.7*v,.5);crackle(t+.03,.12,1500,.35*v,.4);break;
     case 'soft':noise('bandpass',1400,.8,.04,.25,t);break;
-    case 'moktak':{const f=rnd(760,840);tone('sine',f,f*.9,.16,.9*v,t);tone('sine',f*2.02,0,.06,.25*v,t);tone('triangle',f*.5,f*.47,.22,.3*v,t);noise('bandpass',1500,3,.025,.45*v,t);break}
+    case 'moktak':{const f=rnd(565,600);noise('highpass',3200,.7,.006,.4*v,t);tone('sine',f*1.035,f,.42,.75*v,t);tone('sine',f*2.31,f*2.28,.14,.2*v,t);tone('sine',f*3.87,0,.06,.08*v,t);noise('bandpass',f,30,.3,.9*v,t);noise('bandpass',f*2.31,24,.12,.3*v,t);break}
     case 'phone':tone('sine',rnd(260,320),140,.07,.6*v,t);noise('bandpass',2400,1.5,.03,.5*v,t);tone('triangle',rnd(850,950),600,.03,.15*v,t);break;
     case 'oven':sound('metal',k*.85);break;
     case 'frame':tone('sine',230,120,.08,.45,t);noise('bandpass',800,1,.05,.35,t);break;
@@ -980,7 +991,7 @@ function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov
 function setTarget(id,drop){
   if(cur){scene.remove(cur.group)}
   state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;scene.add(cur.group);cur.base=cur.group.position.clone();
-  state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');fitCam();
+  state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
   if(drop&&!reduced){cur.sp.y=1.6;cur.sp.vy=0}
   $('#tName').textContent=t.name;$('#tDesc').textContent=t.desc;$('#tSpec').textContent=t.spec;renderHp();
   document.querySelectorAll('.card').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.id===id)));
@@ -996,6 +1007,7 @@ function combo(){const now=performance.now();state.combo=now-state.last<480?stat
 function doHit(px,py,fromKey){
   if(!cur||state.breaking)return;ensureAudio();const h=pickAt(px,py);if(!h)return;combo();const k=1+Math.min(state.combo,24)/24;
   try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}
+  if(cur.kind==='moktak'&&fromKey)malletStrike(px,py);
   const res=cur.onHit(h,k,px,py,fromKey);
   if(res!=='nosound'&&cur.kind!=='bubble'){const mat=cur.t.mat;sound(mat,k);popWord(px,py-16,hitWord(mat),1,state.combo>=8&&state.combo%4===0)}
   if(cur.kind==='desk'){dustCloud(px,py,6,['#c69560','#e2c39a','#8a5a2e'])}
@@ -1023,7 +1035,7 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden){last=now;re
 }
 
 /* input */
-canvas.addEventListener('pointerdown',e=>{if(e.button>0)return;const r=canvas.getBoundingClientRect();e.preventDefault();doHit(e.clientX-r.left,e.clientY-r.top,false)});
+canvas.addEventListener('pointerdown',e=>{if(e.button>0)return;const r=canvas.getBoundingClientRect();e.preventDefault();if(cur&&cur.kind==='moktak')malletStrike(e.clientX-r.left,e.clientY-r.top);doHit(e.clientX-r.left,e.clientY-r.top,false)});
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;const tag=(e.target.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;if(tag==='button'&&(e.key===' '||e.key==='Enter'))return;
   if(!(e.key.length===1||e.key==='Enter'))return;if(stage.getBoundingClientRect().bottom<0||!cur)return;e.preventDefault();
