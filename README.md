@@ -4,4 +4,4 @@
 
 | 폴더 | 내용 |
 | --- | --- |
-| [`quitopia/`](quitopia/) | QUITOPIA: 퇴근하고 싶은 마음을 사물·글자를 두드려 부수며 푸는 3D 웹사이트 |
+| [`quitopia/`](quitopia/) | QUITOPIA: 퇴근하고 싶은 마음을 사물·글자를 두드려 부수며 푸는 3D 웹사이트 · [사이트](https://quitopia-ssodam.vercel.app) |
