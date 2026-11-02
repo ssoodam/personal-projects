@@ -531,10 +531,10 @@ const MAT={
   laptop:{name:'알루미늄',words:['탁','타닥','CTRL+Z','저장 안 함','렌더링 중…','응답 없음','최종_final']},
   phone:{name:'플라스틱',words:['따르릉','여보세요?','뚝','RING','부재중','네 팀장님']}
 };
-const BREAK_WORD={laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'CRASH!'};
+const BREAK_WORD={laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'KABOOM!'};
 const TEX=['wood','glass','metal','jelly','paper'];
 const TEX_DESC={wood:'원목 글자. 결이 갈라지다가 결대로 쪼개져요.',glass:'유리 글자. 금이 쩍쩍 가다가 산산조각 나요.',metal:'쇠 글자. 찌그러지다가 바닥에 와르르 떨어져요.',jelly:'젤리 글자. 출렁이다가 으깨져 부스러져요.',paper:'종이 글자. 구겨지고 찢어지다가 갈가리 찢겨요.'};
-const TEX_HP={wood:26,glass:16,metal:36,jelly:22,paper:14};
+const TEX_HP={wood:26,glass:16,metal:28,jelly:22,paper:14};
 const TARGETS={
   desk :{id:'desk',kind:'desk',mat:'wood',name:'나무 책상',tag:'WOOD',hp:28,desc:'하루 종일 붙어 앉아 있던 그 책상. 상판이 결대로 쪼개지고 다리가 부러져요.',spec:'재질 원목 · 상판 두께 25mm · 소리 둔탁함'},
   glass:{id:'glass',kind:'glass',mat:'glass',name:'사무실 창문',tag:'GLASS',hp:14,desc:'바다가 보이는데 나갈 수는 없는 창문. 유리도 창틀도 통째로 박살 나요.',spec:'재질 판유리 + 원목 창틀 · 소리 쨍그랑'},
@@ -779,19 +779,20 @@ function buildWord(t){
     shatter(pt){
       g.updateMatrixWorld(true);
       letters.forEach(m=>{const ud=m.userData;const gl=ud.gl;const hl=ud.hits.slice(-3);const b={x0:gl.x0-.02,y0:gl.y0-.02,x1:gl.x1+.02,y1:gl.y1+.02};
-        if(tx==='metal'){debris.attach(m);const p=addPiece(m,{v:new T.Vector3(rnd(-1.5,1.5),rnd(1,3),rnd(.5,2)),w:new T.Vector3(rnd(-4,4),rnd(-3,3),rnd(-5,5)),g:16,r:.3,rest:.42,fric:.6,mode:'metal',keepGeo:false});p.base=m.scale.clone();return}
         let cells=[];const seeds=[];
         if(tx==='paper'){const n=3;const xs=[];for(let i=1;i<n;i++)xs.push(b.x0+(b.x1-b.x0)*i/n+rnd(-.08,.08));const ls=[b.x0-.1].concat(xs,[b.x1+.1]);for(let i=0;i<ls.length-1;i++){const t1=rnd(-.1,.1),t2=rnd(-.1,.1);cells.push([[ls[i]+t1,b.y0-.1],[ls[i+1]+t2,b.y0-.1],[ls[i+1]-t2,b.y1+.1],[ls[i]-t1,b.y1+.1]])}}
-        else{const cnt=tx==='glass'?16:tx==='jelly'?9:8;for(let i=0;i<cnt;i++)seeds.push([rnd(b.x0,b.x1),rnd(b.y0,b.y1)]);hl.forEach(p=>{for(let i=0;i<(tx==='glass'?8:3);i++){const a=rnd(0,6.28),r=Math.pow(Math.random(),1.5)*.4;seeds.push([p.x+Math.cos(a)*r,p.y+Math.sin(a)*r])}});cells=voronoi(seeds,b,tx==='wood'?3:1,1)}
+        else{const cnt=tx==='glass'?16:tx==='jelly'?9:tx==='metal'?7:8;for(let i=0;i<cnt;i++)seeds.push([rnd(b.x0,b.x1),rnd(b.y0,b.y1)]);hl.forEach(p=>{for(let i=0;i<(tx==='glass'?8:3);i++){const a=rnd(0,6.28),r=Math.pow(Math.random(),1.5)*.4;seeds.push([p.x+Math.cos(a)*r,p.y+Math.sin(a)*r])}});cells=voronoi(seeds,b,tx==='wood'?3:1,1)}
         const pieceList=[];
         cells.forEach(cell=>gl.parts.forEach(part=>{let o=clipConvex(part.outer,cell);if(o.length<3||Math.abs(area(o))<.0015)return;const holes=[];part.holes.forEach(hh=>{const c2=clipConvex(hh,cell);if(c2.length>2&&Math.abs(area(c2))>.0008)holes.push(c2)});
-          if(tx==='wood'||tx==='paper')o=jag(o,.008);pieceList.push({o,holes})}));
-        pieceList.forEach(({o,holes})=>{const pr=prism(o,holes,LETTER_DEPTH[tx],ud.mat,tx==='jelly'?.04:0,(x,y)=>[(x-gl.x0)/(gl.x1-gl.x0),(y-gl.y0)/(gl.y1-gl.y0)]);place(pr.mesh,m,null,pr.c);
+          if(tx==='wood'||tx==='paper')o=jag(o,.008);if(tx==='metal')o=jag(o,.006);pieceList.push({o,holes})}));
+        pieceList.forEach(({o,holes})=>{const pr=prism(o,holes,LETTER_DEPTH[tx],ud.mat,tx==='jelly'?.04:tx==='metal'?.008:0,(x,y)=>[(x-gl.x0)/(gl.x1-gl.x0),(y-gl.y0)/(gl.y1-gl.y0)]);place(pr.mesh,m,null,pr.c);
           const d=pr.mesh.position.clone().sub(pt);d.z=Math.abs(d.z)+.3;d.normalize();
           if(tx==='glass')addPiece(pr.mesh,{v:d.multiplyScalar(rnd(1,4)).add(new T.Vector3(0,rnd(0,2),rnd(.5,2.5))),w:new T.Vector3(rnd(-10,10),rnd(-10,10),rnd(-10,10)),r:.02,rest:.2,mode:'glass'});
+          else if(tx==='metal')addPiece(pr.mesh,{v:d.multiplyScalar(rnd(3.5,7)).add(new T.Vector3(0,rnd(2.5,5.5),rnd(1,3))),w:new T.Vector3(rnd(-14,14),rnd(-14,14),rnd(-14,14)),r:.04,rest:.42,fric:.6,mode:'metal',life:rnd(3.2,4.2)});
           else if(tx==='wood')addPiece(pr.mesh,{v:d.multiplyScalar(rnd(1.5,4)).add(new T.Vector3(0,rnd(2,5),0)),w:new T.Vector3(rnd(-8,8),rnd(-6,6),rnd(-8,8)),r:.04,mode:'wood'});
           else if(tx==='jelly'){pr.mesh.scale.multiplyScalar(rnd(.85,.95));addPiece(pr.mesh,{v:d.multiplyScalar(rnd(1.5,4)).add(new T.Vector3(0,rnd(2,5),0)),w:new T.Vector3(rnd(-5,5),rnd(-5,5),rnd(-5,5)),r:.07,rest:.45,squish:true,mode:'jelly'})}
           else addPiece(pr.mesh,{v:d.multiplyScalar(rnd(.5,1.8)).add(new T.Vector3(0,rnd(.5,1.8),0)),g:2.2,drag:.982,flutter:true,r:.02,life:rnd(3.4,4.4),mode:'paper'})});
+        if(tx==='metal'){const wp=new T.Vector3();m.getWorldPosition(wp);chipBoxes(wp,ud.mat,10,.04)}
         if(tx==='jelly')for(let i=0;i<8;i++){const r=rnd(.03,.07);const cm=new T.Mesh(new T.SphereGeometry(r,12,10),ud.mat);m.getWorldPosition(cm.position);cm.position.add(new T.Vector3(rnd(-.2,.2),rnd(-.2,.2),.1));addPiece(cm,{v:new T.Vector3(rnd(-3,3),rnd(2,6),rnd(0,3)),w:new T.Vector3(),r:r*.7,rest:.35,squish:true,mode:'jelly',life:rnd(2.5,3.4)})}
         g.remove(m);
       });
@@ -1137,7 +1138,7 @@ function breakSound(mode){
   else if(mode==='wood'){noise('bandpass',1700,.5,.09,1.1,t);tone('sine',95,38,.45,.9,t);crackle(t+.03,.5,1100,.75,.7);noise('bandpass',900,.8,.2,.6,t+.06);noise('bandpass',2000,.6,.06,.7,t+.14);noise('lowpass',400,.7,.5,.5,t)}
   else if(mode==='paper'){crackle(t,.55,rnd(2600,3400),1,.75);crackle(t+.02,.5,1500,.55,.6);crackle(t+.3,.35,3000,.6,.6)}
   else if(mode==='jelly'){tone('sine',260,50,.45,.9,t);noise('lowpass',450,.8,.35,.8,t);for(let i=0;i<7;i++)squelch(t+.04+i*rnd(.04,.09),rnd(.4,.8))}
-  else if(mode==='metal'){sound('metal',1.4);noise('lowpass',300,.7,.4,.7,t)}
+  else if(mode==='metal'){tone('sine',72,26,.7,1.2,t);noise('lowpass',380,.7,.7,1.1,t);noise('bandpass',1200,.6,.12,.8,t);sound('metal',1.6);crackle(t+.02,.35,3200,.7,.6);for(let i=0;i<22;i++){const tt=t+.25+Math.pow(Math.random(),1.3)*1.4;const f=rnd(1800,4200);tone('sine',f,f*.98,rnd(.08,.25),rnd(.03,.1),tt)}}
   else if(mode==='oven'){breakSound('glass');sound('metal',1.5);noise('lowpass',250,.7,.6,.9,t);tone('sine',2093,0,1.4,.25,t+.35);tone('sine',4186,0,.8,.06,t+.35)}
   else if(mode==='laptop'){breakSound('glass');crackle(t,.35,2600,.8,.7);for(let i=0;i<40;i++){const tt=t+.15+Math.pow(Math.random(),1.4)*1.3;noise('bandpass',rnd(2500,4500),2,.015,rnd(.15,.4),tt)}tone('square',880,0,.25,.05,t+.05);tone('square',440,0,.35,.05,t+.3)}
   else if(mode==='phone'){crackle(t,.3,2200,.9,.7);tone('sine',190,55,.35,.8,t);noise('bandpass',1800,.7,.12,.8,t);for(let i=0;i<20;i++){const f=(i%2?1520:1310)*rnd(.92,1.08);tone('sine',f,f*.7,.05,.12*(1-i/20),t+.1+i*.04)}}
@@ -1181,9 +1182,9 @@ function doHit(px,py,fromKey){
 function afterHit(){state.stats.hits++;store.set('stats',state.stats);renderStats();const cb=$('#combo');if(state.combo>=3){cb.hidden=false;$('#comboN').textContent=state.combo}clearTimeout(afterHit.to);afterHit.to=setTimeout(()=>{cb.hidden=true},700);if(state.combo>=10&&state.combo%5===0)shake=Math.max(shake,.05)}
 function smash(pt,px,py){
   state.breaking=true;state.stats.broken++;store.set('stats',state.stats);renderStats();const mode=cur.t.mat;
-  breakSound(mode);shake=reduced?0:.14;flash=mode==='glass'||mode==='oven'||mode==='laptop'?.35:.15;const c=cur;
+  breakSound(mode);shake=reduced?0:.14;flash=mode==='glass'||mode==='oven'||mode==='laptop'||mode==='metal'?.4:.15;if(mode==='metal'&&!reduced)shake=.24;const c=cur;
   setTimeout(()=>{c.shatter(pt);if(c.kind!=='word')scene.remove(c.group);
-    if(mode==='wood')dustCloud(px,py,40,['#c69560','#e2c39a','#8a5a2e']);if(mode==='glass')glints(px,py,40);if(mode==='metal')sparks(px,py,40);if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
+    if(mode==='wood')dustCloud(px,py,40,['#c69560','#e2c39a','#8a5a2e']);if(mode==='glass')glints(px,py,40);if(mode==='metal'){sparks(px,py,80);glints(px,py,24);dustCloud(px,py,22,['#3a3a3a','#5a5a5a','#7a7a7a'])}if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
     popWord(px,py-24,BREAK_WORD[mode]||'SMASHED!',1.5,true)},reduced?0:70);
   setTimeout(()=>{if(cur===c){setTarget(state.id,true)}},mode==='paper'?2600:2000);
 }
