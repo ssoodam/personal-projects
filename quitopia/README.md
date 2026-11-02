@@ -23,5 +23,5 @@
 
 ## 만든 방법
 - three.js로 만든 3D 오브젝트, Web Audio로 만든 효과음
-- 금속 긁힘 질감: cgbookcase의 Scratched Gold 01 노멀맵(CC0)을 바탕으로 만든 회색 스테인리스 텍스처
+- 금속 질감: 직접 만든 헤어라인 스테인리스 텍스처 + cgbookcase Scratched Gold 01 노멀맵(CC0)의 잔긁힘
 - 파일 하나(`index.html`)로 돌아가는 정적 사이트
