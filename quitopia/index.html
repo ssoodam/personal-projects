@@ -89,12 +89,13 @@ button,input{font:inherit;color:inherit}
 .loading{position:absolute;inset:0;z-index:6;display:grid;place-items:center;font-family:var(--en);font-weight:700;font-size:14px;letter-spacing:.1em;color:var(--ink-soft);pointer-events:none;background:var(--bg)}
 
 .band{background:var(--main);color:var(--on-main);overflow:hidden;transition:background .3s}
-.band-track{display:flex;width:max-content;animation:marq 32s linear infinite;padding-block:12px}
+.band-track{display:flex;width:max-content;padding-block:12px}
+.band-group{display:flex;flex-shrink:0;animation:marq 32s linear infinite;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden}
 .band-track span{font-weight:800;font-size:clamp(18px,2.2vw,28px);letter-spacing:-0.02em;padding-right:28px;white-space:nowrap}
 .band-track span.e{font-family:var(--en);font-weight:800}
 .band-track span.k{font-family:var(--display);font-weight:900}
 .band-track span::after{content:"";display:inline-block;width:.3em;height:.3em;border-radius:50%;background:currentColor;margin-left:28px;vertical-align:.2em}
-@keyframes marq{to{transform:translateX(-50%)}}
+@keyframes marq{from{transform:translate3d(0,0,0)}to{transform:translate3d(-100%,0,0)}}
 
 .sec{max-width:1440px;margin:0 auto;padding-block:60px 20px}
 .sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
@@ -155,7 +156,7 @@ button,input{font:inherit;color:inherit}
   .card h3{font-size:18px}
   .logo small{display:none}
 }
-@media (prefers-reduced-motion:reduce){.band-track{animation:none}}
+@media (prefers-reduced-motion:reduce){.band-group{animation-duration:90s}}
 </style>
 
 <header class="top wrap-x">
@@ -939,7 +940,7 @@ function clock(){const d=new Date();const n=d.getHours()*3600+d.getMinutes()*60+
   const p=en>st?clamp((n-st)/(en-st),0,1):0;$('#workTxt').textContent=Math.round(p*100)+'%';$('#workBar').style.width=(p*100)+'%'}
 $('#resetBtn').addEventListener('click',()=>{state.stats={date:today(),hits:0,broken:0};store.set('stats',state.stats);renderStats()});
 (function(){const T2=Math.PI*2*6.5,pts=[];for(let t=0;t<=T2;t+=.08){const x=-40+(t/T2)*1280-58*Math.sin(t);const y=200-130*Math.cos(t)+Math.sin(t*.37)*30;pts.push(x.toFixed(1)+' '+y.toFixed(1))}$('#coilPath').setAttribute('d','M'+pts.join(' L'))})();
-(function(){const w=[['e','QUITOPIA'],['k','집에 가자'],['e','GO HOME'],['k','쨍그랑'],['e','SMASH'],['k','칼퇴'],['e','RIP IT'],['k','뽁'],['e','OFF WORK'],['k','이불 속']];$('#band').innerHTML=[...w,...w].map(s=>`<span class="${s[0]}">${s[1]}</span>`).join('')})();
+(function(){const w=[['e','QUITOPIA'],['k','집에 가자'],['e','GO HOME'],['k','쨍그랑'],['e','SMASH'],['k','칼퇴'],['e','RIP IT'],['k','뽁'],['e','OFF WORK'],['k','이불 속']];const g=w.map(s=>`<span class="${s[0]}">${s[1]}</span>`).join('');$('#band').innerHTML=`<div class="band-group">${g}</div>`.repeat(3)})();
 
 /* boot */
 new ResizeObserver(resize).observe(stage);resize();renderSnd();renderStats();clock();setInterval(clock,1000);
