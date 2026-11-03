@@ -719,9 +719,9 @@ function bubbleBackCanvas(spots,CW,CH,r){const W=1024,H=Math.round(1024*CH/CW);c
     x.strokeStyle='rgba(60,65,80,.28)';x.lineWidth=R*.06;x.beginPath();x.arc(cx,cy,R*1.0,0,6.283);x.stroke();
     g=x.createRadialGradient(cx-R*.35,cy-R*.4,0,cx-R*.35,cy-R*.4,R*.5);g.addColorStop(0,'rgba(255,255,255,.75)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.beginPath();x.arc(cx-R*.35,cy-R*.4,R*.5,0,6.283);x.fill()}
   return c}
-function clearPlastic(mat,base_,edge,spec){mat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <tonemapping_fragment>',`
+function clearPlastic(mat,base_,edge,spec,pm){mat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <tonemapping_fragment>',`
   float frq=1.0-abs(dot(normalize(normal),normalize(vViewPosition)));float lum=max(max(outgoingLight.r,outgoingLight.g),outgoingLight.b);
-  gl_FragColor.rgb*=.62;gl_FragColor.a=clamp(${base_.toFixed(3)}+pow(frq,2.2)*${edge.toFixed(3)}+smoothstep(.32,1.15,lum)*${spec.toFixed(3)},0.,1.);
+  gl_FragColor.a=clamp(${base_.toFixed(3)}+pow(frq,2.2)*${edge.toFixed(3)}+smoothstep(.32,1.15,lum)*${spec.toFixed(3)},0.,1.);gl_FragColor.rgb*=${pm?'gl_FragColor.a*'+pm.toFixed(3):'.62'};
   #include <tonemapping_fragment>`)};mat.blending=T.CustomBlending;mat.blendSrc=T.OneFactor;mat.blendDst=T.OneMinusSrcAlphaFactor;mat.needsUpdate=true;return mat}
 const WRINKLE={};
 function buildBubble(){
@@ -1067,12 +1067,22 @@ function kbLegend(theme,lab,wu,kind,idx,col){const H=128,W=Math.round(128*wu),c=
   return c}
 function kbCapGeo(w,h,d,theme){const r=theme==='bread'?Math.min(h*.5,d*.32):theme==='jelly'?.018:.012;const g=roundedBox(w,h,d,r,theme==='bread'?6:3);const p=g.attributes.position;const tp=theme==='bread'?.92:theme==='jelly'?.86:.82;
   for(let i=0;i<p.count;i++){const y=p.getY(i);const t=(y/h+.5);const s=1-(1-tp)*Math.pow(t,1.2);let X=p.getX(i)*s,Z=p.getZ(i)*s,Y=y;if(theme==='bread'&&y>0){const nx=X/(w/2),nz=Z/(d/2);Y+=h*.35*Math.max(0,1-nx*nx)*Math.max(0,1-nz*nz)}if(y>0&&theme!=='bread'){Z-=h*.06}p.setXYZ(i,X,Y,Z)}g.computeVertexNormals();g.translate(0,h/2,0);return g}
-function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;v*=.8;
-  if(theme==='bread'){noise('lowpass',rnd(380,480),.7,.05,.5*v,t);tone('sine',rnd(120,140),75,.07,.35*v,t)}
-  else if(theme==='jelly'){noise('lowpass',rnd(700,850),.8,.04,.45*v,t);tone('sine',rnd(160,190),110,.06,.35*v,t);noise('lowpass',600,.7,.03,.2*v,t+.05)}
-  else if(theme==='clear'){noise('bandpass',rnd(1700,2000),1.1,.016,.4*v,t);tone('sine',rnd(300,340),220,.035,.25*v,t);noise('lowpass',1200,.7,.02,.18*v,t+.045)}
-  else if(theme==='ceramic'){noise('bandpass',rnd(1350,1550),2.6,.012,.42*v,t);tone('sine',rnd(820,880),760,.022,.08*v,t);tone('sine',rnd(300,340),220,.04,.14*v,t)}
-  else{noise('lowpass',rnd(1300,1600),.8,.028,.5*v,t);tone('sine',rnd(200,230),150,.05,.33*v,t);noise('lowpass',rnd(1000,1200),.8,.02,.22*v,t+.048);tone('sine',rnd(180,200),140,.03,.14*v,t+.048)}}
+function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;v*=.85;const up=t+rnd(.065,.085);
+  if(theme==='bread'){/* 폭: 말랑한 빵이 눌리는 소리 + 공기 빠지는 숨 */
+    noise('lowpass',rnd(260,330),.9,.09,.55*v,t,.01);tone('sine',rnd(100,115),62,.11,.42*v,t,.008);
+    noise('bandpass',rnd(1800,2200),.6,.06,.07*v,t+.012,.015);noise('lowpass',420,.7,.05,.16*v,up,.01)}
+  else if(theme==='jelly'){/* 뽀용: 말캉한 젤리가 눌렸다 튕기는 소리 */
+    tone('sine',rnd(430,500),rnd(210,240),.1,.36*v,t,.004);noise('lowpass',rnd(520,620),1.2,.035,.3*v,t);
+    tone('sine',rnd(230,260),rnd(330,370),.07,.2*v,up,.006);noise('lowpass',700,1,.025,.1*v,up)}
+  else if(theme==='clear'){/* 톡: 맑은 아크릴 키캡, 속이 빈 듯 가볍게 울림 */
+    noise('bandpass',rnd(2100,2400),7,.022,.34*v,t);tone('sine',rnd(1250,1350),1200,.05,.07*v,t);
+    tone('triangle',rnd(430,470),380,.035,.22*v,t);noise('bandpass',rnd(2500,2800),5,.012,.14*v,up)}
+  else if(theme==='ceramic'){/* 딱: 바둑알이 판 위에 놓이는 짧고 단단한 소리 */
+    noise('bandpass',rnd(2300,2600),5,.009,.36*v,t);tone('sine',rnd(1080,1160),1050,.028,.07*v,t);
+    tone('triangle',rnd(560,620),520,.022,.16*v,t);tone('sine',rnd(170,190),140,.045,.16*v,t+.002)}
+  else{/* 도각: 기계식 클릭(도) + 플라스틱 바닥 울림(각) */
+    noise('bandpass',rnd(2800,3200),2,.007,.18*v,t);noise('bandpass',rnd(850,950),3.5,.032,.42*v,t+.004);
+    tone('sine',rnd(250,275),175,.06,.3*v,t+.004);noise('bandpass',rnd(1500,1700),3,.016,.2*v,up);tone('sine',rnd(300,330),240,.03,.1*v,up)}}
 function buildKeyboard(){
   const theme=CAPS[state.cap]?state.cap:'basic';
   const g=new T.Group();const hit=[];const u=.15,gap=.011,KW=16*u,KD=5*u,M=.075,CW=KW+M*2,CD=KD+M*2,TH=.07;
@@ -1082,12 +1092,18 @@ function buildKeyboard(){
   if(theme==='basic'){caseMat=new T.MeshPhysicalMaterial({color:C(0x8fb09c),transparent:true,depthWrite:false,roughness:.18,clearcoat:1,clearcoatRoughness:.1,envMapIntensity:1});clearPlastic(caseMat,.34,.5,.35);plateMat=new T.MeshStandardMaterial({color:C(0xdfe6e0),roughness:.6})}
   else if(theme==='jelly'){caseMat=new T.MeshStandardMaterial({color:C(0x7f9a6c),roughness:.62,metalness:.05,envMapIntensity:.6});plateMat=new T.MeshStandardMaterial({color:C(0x6f8a5e),roughness:.7})}
   else if(theme==='bread'){caseMat=new T.MeshStandardMaterial({color:C(0xe9d6ac),roughness:.65,envMapIntensity:.6});plateMat=new T.MeshStandardMaterial({color:C(0xd9c08e),roughness:.7})}
-  else {caseMat=steelMat({color:theme==='clear'?0xf2f4f6:0xf6f7f8,roughness:.6});plateMat=new T.MeshStandardMaterial({color:C(theme==='clear'?0x1a2026:0xd5d9dc),roughness:.5,metalness:.3})}
+  else if(theme==='clear'){caseMat=new T.MeshPhysicalMaterial({color:C(0xa9cdf0),transparent:true,depthWrite:false,roughness:.04,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:1.1,sheen:C(0x3a3050)});clearPlastic(caseMat,.05,.55,.12,.8);plateMat=new T.MeshPhysicalMaterial({color:C(0x0e1620),transparent:true,opacity:.5,roughness:.1,clearcoat:1,envMapIntensity:.8})}
+  else {caseMat=steelMat({color:0xf6f7f8,roughness:.6});plateMat=new T.MeshStandardMaterial({color:C(0xd5d9dc),roughness:.5,metalness:.3})}
   const tray=new T.Mesh(roundedBox(CW,TH,CD,.035,4),caseMat);tray.position.y=TH/2;tray.userData={part:'case'};g.add(tray);hit.push(tray);
   const rr=(w,h,r)=>{const sh=new T.Shape();sh.moveTo(-w/2+r,-h/2);sh.lineTo(w/2-r,-h/2);sh.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);sh.lineTo(w/2,h/2-r);sh.quadraticCurveTo(w/2,h/2,w/2-r,h/2);sh.lineTo(-w/2+r,h/2);sh.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);sh.lineTo(-w/2,-h/2+r);sh.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);return sh};
   const fs=rr(CW,CD,.035);fs.holes.push(rr(KW+.016,KD+.016,.012));const frame=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.04,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:2,curveSegments:6}),caseMat);frame.rotation.x=-Math.PI/2;frame.position.y=TH;frame.userData={part:'case'};g.add(frame);hit.push(frame);
   const plate=new T.Mesh(new T.BoxGeometry(KW+.01,.006,KD+.01),plateMat);plate.position.y=TH+.003;g.add(plate);
   if(theme==='basic'){[[-.05,0x3a7bff],[0,0x3cff6a],[.05,0xff3a5a]].forEach(([dx,c])=>{const l=new T.Mesh(new T.SphereGeometry(.012,10,8),new T.MeshBasicMaterial({color:c,toneMapped:false}));l.position.set(-CW/2+.16+dx,TH+.046,-CD/2+.035);g.add(l)})}
+  if(theme==='clear'){/* 투명 틀 속으로 비치는 내부 부품 */const silver=new T.MeshStandardMaterial({color:C(0xc9d2dc),metalness:.9,roughness:.25});const gold=new T.MeshStandardMaterial({color:C(0xe0b560),metalness:.9,roughness:.3});
+    const pcb=new T.Mesh(new T.BoxGeometry(KW*.96,.004,KD*.92),new T.MeshPhysicalMaterial({color:C(0x9fd6e8),transparent:true,opacity:.28,roughness:.2,depthWrite:false}));pcb.position.y=TH*.55;g.add(pcb);
+    const bat=new T.Mesh(roundedBox(.5,.018,.16,.008,2),silver);bat.position.set(-.35,TH*.35,-.18);g.add(bat);
+    [[.5,-.2],[.62,-.2],[.2,.15],[-.8,.1],[.85,.12]].forEach(([x,z],i)=>{const ch=new T.Mesh(new T.BoxGeometry(i<2?.05:.08,.008,i<2?.05:.06),i<2?gold:new T.MeshStandardMaterial({color:C(0x20262e),roughness:.4}));ch.position.set(x,TH*.5,z);g.add(ch)});
+    const sw=new T.Mesh(new T.BoxGeometry(.04,.02,.02),gold);sw.position.set(CW/2-.09,TH*.5,-CD/2+.04);g.add(sw)}
   if(theme==='ceramic'){const kn=new T.Mesh(new T.CylinderGeometry(.06,.06,.06,40),new T.MeshStandardMaterial({color:C(0x3a3d42),metalness:.8,roughness:.3}));kn.position.set(CW/2-.035,TH+.07,-CD/2+.035);g.add(kn)}
   // keys
   const keys=[];const side={};const sideMat=(kind,ri,ci)=>{
@@ -1095,7 +1111,7 @@ function buildKeyboard(){
     if(theme==='jelly'){const pal=[0x1f6a2e,0x3f9a3c,0x7fd07a,0x6fd0c0,0xf08aa8,0xf6d36a,0xe9f2e4];const idx=Math.max(0,Math.min(pal.length-1,Math.floor((ci*1.0+(4-ri)*1.2)/3.1)));const c=pal[idx];const mm=new T.MeshPhysicalMaterial({color:C(c),transparent:true,opacity:.8,roughness:.1,clearcoat:1,clearcoatRoughness:.04,emissive:C(c),emissiveIntensity:.35,envMapIntensity:.8});mm.userData.hex=c;return mm}
     if(theme==='ceramic')return side.c||(side.c=new T.MeshPhysicalMaterial({map:tex(CRACKLE||(CRACKLE=crackleCanvas())),color:C(0xb4c6ce),roughness:.28,clearcoat:.5,clearcoatRoughness:.12,envMapIntensity:.45}));
     if(theme==='bread'){const roll=kind==='m'||kind==='o'||kind==='s';return side[roll?'r':'b']||(side[roll?'r':'b']=new T.MeshStandardMaterial({color:C(roll?0xc07a36:0xf2e4c6),roughness:.75,bumpMap:BUMP,bumpScale:.003,envMapIntensity:.5}))}
-    const m=new T.MeshPhysicalMaterial({color:C(0x5f9ede),transparent:true,depthWrite:false,roughness:.03,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:1.1});clearPlastic(m,.06,.5,.22);return side.x||(side.x=m)};
+    const m=new T.MeshPhysicalMaterial({color:C(0x7aaee2),transparent:true,depthWrite:false,roughness:.03,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:.9});clearPlastic(m,.07,.5,.14,.62);return side.x||(side.x=m)};
   const stemMat=new T.MeshStandardMaterial({color:C(0xcfe2f0),roughness:.4,transparent:true,opacity:.45,depthWrite:false});
   KB_ROWS.forEach((row,ri)=>{let xu=0;row.forEach(([lab,wu,kind='a'],ci)=>{
     const w=wu*u-gap,d=u-gap;const geo=kbCapGeo(w,KH,d,theme);const sm=sideMat(kind,ri,ci);
@@ -1110,6 +1126,7 @@ function buildKeyboard(){
     const x=-KW/2+(xu+wu/2)*u,z=-KD/2+(ri+.5)*u;const y0=TH+.006;k.position.set(x,y0,z);k.userData={y0,press:0,label:lab==='BACK'?'BACKSPACE':lab};cap.userData.key=k;g.add(k);keys.push(k);hit.push(cap);xu+=wu})});
   g.rotation.x=.08;g.rotation.y=-.06;
   const soft=theme==='jelly'||theme==='bread';
+  if(theme==='clear'){tray.renderOrder=1;frame.renderOrder=1;plate.renderOrder=2;keys.forEach(k=>k.traverse&&k.traverse(o=>o.renderOrder=3))}
   return base({kind:'keyboard',group:g,hittables:hit,center:new T.Vector3(0,.08,0),radius:1.32,camDir:new T.Vector3(.04,.9,1),floor:0,fill:1.04,fillN:1.06,
     onHit(h,k,px,py){const m=h.object,ud=m.userData;
       if(ud.part==='key'){const kk=ud.key;kk.userData.press=1;keyThock(theme,Math.min(1.15,.75+k*.25));if(Math.random()<.2){const n=keys[Math.floor(Math.random()*keys.length)];n.userData.press=.5}}
@@ -1201,9 +1218,9 @@ let ac=null,master=null,noiseBuf=null;
 function ensureAudio(){if(ac){if(ac.state==='suspended')ac.resume();return}try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();const comp=ac.createDynamicsCompressor();master.connect(comp);comp.connect(ac.destination);applyVol();noiseBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){ac=null}}
 function applyVol(){if(master)master.gain.value=state.muted?0:state.vol}
 const on=()=>ac&&!state.muted&&state.vol>0;
-function env(g,t,peak,dec,att=.002){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,peak),t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+dec)}
-function tone(type,f0,f1,dec,peak,t){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dec*.7);env(g,t,peak,dec);o.connect(g);g.connect(master);o.start(t);o.stop(t+dec+.05)}
-function noise(ft,freq,q,dec,peak,t){const s=ac.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=rnd(.8,1.2);const f=ac.createBiquadFilter();f.type=ft;f.frequency.value=freq;f.Q.value=q;const g=ac.createGain();env(g,t,peak,dec);s.connect(f);f.connect(g);g.connect(master);s.start(t,Math.random());s.stop(t+dec+.05)}
+function env(g,t,peak,dec,att){att=att||.002;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,peak),t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+dec)}
+function tone(type,f0,f1,dec,peak,t,att){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dec*.7);env(g,t,peak,dec,att);o.connect(g);g.connect(master);o.start(t);o.stop(t+dec+.05)}
+function noise(ft,freq,q,dec,peak,t,att){const s=ac.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=rnd(.8,1.2);const f=ac.createBiquadFilter();f.type=ft;f.frequency.value=freq;f.Q.value=q;const g=ac.createGain();env(g,t,peak,dec,att);s.connect(f);f.connect(g);g.connect(master);s.start(t,Math.random());s.stop(t+dec+.05)}
 function crackle(t,dur,freq,peak,dens=.6){const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=.7;const g=ac.createGain();const N=Math.max(8,Math.round(dur*120));const cv=new Float32Array(N);for(let i=0;i<N;i++)cv[i]=Math.random()<dens?rnd(.15,1)*peak*(1-i/N*.5):.01;cv[N-1]=0;g.gain.setValueCurveAtTime(cv,t,dur);s.connect(f);f.connect(g);g.connect(master);s.start(t,Math.random());s.stop(t+dur+.05)}
 function squelch(t,v){const o=ac.createOscillator(),g=ac.createGain(),l=ac.createOscillator(),lg=ac.createGain();o.frequency.setValueAtTime(rnd(300,420),t);o.frequency.exponentialRampToValueAtTime(rnd(110,160),t+.22);l.frequency.value=rnd(14,22);lg.gain.value=45;l.connect(lg);lg.connect(o.frequency);env(g,t,.45*v,.28);o.connect(g);g.connect(master);o.start(t);l.start(t);o.stop(t+.33);l.stop(t+.33);noise('lowpass',600,1,.07,.3*v,t)}
 function sound(kind,k=1){
