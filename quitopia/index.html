@@ -535,6 +535,7 @@ const MAT={
   keyboard:{name:'키보드',words:['도각','도각도각','타닥']},
   laptop:{name:'알루미늄',words:['탁','타닥','CTRL+Z','저장 안 함','렌더링 중…','응답 없음','최종_final']},
   lighter:{name:'라이터',words:['칙','화르륵','불멍']},
+  switch:{name:'스위치',words:['딸깍']},pills:{name:'은박',words:['톡']},
   phone:{name:'플라스틱',words:['따르릉','여보세요?','뚝','RING','부재중','네 팀장님']}
 };
 const BREAK_WORD={keyboard:'ALT+F4!',laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'KABOOM!'};
@@ -553,6 +554,8 @@ const TARGETS={
   laptop:{id:'laptop',kind:'laptop',mat:'laptop',name:'디자이너 노트북',tag:'ALUMINUM',hp:20,desc:'렌더링 99%에서 멈춘 포스터_최종_final.psd. 화면이 깨지고 지지직거리다가 키캡이 우수수 쏟아져요.',spec:'재질 알루미늄 + 액정 · 13인치 · 소리 퍽'},
   keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'조약돌 키보드',tag:'PEBBLE',hp:Infinity,desc:'도각도각 기계식 무선 키보드. 아무리 두드려도 멀쩡해요. 키캡은 KEYCAP에서 바꿀 수 있어요.',spec:'무선 · 키캡 5종 · 소리 도각'},
   lighter:{id:'lighter',kind:'lighter',mat:'lighter',name:'불멍 라이터',tag:'FIRE',hp:Infinity,desc:'꾹 누르면 칙, 부싯돌이 튀고 불이 붙어요. 길게 누를수록 불길이 커져요. 손을 떼면 꺼져요. 스페이스바를 꾹 눌러도 돼요.',spec:'재질 투명 플라스틱 · 부탄가스 · 소리 칙 화르륵'},
+  switch:{id:'switch',kind:'switch',mat:'switch',name:'원목 토글 스위치',tag:'TOGGLE',hp:Infinity,desc:'호두나무와 메이플 판에 달린 토글 스위치 다섯 개. 딸깍딸깍 끌 때마다 화면이 조금씩 어두워져요. 다 끄면 퇴근.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
+  pills:{id:'pills',kind:'pills',mat:'pills',name:'알약 한 판',tag:'BLISTER',hp:Infinity,desc:'은박 뒤에 플라스틱 볼록이. 누르면 알약이 톡 빠져나와 바닥에 톡톡 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'회사 전화기',tag:'PLASTIC',hp:18,desc:'부재중 37통. 수화기가 들썩이고 버튼이 눌리다가, 결국 산산조각 나요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
@@ -1292,12 +1295,13 @@ function buildLighter(){
     // 플라스틱 레버 '딸깍' + 휠 '치익' + 부싯돌 '틱틱'
     keyCore(t,.22,.9,.3);noise('bandpass',3800,1.1,.05,.5*v,t+.004,.002);crackle(t+.004,.06,5200,.45*v,.75);
     for(let i=0;i<4;i++)tone('sine',rnd(2600,3400),2400,.006,.12*v,t+.008+i*.011,.0003);noise('highpass',6000,.7,.02,.18*v,t+.006,.001)}
-  function ignite(){if(!on())return;const t=ac.currentTime+.06;noise('lowpass',520,.8,.22,.55,t,.03);tone('sine',90,60,.2,.18,t,.02);
-    // 가스 '쉬이익' (누르는 동안 계속)
-    const s=ac.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;f.Q.value=.6;const f2=ac.createBiquadFilter();f2.type='lowpass';f2.frequency.value=700;
-    const gn=ac.createGain();gn.gain.value=0.0001;gn.gain.exponentialRampToValueAtTime(.05,t+.1);const gr=ac.createGain();gr.gain.value=0.0001;gr.gain.exponentialRampToValueAtTime(.12,t+.15);
+  function ignite(){if(!on())return;const t=ac.currentTime+.06;noise('lowpass',380,.7,.18,.22,t,.04);
+    // 잔잔한 불소리: 낮고 부드러운 '스으' + 살짝 일렁임
+    const s=ac.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=1400;f.Q.value=.3;const f2=ac.createBiquadFilter();f2.type='lowpass';f2.frequency.value=320;f2.Q.value=.4;
+    const gn=ac.createGain();gn.gain.value=0.0001;gn.gain.exponentialRampToValueAtTime(.008,t+.25);const gr=ac.createGain();gr.gain.value=0.0001;gr.gain.exponentialRampToValueAtTime(.05,t+.3);
+    const lfo=ac.createOscillator(),lg=ac.createGain();lfo.frequency.value=rnd(2.5,4);lg.gain.value=.02;lfo.connect(lg);lg.connect(gr.gain);lfo.start(t);st.lfo=lfo;
     s.connect(f);f.connect(gn);gn.connect(master);s.connect(f2);f2.connect(gr);gr.connect(master);s.start(t);st.hiss=s;st.hg=gn;st.rg=gr;st.roarF=f2}
-  function douse(){if(st.hiss&&ac){const t=ac.currentTime;[st.hg,st.rg].forEach(g_=>{g_.gain.cancelScheduledValues(t);g_.gain.setValueAtTime(Math.max(.0002,g_.gain.value),t);g_.gain.exponentialRampToValueAtTime(.0001,t+.12)});try{st.hiss.stop(t+.15)}catch(e){}st.hiss=null;
+  function douse(){if(st.hiss&&ac){const t=ac.currentTime;[st.hg,st.rg].forEach(g_=>{g_.gain.cancelScheduledValues(t);g_.gain.setValueAtTime(Math.max(.0002,g_.gain.value),t);g_.gain.exponentialRampToValueAtTime(.0001,t+.12)});try{st.hiss.stop(t+.15);st.lfo&&st.lfo.stop(t+.15)}catch(e){}st.hiss=null;
     if(on()){noise('lowpass',900,.7,.06,.12,t,.002);tone('sine',rnd(1900,2100),1800,.012,.05,t+.02)}}}
   function down(){if(st.hold)return;st.hold=true;st.press=1;st.spin+=1;st.t=0;flint();
     const s=wheelWorld();setTimeout(()=>{if(!st.hold)return;sparks(s.x,s.y,14);glints(s.x,s.y,6)},10);
@@ -1308,7 +1312,7 @@ function buildLighter(){
     onDown(){},onUp(){up()},
     update(dt){st.press+= ((st.hold?1:0)-st.press)*.35;lever.position.y=top+.16-.045*st.press;lever.rotation.z=-.08*st.press;
       st.spin*=.9;wheel.rotation.x-=st.spin*.35;
-      if(st.lit){st.t+=dt;const target=Math.min(1,.3+st.t*.45);st.lvl+=(target-st.lvl)*.08;if(st.hg&&ac){const t=ac.currentTime;st.hg.gain.setTargetAtTime(.03+.09*st.lvl,t,.1);st.rg.gain.setTargetAtTime(.08+.2*st.lvl,t,.1);st.roarF.frequency.setTargetAtTime(500+700*st.lvl,t,.1)}}
+      if(st.lit){st.t+=dt;const target=Math.min(1,.3+st.t*.45);st.lvl+=(target-st.lvl)*.08;if(st.hg&&ac){const t=ac.currentTime;st.hg.gain.setTargetAtTime(.006+.012*st.lvl,t,.3);st.rg.gain.setTargetAtTime(.04+.07*st.lvl,t,.3);st.roarF.frequency.setTargetAtTime(280+180*st.lvl,t,.3)}}
       else st.lvl+=(0-st.lvl)*.3;
       const L=st.lvl;flame.visible=L>.02;const now=performance.now()/1000;
       [outer,mid,core].forEach((m,i)=>{m.material.uniforms.uT.value=now+i*.37;const fl=1+.07*Math.sin(now*17+i)+.05*Math.sin(now*29+i*2);m.scale.set(.6+L*.9,(.16+L*.95)*fl*(1-i*.18),.6+L*.9)});
@@ -1316,7 +1320,71 @@ function buildLighter(){
       flame.rotation.z=Math.sin(now*1.7)*.05*L}});
 }
 
-function build(t){return t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
+/* ================= 토글 스위치 ================= */
+function mapleCanvas(){const W=512,H=512,c=mk(W,H),x=c.getContext('2d');x.fillStyle='#ecdcc4';x.fillRect(0,0,W,H);for(let i=0;i<220;i++){const x0=Math.random()*W,a=Math.random()*.25+.05;x.strokeStyle=`rgba(${170+Math.random()*30|0},${130+Math.random()*30|0},${90+Math.random()*20|0},${a})`;x.lineWidth=Math.random()*1.6+.4;x.beginPath();for(let y=0;y<=H;y+=16){const xx=x0+Math.sin(y*.012+i)*6+Math.sin(y*.05+i*3)*1.5;y?x.lineTo(xx,y):x.moveTo(xx,y)}x.stroke()}grain(c,10);return c}
+function buildSwitches(){
+  const g=new T.Group();const chrome=new T.MeshStandardMaterial({color:C(0xdadde1),metalness:1,roughness:.22,envMapIntensity:1.2});
+  const kt=tex(knurlCanvas());kt.wrapS=T.RepeatWrapping;kt.repeat.set(4,1);const knurl=new T.MeshStandardMaterial({map:kt,bumpMap:kt,bumpScale:.006,color:C(0xe6e8eb),metalness:1,roughness:.3});
+  const dark=new T.MeshStandardMaterial({color:C(0x2a2b2e),roughness:.5});
+  const woodT=tex(IMG.mokWood);const walnut=new T.MeshPhysicalMaterial({map:woodT,color:C(0x8a6a58),roughness:.5,clearcoat:.25,clearcoatRoughness:.5,envMapIntensity:.5});
+  const woodT2=tex(mapleCanvas());const maple=new T.MeshPhysicalMaterial({map:woodT2,color:C(0xffffff),roughness:.55,clearcoat:.15,clearcoatRoughness:.5,envMapIntensity:.5});
+  const plates=[[walnut,2,-1.22],[maple,1,0],[walnut,2,1.22]];const toggles=[];const hit=[];
+  plates.forEach(([mat,n,x])=>{const P=1.02;const pl=new T.Mesh(roundedBox(P,P,.1,.06,5),mat);pl.position.set(x,0,0);pl.userData={plate:true};g.add(pl);hit.push(pl);
+    const xs=n===2?[-.15,.15]:[0];const sx=n===2?[-.36,.36]:[-.25,.25];
+    sx.forEach(s=>{const sc=new T.Group();const hd=new T.Mesh(new T.CylinderGeometry(.034,.036,.016,20),chrome);hd.rotation.x=Math.PI/2;sc.add(hd);
+      const c1=new T.Mesh(new T.BoxGeometry(.04,.007,.006),dark),c2=c1.clone();c1.position.z=c2.position.z=.009;c2.rotation.z=Math.PI/2;sc.add(c1,c2);sc.position.set(x+s,0,.058);g.add(sc)});
+    xs.forEach(dx=>{const tg=new T.Group();tg.position.set(x+dx,0,.05);
+      const fl=new T.Mesh(new T.CylinderGeometry(.1,.105,.014,36),chrome);fl.rotation.x=Math.PI/2;fl.position.z=.007;tg.add(fl);
+      const nut=new T.Mesh(new T.CylinderGeometry(.078,.078,.045,40,1,true),knurl);nut.rotation.x=Math.PI/2;nut.position.z=.036;tg.add(nut);
+      const cap=new T.Mesh(new T.RingGeometry(.03,.078,40),chrome);cap.position.z=.0585;tg.add(cap);
+      const boss=new T.Mesh(new T.CylinderGeometry(.03,.03,.03,24),chrome);boss.rotation.x=Math.PI/2;boss.position.z=.07;tg.add(boss);
+      const bat=new T.Group();bat.position.z=.07;const rod=new T.Mesh(new T.CylinderGeometry(.013,.019,.19,20),chrome);rod.position.y=.095;bat.add(rod);const tip=new T.Mesh(new T.SphereGeometry(.019,18,12),chrome);tip.position.y=.19;tip.scale.multiplyScalar(.8);tip.scale.set(1,.7,1);bat.add(tip);
+      bat.rotation.x=1.05;tg.add(bat);g.add(tg);const st={on:true,a:1.05,v:0};tg.userData.st=st;tg.userData.bat=bat;toggles.push(tg);[fl,nut,rod,tip].forEach(m=>{m.userData.tg=tg;hit.push(m)})})});
+  g.position.y=.9;
+  function snd(on_){if(!on())return;const t=ac.currentTime+.002;noise('bandpass',rnd(2400,2700),2,.005,2.4*.35,t,.0003);tone('sine',rnd(1750,1850),1700,.02,.06,t,.0004);tone('sine',on_?340:300,240,.035,.1,t,.001);tone('sine',3300,3250,.035,.025,t+.004,.0005);noise('bandpass',1200,1.2,.004,.5,t+.006,.0003)}
+  function setExp(){const n=toggles.filter(t=>t.userData.st.on).length;renderer.toneMappingExposure=.82*(.42+.58*n/toggles.length)}
+  return base({kind:'switch',group:g,hittables:hit,center:new T.Vector3(0,.9,0),radius:1.8,camDir:new T.Vector3(.42,.08,1),floor:-5,fill:1.12,fillN:1.12,
+    onHit(h,k,px,py){let tg=h.object.userData.tg;if(!tg){let best=1e9;toggles.forEach(t=>{const p=t.getWorldPosition(new T.Vector3());const d=p.distanceTo(h.point);if(d<best){best=d;tg=t}})}
+      const st=tg.userData.st;st.on=!st.on;snd(st.on);setExp();popWord(px,py-16,st.on?pick(['ON','딸깍','불 켜기']):pick(['OFF','딸깍','소등','퇴근']),1);this.sp.vsy-=.002*k;return 'nosound'},
+    onUp(){},cleanup(){renderer.toneMappingExposure=.82},
+    update(){toggles.forEach(t=>{const st=t.userData.st;st.v+=((st.on?1.05:2.09)-st.a)*.5;st.v*=.45;st.a+=st.v;t.userData.bat.rotation.x=st.a})}});
+}
+/* ================= 알약 블리스터 ================= */
+function foilCanvas(){const S=512,c=mk(S,S),x=c.getContext('2d');x.fillStyle='#b9bcc0';x.fillRect(0,0,S,S);
+  for(let yy=0;yy<S;yy+=8)for(let xx=(yy/8)%2?4:0;xx<S;xx+=8){const gr=x.createRadialGradient(xx-1,yy-1,0,xx,yy,4);gr.addColorStop(0,'#f2f3f5');gr.addColorStop(.6,'#a9adb2');gr.addColorStop(1,'#7f8388');x.fillStyle=gr;x.beginPath();x.arc(xx,yy,3.2,0,6.283);x.fill()}grain(c,14);return c}
+let FOIL=null;
+function capsuleGeo(R,L,seg=28){const pts=[];const n=10;for(let i=0;i<=n;i++){const a=-Math.PI/2+i/n*Math.PI/2;pts.push(new T.Vector2(Math.cos(a)*R+.0001,-L/2+Math.sin(a)*R))}for(let i=0;i<=n;i++){const a=i/n*Math.PI/2;pts.push(new T.Vector2(Math.cos(a)*R+.0001,L/2+Math.sin(a)*R))}return new T.LatheGeometry(pts,seg)}
+const PILL_SETS=[[0xf2c21b,0x1f3f9e],[0xe8a27a,0xc8202e],[0x7fd23f,0x7fd23f],[0xb3122e,0xb3122e]];
+function buildPills(){
+  const g=new T.Group();const set=PILL_SETS[(state.pillSet=(state.pillSet||0))%PILL_SETS.length];
+  if(!FOIL){FOIL=tex(foilCanvas());FOIL.wrapS=FOIL.wrapT=T.RepeatWrapping;FOIL.repeat.set(3,1.6)}
+  const W=2.0,H=1.02;const foil=new T.Mesh(roundedBox(W,H,.018,.05,4),new T.MeshStandardMaterial({map:FOIL,bumpMap:FOIL,bumpScale:.004,color:C(0x6c7076),metalness:1,roughness:.36,envMapIntensity:.75}));g.add(foil);
+  // 절취선
+  const lineM=new T.MeshStandardMaterial({color:C(0x8b8f94),metalness:.9,roughness:.5});
+  for(let i=1;i<5;i++){const l=new T.Mesh(new T.BoxGeometry(.006,H*.96,.02),lineM);l.position.x=-W/2+i*W/5;g.add(l)}const lh=new T.Mesh(new T.BoxGeometry(W*.97,.006,.02),lineM);g.add(lh);
+  const bubMat=new T.MeshPhysicalMaterial({color:C(0xdfe6ee),transparent:true,opacity:.22,depthWrite:false,roughness:.04,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.1,side:T.DoubleSide});
+  const bubG=capsuleGeo(.115,.19,32);const pillA=capsuleGeo(.082,.095,24),pillB=capsuleGeo(.086,.085,24);
+  const mA=new T.MeshPhysicalMaterial({color:C(set[0]),roughness:.25,clearcoat:.8,clearcoatRoughness:.15}),mB=new T.MeshPhysicalMaterial({color:C(set[1]),roughness:.25,clearcoat:.8,clearcoatRoughness:.15});
+  const cells=[];const hit=[foil];
+  for(let r=0;r<2;r++)for(let c=0;c<5;c++){const x=-W/2+(c+.5)*W/5,y=(r?-1:1)*H/4;
+    const bub=new T.Mesh(bubG,bubMat);bub.position.set(x,y,.01);bub.scale.set(1,1,.62);bub.renderOrder=3;g.add(bub);
+    const pill=new T.Group();const a=new T.Mesh(pillA,mA);a.position.y=-.045;const b=new T.Mesh(pillB,mB);b.position.y=.05;pill.add(a,b);pill.position.set(x,y,.03);pill.rotation.z=rnd(-.08,.08);pill.scale.set(1,1,.9);g.add(pill);
+    const cell={bub,pill,done:false,x,y,crush:0};bub.userData.cell=cell;a.userData.cell=cell;b.userData.cell=cell;cells.push(cell);hit.push(bub)}
+  g.rotation.x=-.55;g.position.y=1.0;
+  function pop(){if(!on())return;const t=ac.currentTime+.002;crackle(t,.07,3200,.5,.8);noise('highpass',4200,.7,.02,.2,t+.01,.001);noise('bandpass',1800,1.5,.006,.9,t+.035,.0003);tone('sine',rnd(900,1100),700,.03,.08,t+.035,.0005)}
+  return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.7,.1),radius:1.25,camDir:new T.Vector3(.12,.62,1),floor:0,fill:.86,fillN:1,
+    onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
+      if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
+      cell.done=true;cell.crush=1;pop();{const hole=new T.Mesh(new T.CircleGeometry(1,24),new T.MeshStandardMaterial({color:C(0x1c1d20),roughness:.7}));hole.scale.set(.085,.16,1);hole.position.set(cell.x,cell.y,.0105);g.add(hole);for(let j=0;j<5;j++){const a=j/5*6.283+rnd(-.3,.3);const f=new T.Mesh(new T.CircleGeometry(1,3),new T.MeshStandardMaterial({map:FOIL,color:C(0x8a8e94),metalness:1,roughness:.35,side:T.DoubleSide}));f.scale.set(.05,.035,1);f.position.set(cell.x+Math.cos(a)*.06,cell.y+Math.sin(a)*.12,.016);f.rotation.set(rnd(-.8,.8),rnd(-.8,.8),a);g.add(f)}}
+      const pl=cell.pill;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
+      addPiece(pl,{v:n.multiplyScalar(rnd(.6,1)).add(new T.Vector3(rnd(-.4,.4),-.2,rnd(1.2,2))),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.08,rest:.5,fric:.75,mode:'pill',keepGeo:true,life:rnd(4.5,6),g:9.8});
+      popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
+      if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;setTarget('pills',true)}},2200)}
+      return 'nosound'},
+    update(){cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);const z=.62-.38*(1-c.crush);c.bub.scale.set(1+.06*(1-c.crush),1-.04*(1-c.crush),Math.max(.22,z));c.bub.rotation.z=.05*(1-c.crush)}})}});
+}
+
+function build(t){return t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
 
 /* small effects */
 function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(new T.BoxGeometry(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
@@ -1391,15 +1459,15 @@ function breakSound(mode){
 }
 let lastTink=0;
 function landSound(mode){if(!on()||mode==='chip')return;const now=performance.now();if(now-lastTink<35)return;lastTink=now;const t=ac.currentTime;
-  if(mode==='glass')tone('sine',rnd(3000,7500),0,rnd(.05,.12),.05,t);else if(mode==='wood')tone('sine',rnd(180,260),90,.06,.12,t);else if(mode==='metal')sound('metal',.55);else if(mode==='plastic')tone('sine',rnd(600,950),320,.04,.1,t);else if(mode==='jelly'){if(Math.random()<.5)squelch(t,.25)}}
+  if(mode==='glass')tone('sine',rnd(3000,7500),0,rnd(.05,.12),.05,t);else if(mode==='wood')tone('sine',rnd(180,260),90,.06,.12,t);else if(mode==='metal')sound('metal',.55);else if(mode==='plastic')tone('sine',rnd(600,950),320,.04,.1,t);else if(mode==='pill'){tone('sine',rnd(1300,1700),900,.025,.09,t,.0005);noise('bandpass',rnd(2600,3200),2,.006,.6,t,.0003)}else if(mode==='jelly'){if(Math.random()<.5)squelch(t,.25)}}
 
 /* ================= stage control ================= */
 function stepSpring(sp,soft){const K=soft?.06:.22,D=soft?.9:.72;for(const k of ['x','y','r','sx','sy']){const vk='v'+k;sp[vk]=(sp[vk]-sp[k]*K)*D;sp[k]+=sp[vk]}}
 let flash=0,shake=0;
-function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*Math.max(0,Math.min(1,state.size||0));const d=o.radius/Math.tan(f/2*fill);
+function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*(camera===cam?Math.max(0,Math.min(1,state.size||0)):0);const d=o.radius/Math.tan(f/2*fill);
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
-  if(cur){if(cur.onUp)cur.onUp();scene.remove(cur.group)}
+  if(cur){if(cur.onUp)cur.onUp();if(cur.cleanup)cur.cleanup();scene.remove(cur.group)}
   state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;scene.add(cur.group);cur.base=cur.group.position.clone();
   state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
   if(drop&&!reduced){cur.sp.y=1.6;cur.sp.vy=0}
