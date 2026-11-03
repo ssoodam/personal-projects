@@ -1068,24 +1068,25 @@ function kbLegend(theme,lab,wu,kind,idx,col){const H=128,W=Math.round(128*wu),c=
 function kbCapGeo(w,h,d,theme){const r=theme==='bread'?Math.min(h*.5,d*.32):theme==='jelly'?.018:.012;const g=roundedBox(w,h,d,r,theme==='bread'?6:3);const p=g.attributes.position;const tp=theme==='bread'?.92:theme==='jelly'?.86:.82;
   for(let i=0;i<p.count;i++){const y=p.getY(i);const t=(y/h+.5);const s=1-(1-tp)*Math.pow(t,1.2);let X=p.getX(i)*s,Z=p.getZ(i)*s,Y=y;if(theme==='bread'&&y>0){const nx=X/(w/2),nz=Z/(d/2);Y+=h*.35*Math.max(0,1-nx*nx)*Math.max(0,1-nz*nz)}if(y>0&&theme!=='bread'){Z-=h*.06}p.setXYZ(i,X,Y,Z)}g.computeVertexNormals();g.translate(0,h/2,0);return g}
 function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;
-  /* 디가 보내준 기본 키보드 녹음 분석: 2ms 안에 꺼지는 날카로운 클릭(1.4kHz 중심) + 115~230Hz 몸통 + 약 58ms 뒤 키가 올라오는 작은 클릭 */
-  if(theme==='bread'){v*=1.1;const up=rnd(.075,.085);
-    noise('lowpass',320,.9,.08,1.4*v,t,.006);tone('sine',105,62,.1,.3*v,t,.006);noise('bandpass',700,1,.012,.7*v,t,.002)
-noise('bandpass',2200,.8,.05,.18*v,t+.01,.012);noise('lowpass',420,.8,.04,.4*v,t+up,.008)} /* 폭: 말랑하게 눌리고 겉껍질이 살짝 바스락 */
-  else if(theme==='jelly'){v*=1.1;const up=rnd(.065,.075);
-    noise('bandpass',900,1.0,.008,1.6*v,t,.001);tone('sine',480,230,.1,.3*v,t,.003);noise('lowpass',550,1.0,.04,.6*v,t,.002)
-noise('bandpass',1800,3,.012,.25*v,t+.01,.002);tone('sine',240,360,.07,.15*v,t+up,.005);noise('bandpass',900,1,.006,.5*v,t+up,.001)} /* 뽀용 */
+  /* 기본: 디가 보내준 키보드 녹음 분석(2ms 안에 꺼지는 1.3~2.2kHz 클릭 + 110~230Hz 몸통 + 58ms 뒤 업스트로크) */
+  if(theme==='bread'){v*=1.15;const up=rnd(.075,.085);
+    noise('lowpass',340,.9,.08,1.3*v,t,.005);tone('sine',105,62,.1,.28*v,t,.005);noise('bandpass',800,1,.012,.8*v,t,.002);
+    noise('bandpass',3000,1.2,.004,.35*v,t+.006,.0005);noise('bandpass',2600,1.2,.004,.3*v,t+.017,.0005);noise('bandpass',3300,1.2,.003,.25*v,t+.029,.0005);
+    noise('bandpass',2200,.8,.05,.16*v,t+.01,.012);noise('lowpass',420,.8,.04,.4*v,t+up,.008)} /* 폭 + 겉껍질 바스락 */
+  else if(theme==='jelly'){v*=1.3;const up=rnd(.065,.075);
+    noise('bandpass',1100,1.2,.008,1.8*v,t,.0008);noise('bandpass',2600,4,.01,.5*v,t+.004,.001);tone('sine',480,230,.1,.28*v,t,.003);noise('lowpass',550,1.0,.04,.5*v,t,.002);
+    noise('bandpass',1900,3,.012,.35*v,t+.012,.002);tone('sine',240,360,.07,.14*v,t+up,.005);noise('bandpass',1200,1,.006,.6*v,t+up,.001)} /* 뽀용 */
   else if(theme==='clear'){v*=0.5;const up=rnd(.055,.065);
-    noise('bandpass',1900,1.3,.006,3.2*v,t,.0004);noise('bandpass',650,6,.035,.9*v,t+.001,.001);tone('sine',1620,1590,.05,.05*v,t)
-tone('triangle',330,260,.04,.08*v,t,.001);noise('bandpass',2100,1.5,.005,.9*v,t+up,.0004);tone('sine',1700,1680,.025,.025*v,t+up)} /* 톡: 속이 빈 아크릴 울림 */
-  else if(theme==='ceramic'){v*=0.4;const up=rnd(.055,.065);
-    noise('bandpass',2300,2.2,.0045,4.0*v,t,.0003);noise('bandpass',3400,7,.014,.9*v,t+.0005,.0005);tone('sine',1150,1120,.02,.06*v,t)
-tone('sine',175,140,.04,.08*v,t,.001);noise('bandpass',2400,2,.004,.9*v,t+up,.0003)} /* 딱: 바둑알 */
-  else{v*=0.36;const up=rnd(.055,.062);
-    noise('bandpass',1400,1.6,.007,4.5*v,t,.0004);noise('bandpass',2400,1.2,.004,.6*v,t,.0004);noise('bandpass',500,.8,.03,.9*v,t,.0005)
-noise('bandpass',1300,1.2,.06,.35*v,t+.004,.002)
-tone('sine',230,180,.075,.07*v,t,.001);tone('sine',115,95,.05,.07*v,t,.001);tone('sine',1380,1360,.045,.05*v,t)
-noise('bandpass',1500,1.2,.006,1.1*v,t+up,.0005);tone('sine',240,190,.03,.03*v,t+up)}}
+    noise('bandpass',2000,1.3,.006,3.4*v,t,.0004);noise('bandpass',3600,3,.006,.8*v,t,.0003);noise('bandpass',650,6,.035,.8*v,t+.001,.001);tone('sine',1620,1590,.05,.05*v,t);
+    tone('triangle',330,260,.04,.07*v,t,.001);noise('bandpass',2300,1.5,.005,1.0*v,t+up,.0004);tone('sine',1700,1680,.025,.025*v,t+up)} /* 톡: 속이 빈 아크릴 */
+  else if(theme==='ceramic'){v*=0.75;const up=rnd(0,0);
+    noise('bandpass',2150,5,.012,3.2*v,t,.0003);tone('sine',2080,2020,.016,.12*v,t,.0004);tone('sine',3150,3100,.01,.05*v,t,.0004);
+    noise('bandpass',750,2,.01,.9*v,t,.0004);noise('highpass',5000,.7,.002,.25*v,t,.0002)} /* 아이폰 타건음처럼 짧고 맑은 '톡' */
+  else{v*=0.45;const up=rnd(.055,.062);
+    noise('bandpass',2200,1.4,.006,3.6*v,t,.0004);noise('bandpass',1300,1.6,.007,3.6*v,t,.0004);noise('lowpass',220,.8,.008,2.2*v,t,.0005);
+    noise('bandpass',1300,1.2,.06,.3*v,t+.004,.002);
+    tone('sine',230,180,.075,.06*v,t,.001);tone('sine',110,92,.05,.09*v,t,.001);tone('sine',1380,1360,.045,.04*v,t);
+    noise('bandpass',1800,1.2,.006,1.1*v,t+up,.0005);tone('sine',240,190,.03,.025*v,t+up)}}
 function buildKeyboard(){
   const theme=CAPS[state.cap]?state.cap:'basic';
   const g=new T.Group();const hit=[];const u=.15,gap=.011,KW=16*u,KD=5*u,M=.075,CW=KW+M*2,CD=KD+M*2,TH=.07;
@@ -1133,7 +1134,7 @@ function buildKeyboard(){
   return base({kind:'keyboard',group:g,hittables:hit,center:new T.Vector3(0,.08,0),radius:1.32,camDir:new T.Vector3(.04,.9,1),floor:0,fill:1.04,fillN:1.06,
     onHit(h,k,px,py){const m=h.object,ud=m.userData;
       if(ud.part==='key'){const kk=ud.key;kk.userData.press=1;keyThock(theme,Math.min(1.15,.75+k*.25));if(Math.random()<.2){const n=keys[Math.floor(Math.random()*keys.length)];n.userData.press=.5}}
-      else{if(on()){const t=ac.currentTime+.003;if(soft){noise('lowpass',420,.7,.07,.5,t);tone('sine',120,70,.09,.4,t)}else{tone('sine',rnd(150,175),90,.07,.45,t);noise('lowpass',1100,.8,.04,.35,t)}}keys.forEach(q=>{if(Math.random()<.25)q.userData.press=.4+Math.random()*.4})}
+      else{const n=keys.reduce((b,q)=>{const d=q.getWorldPosition(new T.Vector3()).distanceTo(h.point);return d<b[0]?[d,q]:b},[1e9,null])[1];if(n)n.userData.press=1;keyThock(theme,Math.min(1.15,.75+k*.25));keys.forEach(q=>{if(Math.random()<.12)q.userData.press=.3+Math.random()*.3})}
       popWord(px,py-16,capWord(theme),1);this.sp.vsy-=(soft?.016:.007)*k;return 'nosound'},
     update(){keys.forEach(q=>{const u_=q.userData;u_.press*=soft?.85:.72;q.position.y=u_.y0-.03*u_.press;if(theme==='jelly')q.scale.set(1+.1*u_.press,1-.22*u_.press,1+.1*u_.press);else if(theme==='bread')q.scale.set(1+.06*u_.press,1-.18*u_.press,1+.06*u_.press)})},
     shatter(pt){g.updateMatrixWorld(true);const mode=soft?'jelly':'plastic';
