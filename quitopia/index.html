@@ -48,6 +48,7 @@ button,input{font:inherit;color:inherit}
 .pill{border:1px solid var(--ink);background:transparent;border-radius:999px;padding:4px 14px;font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer}
 .pill[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .snd input[type=range]{width:86px;accent-color:var(--main)}
+.szl{font:800 11px/1 Unbounded,sans-serif;letter-spacing:.08em;color:var(--cream,#F6F9DC)}
 .pal{display:flex;gap:6px}
 .pal button{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
 .pal button[aria-pressed="true"]{border-color:var(--ink)}
@@ -132,6 +133,7 @@ button,input{font:inherit;color:inherit}
 .saved{margin:0;font-size:13px;color:var(--main)}
 #popInput:focus,#wordInput:focus{outline:none;border-bottom-color:var(--main)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.capset{pointer-events:auto;display:flex;flex-direction:column;gap:6px}.capset[hidden]{display:none}.capset .lbl{font-family:var(--en);font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-soft)}.capset .chip span{padding:5px 12px;font-size:13px}
 .chip{position:relative}
 .chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .chip span{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 5px;font-size:14px;font-weight:600;background:var(--bg)}
@@ -172,6 +174,7 @@ button,input{font:inherit;color:inherit}
       <button class="pill" id="muteBtn" type="button" aria-pressed="false">SOUND ON</button>
       <input id="vol" type="range" min="0" max="1" step="0.05" value="0.6" aria-label="음량">
     </div>
+    <label class="snd sz"><span class="szl">SIZE</span><input id="size" type="range" min="0" max="1" step="0.01" value="0" aria-label="물건 크기"></label>
   </div>
 </header>
 
@@ -185,6 +188,7 @@ button,input{font:inherit;color:inherit}
       <div class="meter-l"><span>DURABILITY</span><span id="hpTxt">-</span></div>
       <div class="bar"><i id="hpBar" style="width:100%"></i></div>
     </div>
+    <div class="capset" id="capSet" hidden><span class="lbl">KEYCAP · 키캡</span><div class="chips" id="capChips" role="radiogroup" aria-label="키캡"></div></div>
     <div class="meter">
       <div class="meter-l"><span>WORKDAY</span><span id="workTxt">0%</span></div>
       <div class="bar m"><i id="workBar" style="width:0%"></i></div>
@@ -528,10 +532,11 @@ const MAT={
   paper:{name:'종이',words:['찌익','부욱','RIP','바스락']},
   moktak:{name:'나무',words:['똑','똑','TOK','번뇌 -1','해탈','마음의 평화']},
   oven:{name:'금속',words:['쾅','텅','CLANG','띵!']},
+  keyboard:{name:'키보드',words:['도각','도각도각','타닥']},
   laptop:{name:'알루미늄',words:['탁','타닥','CTRL+Z','저장 안 함','렌더링 중…','응답 없음','최종_final']},
   phone:{name:'플라스틱',words:['따르릉','여보세요?','뚝','RING','부재중','네 팀장님']}
 };
-const BREAK_WORD={laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'KABOOM!'};
+const BREAK_WORD={keyboard:'ALT+F4!',laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'KABOOM!'};
 const TEX=['wood','glass','metal','jelly','paper'];
 const TEX_DESC={wood:'원목 글자. 결이 갈라지다가 결대로 쪼개져요.',glass:'유리 글자. 금이 쩍쩍 가다가 산산조각 나요.',metal:'쇠 글자. 찌그러지다가 바닥에 와르르 떨어져요.',jelly:'젤리 글자. 출렁이다가 으깨져 부스러져요.',paper:'종이 글자. 구겨지고 찢어지다가 갈가리 찢겨요.'};
 const TEX_HP={wood:26,glass:16,metal:28,jelly:22,paper:14};
@@ -545,6 +550,7 @@ const TARGETS={
   moktak:{id:'moktak',kind:'moktak',mat:'moktak',name:'목탁',tag:'TEMPLE',hp:Infinity,desc:'똑, 똑. 한 번 두드릴 때마다 번뇌가 하나씩 줄어요. 아무리 쳐도 깨지지 않아요.',spec:'재질 옻칠한 살구나무 · 방석 포함 · 소리 똑'},
   oven :{id:'oven',kind:'oven',mat:'oven',name:'제빵 오븐',tag:'STEEL',hp:30,desc:'빵이 노릇노릇 구워지는 3단 오븐. 창마다 금이 가다가 유리, 문짝, 빵까지 전부 날아가요.',spec:'재질 스테인리스 + 강화유리 · 3단 · 소리 쾅'},
   laptop:{id:'laptop',kind:'laptop',mat:'laptop',name:'디자이너 노트북',tag:'ALUMINUM',hp:20,desc:'렌더링 99%에서 멈춘 포스터_최종_final.psd. 화면이 깨지고 지지직거리다가 키캡이 우수수 쏟아져요.',spec:'재질 알루미늄 + 액정 · 13인치 · 소리 퍽'},
+  keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'조약돌 키보드',tag:'PEBBLE',hp:20,desc:'도각도각. 동글동글 조약돌 키캡이 눌리다가 마지막엔 키캡이 와르르 흩어져요. 키캡은 KEYCAP에서 바꿀 수 있어요.',spec:'무선 · 키캡 5종 · 소리 도각'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'회사 전화기',tag:'PLASTIC',hp:18,desc:'부재중 37통. 수화기가 들썩이고 버튼이 눌리다가, 결국 산산조각 나요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
@@ -552,7 +558,7 @@ const getT=id=>id==='custom'?customTarget():TARGETS[id];
 const today=()=>new Date().toDateString();
 let popWords=store.get('popWords',[]);if(!Array.isArray(popWords))popWords=[];
 const hitWord=mat=>popWords.length?pick(popWords):pick(MAT[mat].words);
-const state={id:store.get('target','desk'),custom:store.get('custom',{text:'월요일',tex:'glass'}),hp:0,max:0,breaking:false,combo:0,last:0,
+const state={cap:store.get('cap','basic'),id:store.get('target','desk'),custom:store.get('custom',{text:'월요일',tex:'glass'}),hp:0,max:0,breaking:false,combo:0,last:0,
   stats:(()=>{const s=store.get('stats',null);return s&&s.date===today()?s:{date:today(),hits:0,broken:0}})(),muted:store.get('muted',false),vol:store.get('vol',0.6)};
 if(!TEX.includes(state.custom.tex))state.custom.tex='glass';
 if(state.id!=='custom'&&!TARGETS[state.id])state.id='desk';
@@ -1026,6 +1032,73 @@ function buildLaptop(){
       [base_,well,pad].forEach(m=>{debris.attach(m);addPiece(m,{v:new T.Vector3(rnd(-1,1),rnd(1.5,3),rnd(0,1.5)),w:new T.Vector3(rnd(-4,4),rnd(-2,2),rnd(-4,4)),r:.04,rest:.3,mode:'plastic',keepGeo:true})});
     }});
 }
+/* ---- 조약돌 키보드 ---- */
+const CAPS={
+  basic:{name:'기본',en:'BASIC',base:0xcfc9bd,legend:'#6b6a66'},
+  bread:{name:'빵',en:'BREAD',base:0xd8b080,legend:'#5a2e0e'},
+  clear:{name:'투명',en:'CLEAR',base:0xdfe6ea,legend:'#2a3a48'},
+  ceramic:{name:'도기',en:'CERAMIC',base:0xe9e4d6,legend:'#25407a'},
+  jelly:{name:'젤리',en:'JELLY',base:0xf6d6e4,legend:'#ffffff'}};
+const CAP_WORDS={basic:['도각','도각도각','타닥','딸깍','Ctrl+S','엔터!'],bread:['폭','말랑','갓 구운 키','폭신','바삭'],clear:['틱','찰칵','티딕','투명!'],ceramic:['딸깍','챙','쨍','달그락'],jelly:['뽀용','말캉','젤리!','뾱']};
+const capWord=c=>popWords.length?pick(popWords):pick(CAP_WORDS[c]);
+function legendCanvas(t,col){const c=mk(96,96),x=c.getContext('2d');x.fillStyle=col;const s=t.length>1?24:40;x.font=`600 ${s}px "IBM Plex Sans KR",Unbounded,Arial,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(t,48,51);return c}
+function capProfile(theme){const pts=[];const R=1,H=theme==='bread'||theme==='jelly'?.62:.42;
+  // pebble: round side, soft dome top
+  for(let i=0;i<=14;i++){const a=i/14*Math.PI/2;pts.push(new T.Vector2(R*(.86+.14*Math.cos(a))*(i===0?.84:1),H*.55*Math.sin(a)))}
+  for(let i=1;i<=12;i++){const t=i/12;pts.push(new T.Vector2(R*(1-t)*Math.cos(t*.35)*.98+.0001,H*.55+H*.45*Math.sin(t*Math.PI/2)))}
+  pts.unshift(new T.Vector2(0.0001,0));return pts}
+function capMat(theme,i){
+  if(theme==='bread')return new T.MeshPhysicalMaterial({vertexColors:true,roughness:.62,clearcoat:.25,clearcoatRoughness:.5,bumpMap:BUMP,bumpScale:.003,envMapIntensity:.6});
+  if(theme==='clear'){const m=new T.MeshPhysicalMaterial({color:0x10141a,transparent:true,depthWrite:false,roughness:.06,metalness:0,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.2});clearPlastic(m,.06,.5,.4);return m}
+  if(theme==='ceramic')return new T.MeshPhysicalMaterial({vertexColors:true,roughness:.1,metalness:0,clearcoat:1,clearcoatRoughness:.05,envMapIntensity:1});
+  if(theme==='jelly'){const cols=[0xff5a7a,0xffa23a,0xffd23a,0x7ad66a,0x5ab4ff,0xb07aff];const c=cols[i%cols.length];return new T.MeshPhysicalMaterial({color:C(c),transparent:true,opacity:.86,roughness:.12,clearcoat:1,clearcoatRoughness:.05,emissive:C(c),emissiveIntensity:.28,envMapIntensity:.8})}
+  return new T.MeshPhysicalMaterial({color:C(0xf6f3ec),roughness:.45,clearcoat:.2,clearcoatRoughness:.5,envMapIntensity:.7})}
+function capGeo(theme){const g=new T.LatheGeometry(capProfile(theme),40);if(theme==='ceramic'){const p=g.attributes.position;const col=new Float32Array(p.count*3);const top=C(0xbfd9c6),edge=C(0x6f9c86),foot=C(0xe8dcc6),tc=new T.Color();for(let i=0;i<p.count;i++){const y=p.getY(i)/.42,r=Math.hypot(p.getX(i),p.getZ(i));tc.copy(top).lerp(edge,Math.min(1,Math.max(0,(r-.6)/.4))*.85);if(y<.12)tc.copy(foot);col[i*3]=tc.r;col[i*3+1]=tc.g;col[i*3+2]=tc.b}g.setAttribute('color',new T.BufferAttribute(col,3))}if(theme==='bread'){const p=g.attributes.position;const col=new Float32Array(p.count*3);const top=C(0x9a4a12),mid=C(0xc8782c),side=C(0xf0cf98),tc=new T.Color();const H=.62;
+    for(let i=0;i<p.count;i++){const y=p.getY(i)/H;tc.copy(side).lerp(mid,Math.min(1,Math.max(0,(y-.25)/.4))).lerp(top,Math.min(1,Math.max(0,(y-.7)/.3))*.8);col[i*3]=tc.r;col[i*3+1]=tc.g;col[i*3+2]=tc.b}g.setAttribute('color',new T.BufferAttribute(col,3))}return g}
+function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;
+  if(theme==='bread'){noise('lowpass',rnd(500,700),.7,.06,.6*v,t);tone('sine',rnd(150,180),80,.08,.5*v,t)}
+  else if(theme==='clear'){noise('highpass',rnd(4200,5200),.8,.012,.45*v,t);tone('sine',rnd(2900,3400),2400,.03,.1*v,t);noise('bandpass',1400,1.5,.02,.25*v,t+.03)}
+  else if(theme==='ceramic'){noise('bandpass',3200,2,.01,.4*v,t);const f=rnd(2500,2800);[1,1.58,2.3].forEach((m,i)=>tone('sine',f*m,f*m*.995,.22-i*.05,.09*v/(i+1),t));tone('sine',rnd(500,560),300,.03,.15*v,t)}
+  else if(theme==='jelly'){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(rnd(240,300),t);o.frequency.exponentialRampToValueAtTime(rnd(620,760),t+.09);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35*v,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(g);g.connect(master);o.start(t);o.stop(t+.16);noise('lowpass',800,.7,.04,.25*v,t)}
+  else{noise('bandpass',rnd(2200,2700),2,.016,.55*v,t);tone('sine',rnd(250,290),170,.045,.4*v,t);noise('bandpass',rnd(1500,1800),2.2,.016,.35*v,t+.034);tone('sine',rnd(210,240),150,.035,.22*v,t+.034)}}
+function buildKeyboard(){
+  const theme=CAPS[state.cap]?state.cap:'basic';const th=CAPS[theme];
+  const g=new T.Group();const hit=[];const W=2.3,D=.92,BH=.08;
+  let baseMat;if(theme==='clear'){baseMat=new T.MeshPhysicalMaterial({color:0x14181e,transparent:true,depthWrite:false,roughness:.3,clearcoat:.8,clearcoatRoughness:.2,envMapIntensity:1});clearPlastic(baseMat,.12,.55,.3)}
+  else if(theme==='jelly')baseMat=new T.MeshPhysicalMaterial({color:C(th.base),transparent:true,opacity:.9,roughness:.2,clearcoat:1,emissive:C(0xff8ab0),emissiveIntensity:.15,envMapIntensity:.7});
+  else if(theme==='ceramic')baseMat=new T.MeshPhysicalMaterial({color:C(th.base),roughness:.14,clearcoat:1,clearcoatRoughness:.06,envMapIntensity:.9});
+  else baseMat=new T.MeshPhysicalMaterial({color:C(th.base),roughness:theme==='bread'?.7:.5,clearcoat:theme==='bread'?.1:.25,clearcoatRoughness:.5,bumpMap:theme==='bread'?BUMP:null,bumpScale:.004,envMapIntensity:.7});
+  const bg=roundedBox(W,BH,D,.04,6);const bpos=bg.attributes.position;for(let i=0;i<bpos.count;i++){const z=bpos.getZ(i),y=bpos.getY(i);if(y>0)bpos.setY(i,y-(z/D+.5)*.03)}bg.computeVertexNormals();
+  const baseM=new T.Mesh(bg,baseMat);baseM.position.y=BH/2;baseM.userData={part:'base'};g.add(baseM);hit.push(baseM);
+  const logo=new T.Mesh(new T.PlaneGeometry(.36,.06),new T.MeshBasicMaterial({map:tex((()=>{const c=mk(256,44),x=c.getContext('2d');x.fillStyle=th.legend;x.globalAlpha=.6;x.font='800 26px Unbounded,"Arial Black",sans-serif';x.textAlign='right';x.textBaseline='middle';x.fillText('QUITOPIA',250,23);return c})()),transparent:true,depthWrite:false}));logo.rotation.x=-Math.PI/2+.03;logo.position.set(W/2-.24,BH+.002,-D/2+.07);g.add(logo);
+  const led=new T.Mesh(new T.CircleGeometry(.012,16),new T.MeshBasicMaterial({color:0x7cff9a,toneMapped:false}));led.rotation.x=-Math.PI/2;led.position.set(-W/2+.1,BH+.003,-D/2+.07);g.add(led);
+  const cg=capGeo(theme);const shared=theme==='jelly'?null:capMat(theme,0);const lgC={};
+  const rows=[['1','2','3','4','5','6','7','8','9','0','⌫'],['Q','W','E','R','T','Y','U','I','O','P','⏎'],['A','S','D','F','G','H','J','K','L',';'],['⇧','Z','X','C','V','B','N','M',',','.']];
+  const P=.178,KR=.08;const keys=[];let ki=0;
+  rows.forEach((row,r)=>{const off=(r===2?.5:r===3?.3:0)*P;row.forEach((t,i)=>{const z=-D/2+.2+r*P*.92;const x=-((rows[0].length-1)*P)/2+i*P+off;
+    const k=new T.Group();const cap=new T.Mesh(cg,shared||capMat(theme,ki));const sc=theme==='ceramic'?rnd(.94,1.04):1;cap.scale.set(KR*sc,KR,KR*sc*(theme==='ceramic'?rnd(.95,1.03):1));cap.userData={part:'key'};k.add(cap);hit.push(cap);
+    const lh=(theme==='bread'||theme==='jelly'?.62:.42)*KR;const lm=lgC[t]||(lgC[t]=new T.MeshBasicMaterial({map:tex(legendCanvas(t,th.legend)),transparent:true,depthWrite:false,toneMapped:theme!=='jelly'}));
+    if(theme!=='bread'){const lg=new T.Mesh(new T.PlaneGeometry(KR*1.2,KR*1.2),lm);lg.rotation.x=-Math.PI/2;lg.position.y=lh+.002;k.add(lg)}
+    const y0=BH-(z/D+.5)*.03+.002;k.position.set(x,y0,z);k.userData={y0,press:0,v:0,label:t};g.add(k);keys.push(k);cap.userData.key=k;ki++})});
+  // space bar pill
+  {const k=new T.Group();const sg=roundedBox(P*4.6,KR*.75,KR*1.7,KR*.36,6);sg.translate(0,KR*.38,0);if(theme==='bread'){const p=sg.attributes.position;const col=new Float32Array(p.count*3);const a=C(0xb8661e),b=C(0xf0cf98),tc=new T.Color();for(let i=0;i<p.count;i++){tc.copy(b).lerp(a,Math.min(1,Math.max(0,p.getY(i)/(KR*.75))));col[i*3]=tc.r;col[i*3+1]=tc.g;col[i*3+2]=tc.b}sg.setAttribute('color',new T.BufferAttribute(col,3))}
+    if(!sg.attributes.color){const n=sg.attributes.position.count,col=new Float32Array(n*3),cc=theme==='ceramic'?C(0xb3d2bc):new T.Color(1,1,1);for(let i=0;i<n;i++){col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b}sg.setAttribute('color',new T.BufferAttribute(col,3))}
+    const cap=new T.Mesh(sg,shared||capMat(theme,ki++));cap.userData={part:'key',key:k};k.add(cap);hit.push(cap);const z=-D/2+.2+4*P*.92;const y0=BH-(z/D+.5)*.03+.002;k.position.set(0,y0,z);k.userData={y0,press:0,v:0,label:'SPACE'};g.add(k);keys.push(k);
+    for(const s of [-1,1])for(const j of [3.2,4.2]){const kk=new T.Group();const c2=new T.Mesh(cg,shared||capMat(theme,ki++));c2.scale.setScalar(KR*.9);c2.userData={part:'key',key:kk};kk.add(c2);hit.push(c2);kk.position.set(s*P*j,y0,z);kk.userData={y0,press:0,v:0};g.add(kk);keys.push(kk)}}
+  g.rotation.x=.32;g.rotation.y=-.1;
+  const soft=theme==='jelly'||theme==='bread';
+  return base({kind:'keyboard',group:g,hittables:hit,center:new T.Vector3(0,.12,0),radius:1.2,camDir:new T.Vector3(.05,.62,1),floor:0,fill:.96,fillN:.98,
+    onHit(h,k,px,py){const m=h.object,ud=m.userData;
+      if(ud.part==='key'){const kk=ud.key;kk.userData.press=1;kk.userData.v=0;keyThock(theme,Math.min(1.3,.7+k*.4));if(Math.random()<.35){const n=keys[Math.floor(Math.random()*keys.length)];n.userData.press=.6}}
+      else{if(on()){const t=ac.currentTime+.003;if(theme==='ceramic'){tone('sine',rnd(900,1000),0,.35,.25,t);tone('sine',rnd(2300,2500),0,.25,.12,t)}else if(soft){noise('lowpass',500,.7,.08,.6,t);tone('sine',140,70,.1,.5,t)}else{tone('sine',rnd(170,200),90,.07,.6,t);noise('bandpass',1600,1.2,.03,.4,t)}}keys.forEach(q=>{if(Math.random()<.3)q.userData.press=.5+Math.random()*.4})}
+      popWord(px,py-16,capWord(theme),1);this.sp.vsy-=(soft?.02:.008)*k;return 'nosound'},
+    update(){keys.forEach(q=>{const u=q.userData;u.press*=soft?.86:.74;q.position.y=u.y0-.028*u.press;if(theme==='jelly'){const s=1-.25*u.press;q.scale.set(1+.18*u.press,s,1+.18*u.press)}else if(theme==='bread'){q.scale.set(1+.08*u.press,1-.2*u.press,1+.08*u.press)}})},
+    shatter(pt){g.updateMatrixWorld(true);const mode=theme==='ceramic'?'glass':soft?'jelly':'plastic';
+      keys.forEach(q=>{debris.attach(q);addPiece(q,{v:new T.Vector3(rnd(-3,3),rnd(3,7.5),rnd(-1,3.5)),w:new T.Vector3(rnd(-16,16),rnd(-16,16),rnd(-16,16)),r:.05,rest:soft?.5:.45,fric:.6,mode,squish:soft,keepGeo:true,life:rnd(2.8,4)})});
+      const parts=[[-W*3/8,-D/4],[-W/8,-D/4],[W/8,-D/4],[W*3/8,-D/4],[-W*3/8,D/4],[-W/8,D/4],[W/8,D/4],[W*3/8,D/4]];
+      parts.forEach(([x,z])=>{const c=new T.Mesh(roundedBox(W/4*.98,BH,D/2*.98,.03,3),baseMat);c.position.set(x,BH/2,z);g.add(c);debris.attach(c);addPiece(c,{v:new T.Vector3(x*2+rnd(-.5,.5),rnd(2,4.5),z*2+rnd(0,2)),w:new T.Vector3(rnd(-6,6),rnd(-6,6),rnd(-6,6)),r:.06,rest:.35,fric:.6,mode,squish:soft,keepGeo:true,life:rnd(3,4)})});
+      g.remove(baseM);g.remove(logo);g.remove(led)}});
+}
 /* ---- 회사용 유선전화 ---- */
 function phoneLcd(){const c=mk(384,128),x=c.getContext('2d');const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'#c3cfae');g.addColorStop(1,'#a9b893');x.fillStyle=g;x.fillRect(0,0,384,128);
   x.fillStyle='#1f2a18';x.font='700 30px "IBM Plex Sans KR",sans-serif';x.textBaseline='top';x.fillText('부재중 37통',18,14);x.font='600 22px "IBM Plex Sans KR",sans-serif';x.fillText('내선 1004  ·  팀장님',18,56);x.font='700 22px Unbounded,"Arial Black",sans-serif';x.fillText('18:00 OFF',18,88);grain(c,10);return c}
@@ -1071,7 +1144,7 @@ function buildPhone(){
       debris.attach(cord);addPiece(cord,{v:new T.Vector3(rnd(-1,1),rnd(2,4),rnd(0,1)),w:new T.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3)),r:.05,rest:.2,mode:'chip',keepGeo:true});
     }});
 }
-function build(t){return t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():buildWord(t)}
+function build(t){return t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
 
 /* small effects */
 function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(new T.BoxGeometry(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
@@ -1141,6 +1214,7 @@ function breakSound(mode){
   else if(mode==='metal'){tone('sine',72,26,.7,1.2,t);noise('lowpass',380,.7,.7,1.1,t);noise('bandpass',1200,.6,.12,.8,t);sound('metal',1.6);crackle(t+.02,.35,3200,.7,.6);for(let i=0;i<22;i++){const tt=t+.25+Math.pow(Math.random(),1.3)*1.4;const f=rnd(1800,4200);tone('sine',f,f*.98,rnd(.08,.25),rnd(.03,.1),tt)}}
   else if(mode==='oven'){breakSound('glass');sound('metal',1.5);noise('lowpass',250,.7,.6,.9,t);tone('sine',2093,0,1.4,.25,t+.35);tone('sine',4186,0,.8,.06,t+.35)}
   else if(mode==='laptop'){breakSound('glass');crackle(t,.35,2600,.8,.7);for(let i=0;i<40;i++){const tt=t+.15+Math.pow(Math.random(),1.4)*1.3;noise('bandpass',rnd(2500,4500),2,.015,rnd(.15,.4),tt)}tone('square',880,0,.25,.05,t+.05);tone('square',440,0,.35,.05,t+.3)}
+  else if(mode==='keyboard'){const th=state.cap;if(th==='ceramic')breakSound('glass');else if(th==='jelly'||th==='bread')breakSound('jelly');else{crackle(t,.3,2400,.9,.7);tone('sine',170,55,.3,.7,t)}for(let i=0;i<26;i++){setTimeout(()=>keyThock(th,rnd(.4,.9)),60+Math.pow(Math.random(),1.3)*1100)}}
   else if(mode==='phone'){crackle(t,.3,2200,.9,.7);tone('sine',190,55,.35,.8,t);noise('bandpass',1800,.7,.12,.8,t);for(let i=0;i<20;i++){const f=(i%2?1520:1310)*rnd(.92,1.08);tone('sine',f,f*.7,.05,.12*(1-i/20),t+.1+i*.04)}}
 }
 let lastTink=0;
@@ -1150,14 +1224,14 @@ function landSound(mode){if(!on()||mode==='chip')return;const now=performance.no
 /* ================= stage control ================= */
 function stepSpring(sp,soft){const K=soft?.06:.22,D=soft?.9:.72;for(const k of ['x','y','r','sx','sy']){const vk='v'+k;sp[vk]=(sp[vk]-sp[k]*K)*D;sp[k]+=sp[vk]}}
 let flash=0,shake=0;
-function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const fill=narrow?o.fillN:o.fill;const d=o.radius/Math.tan(f/2*fill);
+function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.22-f0)*Math.max(0,Math.min(1,state.size||0));const d=o.radius/Math.tan(f/2*fill);
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
   if(cur){scene.remove(cur.group)}
   state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;scene.add(cur.group);cur.base=cur.group.position.clone();
   state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
   if(drop&&!reduced){cur.sp.y=1.6;cur.sp.vy=0}
-  $('#tName').textContent=t.name;$('#tDesc').textContent=t.desc;$('#tSpec').textContent=t.spec;renderHp();
+  $('#tName').textContent=t.name;$('#tDesc').textContent=t.desc;$('#tSpec').textContent=t.kind==='keyboard'?`키캡 ${CAPS[state.cap].name}(${CAPS[state.cap].en}) · 무선 · 소리 ${CAP_WORDS[state.cap][0]}`:t.spec;$('#capSet').hidden=t.kind!=='keyboard';renderHp();
   document.querySelectorAll('.card').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.id===id)));
 }
 function renderHp(){const inf=!isFinite(state.max);$('#hpTxt').innerHTML=inf?'<span class="inf">∞</span>':Math.max(0,state.hp)+' / '+state.max;$('#hpBar').style.width=inf?'100%':(Math.max(0,state.hp)/state.max*100)+'%'}
@@ -1184,7 +1258,7 @@ function smash(pt,px,py){
   state.breaking=true;state.stats.broken++;store.set('stats',state.stats);renderStats();const mode=cur.t.mat;
   breakSound(mode);shake=reduced?0:.14;flash=mode==='glass'||mode==='oven'||mode==='laptop'||mode==='metal'?.4:.15;if(mode==='metal'&&!reduced)shake=.24;const c=cur;
   setTimeout(()=>{c.shatter(pt);if(c.kind!=='word')scene.remove(c.group);
-    if(mode==='wood')dustCloud(px,py,40,['#c69560','#e2c39a','#8a5a2e']);if(mode==='glass')glints(px,py,40);if(mode==='metal'){sparks(px,py,80);glints(px,py,24);dustCloud(px,py,22,['#3a3a3a','#5a5a5a','#7a7a7a'])}if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
+    if(mode==='wood')dustCloud(px,py,40,['#c69560','#e2c39a','#8a5a2e']);if(mode==='glass')glints(px,py,40);if(mode==='metal'){sparks(px,py,80);glints(px,py,24);dustCloud(px,py,22,['#3a3a3a','#5a5a5a','#7a7a7a'])}if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='keyboard'){glints(px,py,24);if(state.cap==='bread')dustCloud(px,py,18,['#e8c38a','#c98a42','#f4dfb4']);else if(state.cap==='jelly')dropBlobs(pt,14);else dustCloud(px,py,10,['#d8d6d0','#b8b6b0'])}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
     popWord(px,py-24,BREAK_WORD[mode]||'SMASHED!',1.5,true)},reduced?0:70);
   setTimeout(()=>{if(cur===c){setTarget(state.id,true)}},mode==='paper'?2600:2000);
 }
@@ -1204,6 +1278,7 @@ document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;const tag=(e.target.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;if(tag==='button'&&(e.key===' '||e.key==='Enter'))return;
   if(!(e.key.length===1||e.key==='Enter'))return;if(stage.getBoundingClientRect().bottom<0||!cur)return;e.preventDefault();
   const objs=cur.hittables.filter(o=>o.parent&&!(o.userData&&o.userData.pop));if(!objs.length)return;
+  if(cur.kind==='keyboard'){const lbl=e.key===' '?'SPACE':e.key==='Enter'?'⏎':e.key.toUpperCase();const o=objs.find(o=>o.userData.key&&o.userData.key.userData.label===lbl);if(o){const p=new T.Vector3();o.getWorldPosition(p);p.y+=.02;const s=project(p);if(pickAt(s.x,s.y)){doHit(s.x,s.y,true);return}}}
   for(let i=0;i<20;i++){const o=pick(objs);const bx=new T.Box3().setFromObject(o);const p=new T.Vector3(rnd(bx.min.x,bx.max.x),rnd(bx.min.y,bx.max.y),bx.max.z);const s=project(p);const h=pickAt(s.x,s.y);if(h){doHit(s.x,s.y,true);return}}
 });
 
@@ -1219,6 +1294,8 @@ function renderCards(){
   list.forEach((t,i)=>setTimeout(()=>{try{const img=new Image();img.alt='';img.src=preview(t);const box=document.querySelectorAll('.card-prev')[i];box&&box.appendChild(img)}catch(e){}},60*i));
 }
 function chipSwatch(k){const c=mk(52,52),x=c.getContext('2d');if(k==='wood')x.drawImage(IMG.wood,300,100,120,120,0,0,52,52);else if(k==='metal'){const g=x.createLinearGradient(0,0,0,52);g.addColorStop(0,'#f2f3f5');g.addColorStop(.5,'#8d9097');g.addColorStop(1,'#e2e4e8');x.fillStyle=g;x.fillRect(0,0,52,52)}else if(k==='glass'){cover(x,IMG.sea,0,0,52,52,1,.7,.4);x.fillStyle='rgba(225,242,248,.45)';x.fillRect(0,0,52,52)}else if(k==='jelly'){const g=x.createRadialGradient(18,16,2,26,26,30);g.addColorStop(0,'#ffc2d4');g.addColorStop(.4,'#ff2b62');g.addColorStop(1,'#8a0026');x.fillStyle=g;x.fillRect(0,0,52,52)}else x.drawImage(paperCanvas(52,52),0,0);return c}
+$('#capChips').innerHTML=Object.keys(CAPS).map(k=>`<label class="chip"><input type="radio" name="cap" value="${k}"${state.cap===k?' checked':''}><span>${CAPS[k].name}</span></label>`).join('');
+document.querySelectorAll('input[name=cap]').forEach(r=>r.addEventListener('change',()=>{r.blur();state.cap=r.value;store.set('cap',state.cap);if(cur&&cur.kind==='keyboard'){setTarget('keyboard',true);ensureAudio();keyThock(state.cap,1)}const c=document.querySelector('.card[data-id=keyboard]');if(c&&typeof refreshPreview==='function')refreshPreview('keyboard')}));
 $('#chips').innerHTML=TEX.map(k=>`<label class="chip"><input type="radio" name="tex" id="tex-${k}" value="${k}"${state.custom.tex===k?' checked':''}><span><i data-k="${k}"></i>${MAT[k].name}</span></label>`).join('');
 document.querySelectorAll('.chip i').forEach(i=>i.replaceWith(chipSwatch(i.dataset.k)));
 $('#wordInput').value=state.custom.text;
@@ -1233,7 +1310,7 @@ $('#wordsForm').addEventListener('submit',e=>{e.preventDefault();popWords=$('#po
   $('#popSaved').textContent=popWords.length?popWords.length+'개 저장했어요. 두드려 보세요!':'비어 있어서 기본 소리말을 써요.';if(popWords.length)popWord(SW/2,SH*.45,pick(popWords),1.3,true)});
 $('#popReset').addEventListener('click',()=>{popWords=[];store.set('popWords',popWords);$('#popInput').value='';$('#popSaved').textContent='기본 소리말로 되돌렸어요.'});
 /* sound + clock + decor */
-const muteBtn=$('#muteBtn'),vol=$('#vol');
+const muteBtn=$('#muteBtn'),vol=$('#vol'),sizeIn=$('#size');state.size=+(store.get('size')||0)||0;sizeIn.value=state.size;sizeIn.addEventListener('input',()=>{state.size=+sizeIn.value;store.set('size',state.size);if(cur)fitCam()});
 function renderSnd(){muteBtn.setAttribute('aria-pressed',String(state.muted));muteBtn.textContent=state.muted?'MUTED':'SOUND ON';vol.value=state.vol}
 muteBtn.addEventListener('click',()=>{state.muted=!state.muted;store.set('muted',state.muted);ensureAudio();applyVol();renderSnd()});
 vol.addEventListener('input',()=>{state.vol=+vol.value;store.set('vol',state.vol);if(state.muted&&state.vol>0){state.muted=false;store.set('muted',false)}ensureAudio();applyVol();renderSnd()});
