@@ -550,7 +550,7 @@ const TARGETS={
   moktak:{id:'moktak',kind:'moktak',mat:'moktak',name:'목탁',tag:'TEMPLE',hp:Infinity,desc:'똑, 똑. 한 번 두드릴 때마다 번뇌가 하나씩 줄어요. 아무리 쳐도 깨지지 않아요.',spec:'재질 옻칠한 살구나무 · 방석 포함 · 소리 똑'},
   oven :{id:'oven',kind:'oven',mat:'oven',name:'제빵 오븐',tag:'STEEL',hp:30,desc:'빵이 노릇노릇 구워지는 3단 오븐. 창마다 금이 가다가 유리, 문짝, 빵까지 전부 날아가요.',spec:'재질 스테인리스 + 강화유리 · 3단 · 소리 쾅'},
   laptop:{id:'laptop',kind:'laptop',mat:'laptop',name:'디자이너 노트북',tag:'ALUMINUM',hp:20,desc:'렌더링 99%에서 멈춘 포스터_최종_final.psd. 화면이 깨지고 지지직거리다가 키캡이 우수수 쏟아져요.',spec:'재질 알루미늄 + 액정 · 13인치 · 소리 퍽'},
-  keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'조약돌 키보드',tag:'PEBBLE',hp:20,desc:'도각도각 차분한 기계식 무선 키보드. 두드리다 보면 마지막엔 키캡이 와르르 흩어져요. 키캡은 KEYCAP에서 바꿀 수 있어요.',spec:'무선 · 키캡 5종 · 소리 도각'},
+  keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'조약돌 키보드',tag:'PEBBLE',hp:Infinity,desc:'도각도각 기계식 무선 키보드. 아무리 두드려도 멀쩡해요. 키캡은 KEYCAP에서 바꿀 수 있어요.',spec:'무선 · 키캡 5종 · 소리 도각'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'회사 전화기',tag:'PLASTIC',hp:18,desc:'부재중 37통. 수화기가 들썩이고 버튼이 눌리다가, 결국 산산조각 나요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
@@ -1033,8 +1033,8 @@ function buildLaptop(){
     }});
 }
 /* ---- 조약돌 키보드 ---- */
-const CAPS={basic:{name:'기본',en:'BASIC'},jelly:{name:'젤리',en:'JELLY'},ceramic:{name:'도기',en:'CERAMIC'},bread:{name:'빵',en:'BREAD'},clear:{name:'투명',en:'CLEAR'}};
-const CAP_WORDS={basic:['도각','도각도각','타닥','Ctrl+S','엔터!'],bread:['폭','말랑','갓 구운 키','폭신'],clear:['탁','톡','투명!','타닥'],ceramic:['딱','똑','탁','바둑 한 수'],jelly:['뽀용','말캉','젤리!','몽글']};
+const CAPS={basic:{name:'기본',en:'BASIC'},jelly:{name:'젤리',en:'JELLY'},ceramic:{name:'도기',en:'CERAMIC'},bread:{name:'빵',en:'BREAD'},clear:{name:'투명',en:'CLEAR'},moss:{name:'이끼',en:'MOSS'}};
+const CAP_WORDS={basic:['도각','도각도각','타닥','Ctrl+S','엔터!'],bread:['폭','말랑','갓 구운 키','폭신'],clear:['탁','톡','투명!','타닥'],ceramic:['딱','똑','탁','바둑 한 수'],jelly:['뽀록','톡','젤리!','몽글'],moss:['탁','사각','TOUCH GRASS','폭신']};
 const capWord=c=>popWords.length?pick(popWords):pick(CAP_WORDS[c]);
 const KB_ROWS=[
  [['ESC',1,'o'],['1',1],['2',1],['3',1],['4',1],['5',1],['6',1],['7',1],['8',1],['9',1],['0',1],['-',1],['=',1],['BACK',2,'m'],['DEL',1,'o']],
@@ -1047,6 +1047,7 @@ function crackleCanvas(){const S=256,c=mk(S,S),x=c.getContext('2d');const g=x.cr
   for(let i=0;i<46;i++){let px=rnd(0,S),py=rnd(0,S),a=rnd(0,6.283);x.strokeStyle=`rgba(62,88,104,${rnd(.35,.7)})`;x.lineWidth=rnd(.5,1.3);x.beginPath();x.moveTo(px,py);const n=4+Math.floor(Math.random()*6);for(let k=0;k<n;k++){a+=rnd(-.9,.9);px+=Math.cos(a)*rnd(10,30);py+=Math.sin(a)*rnd(10,30);x.lineTo(px,py)}x.stroke()}
   for(let i=0;i<90;i++){x.fillStyle=`rgba(255,255,255,${rnd(.5,.95)})`;x.fillRect(rnd(0,S),rnd(0,S),rnd(.8,2),rnd(.8,2))}return c}
 let CRACKLE=null;
+function stoneCanvas(base,amt,W=256,H=256){const c=mk(W,H),x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,W,H);for(let i=0;i<W*H/60;i++){x.fillStyle=`rgba(${Math.random()<.5?'255,255,255':'0,0,0'},${Math.random()*.07})`;const r=Math.random()*2.2+.4;x.fillRect(Math.random()*W,Math.random()*H,r,r)}grain(c,amt);return c}
 function kbLegend(theme,lab,wu,kind,idx,col){const H=128,W=Math.round(128*wu),c=mk(W,H),x=c.getContext('2d');const big=lab.length===1;const disp=lab==='SPACE'?(theme==='basic'?'"THIS IS QUITOPIA"':theme==='bread'?'':''):lab==='⏎'&&theme==='basic'?'"GO HOME"':lab;
   const F=(w,s,f='Unbounded,"IBM Plex Sans KR",Arial,sans-serif')=>x.font=`${w} ${s}px ${f}`;x.textAlign='center';x.textBaseline='middle';
   if(theme==='basic'){const bg=kind==='o'?'#f05a1e':kind==='s'?'#c6d6cb':'#f3f2ee';x.fillStyle=bg;x.fillRect(0,0,W,H);const sh=x.createLinearGradient(0,0,0,H);sh.addColorStop(0,'rgba(255,255,255,.35)');sh.addColorStop(1,'rgba(0,0,0,.06)');x.fillStyle=sh;x.fillRect(0,0,W,H);
@@ -1063,40 +1064,63 @@ function kbLegend(theme,lab,wu,kind,idx,col){const H=128,W=Math.round(128*wu),c=
       const ey=H*.4,ex=W*.6;x.strokeStyle='#4a2810';x.lineWidth=3.4;x.lineCap='round';const kind2=(idx[0]+idx[1])%3;
       if(kind2===0){x.beginPath();x.arc(ex-13,ey,6,Math.PI*1.1,Math.PI*1.9);x.stroke();x.beginPath();x.arc(ex+13,ey,6,Math.PI*1.1,Math.PI*1.9);x.stroke()}else{x.fillStyle='#3a200c';x.beginPath();x.arc(ex-12,ey,4,0,6.283);x.arc(ex+12,ey,4,0,6.283);x.fill()}
       x.beginPath();x.arc(ex,ey+7,4.5,.2,Math.PI-.2);x.stroke();x.fillStyle='rgba(255,120,130,.55)';x.beginPath();x.ellipse(ex-24,ey+11,7,4,0,0,6.283);x.ellipse(ex+24,ey+11,7,4,0,0,6.283);x.fill()}}
+  else if(theme==='moss'){x.drawImage(stoneCanvas('#3a3f43',16,W,H),0,0);const sh=x.createLinearGradient(0,0,0,H);sh.addColorStop(0,'rgba(255,255,255,.08)');sh.addColorStop(1,'rgba(0,0,0,.12)');x.fillStyle=sh;x.fillRect(0,0,W,H);x.fillStyle='rgba(236,238,236,.92)';F(500,big?44:18,'"IBM Plex Sans KR",Arial,sans-serif');x.fillText(lab==='SPACE'?'':lab,W*.42,H*.5)}
   else{x.clearRect(0,0,W,H)}
   return c}
 function kbCapGeo(w,h,d,theme){const r=theme==='bread'?Math.min(h*.5,d*.32):theme==='jelly'?.018:.012;const g=roundedBox(w,h,d,r,theme==='bread'?6:3);const p=g.attributes.position;const tp=theme==='bread'?.92:theme==='jelly'?.86:.82;
   for(let i=0;i<p.count;i++){const y=p.getY(i);const t=(y/h+.5);const s=1-(1-tp)*Math.pow(t,1.2);let X=p.getX(i)*s,Z=p.getZ(i)*s,Y=y;if(theme==='bread'&&y>0){const nx=X/(w/2),nz=Z/(d/2);Y+=h*.35*Math.max(0,1-nx*nx)*Math.max(0,1-nz*nz)}if(y>0&&theme!=='bread'){Z-=h*.06}p.setXYZ(i,X,Y,Z)}g.computeVertexNormals();g.translate(0,h/2,0);return g}
-function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;
-  /* 기본: 디가 보내준 키보드 녹음 분석(2ms 안에 꺼지는 1.3~2.2kHz 클릭 + 110~230Hz 몸통 + 58ms 뒤 업스트로크) */
-  if(theme==='bread'){v*=1.15;const up=rnd(.075,.085);
-    noise('lowpass',340,.9,.08,1.3*v,t,.005);tone('sine',105,62,.1,.28*v,t,.005);noise('bandpass',800,1,.012,.8*v,t,.002);
-    noise('bandpass',3000,1.2,.004,.35*v,t+.006,.0005);noise('bandpass',2600,1.2,.004,.3*v,t+.017,.0005);noise('bandpass',3300,1.2,.003,.25*v,t+.029,.0005);
-    noise('bandpass',2200,.8,.05,.16*v,t+.01,.012);noise('lowpass',420,.8,.04,.4*v,t+up,.008)} /* 폭 + 겉껍질 바스락 */
-  else if(theme==='jelly'){v*=1.3;const up=rnd(.065,.075);
-    noise('bandpass',1100,1.2,.008,1.8*v,t,.0008);noise('bandpass',2600,4,.01,.5*v,t+.004,.001);tone('sine',480,230,.1,.28*v,t,.003);noise('lowpass',550,1.0,.04,.5*v,t,.002);
-    noise('bandpass',1900,3,.012,.35*v,t+.012,.002);tone('sine',240,360,.07,.14*v,t+up,.005);noise('bandpass',1200,1,.006,.6*v,t+up,.001)} /* 뽀용 */
-  else if(theme==='clear'){v*=0.5;const up=rnd(.055,.065);
-    noise('bandpass',2000,1.3,.006,3.4*v,t,.0004);noise('bandpass',3600,3,.006,.8*v,t,.0003);noise('bandpass',650,6,.035,.8*v,t+.001,.001);tone('sine',1620,1590,.05,.05*v,t);
-    tone('triangle',330,260,.04,.07*v,t,.001);noise('bandpass',2300,1.5,.005,1.0*v,t+up,.0004);tone('sine',1700,1680,.025,.025*v,t+up)} /* 톡: 속이 빈 아크릴 */
-  else if(theme==='ceramic'){v*=0.75;const up=rnd(0,0);
-    noise('bandpass',2150,5,.012,3.2*v,t,.0003);tone('sine',2080,2020,.016,.12*v,t,.0004);tone('sine',3150,3100,.01,.05*v,t,.0004);
-    noise('bandpass',750,2,.01,.9*v,t,.0004);noise('highpass',5000,.7,.002,.25*v,t,.0002)} /* 아이폰 타건음처럼 짧고 맑은 '톡' */
-  else{v*=0.45;const up=rnd(.055,.062);
-    noise('bandpass',2200,1.4,.006,3.6*v,t,.0004);noise('bandpass',1300,1.6,.007,3.6*v,t,.0004);noise('lowpass',220,.8,.008,2.2*v,t,.0005);
-    noise('bandpass',1300,1.2,.06,.3*v,t+.004,.002);
-    tone('sine',230,180,.075,.06*v,t,.001);tone('sine',110,92,.05,.09*v,t,.001);tone('sine',1380,1360,.045,.04*v,t);
-    noise('bandpass',1800,1.2,.006,1.1*v,t+up,.0005);tone('sine',240,190,.03,.025*v,t+up)}}
+/* 모든 키캡 공통 바탕: 디가 보내준 기본 키보드 녹음 분석
+   (2ms 안에 꺼지는 1.3~2.2kHz 클릭 + 110~230Hz 몸통 + 약 58ms 뒤 키가 올라오는 클릭). c=클릭 세기, b=몸통 세기 */
+function keyCore(t,v,c=1,b=1){const up=rnd(.054,.062);
+  noise('bandpass',rnd(2100,2300),1.4,.006,3.6*v*c,t,.0004);noise('bandpass',rnd(1250,1350),1.6,.007,3.6*v*c,t,.0004);noise('lowpass',220,.8,.008,2.2*v*b,t,.0005);
+  noise('bandpass',1300,1.2,.06,.3*v,t+.004,.002);
+  tone('sine',rnd(220,240),180,.075,.06*v*b,t,.001);tone('sine',110,92,.05,.09*v*b,t,.001);tone('sine',1380,1360,.045,.04*v,t);
+  noise('bandpass',1800,1.2,.006,1.1*v*c,t+up,.0005);tone('sine',240,190,.03,.025*v*b,t+up)}
+function keyThock(theme,v=1){if(!on())return;const t=ac.currentTime+.003;v*=.45;
+  if(theme==='jelly'){/* 맑고 촉촉한 '뽀록' */keyCore(t,v*.85,.75,.55);tone('sine',rnd(1200,1300),rnd(1600,1700),.035,.2*v,t+.003,.002);noise('bandpass',3000,7,.018,.9*v,t+.004,.001);tone('sine',rnd(1450,1550),1900,.025,.09*v,t+.06,.002)}
+  else if(theme==='ceramic'){/* 아이폰 타건음 같은 짧고 맑은 '톡' */keyCore(t,v*.6,.5,.5);noise('bandpass',2150,5,.012,2.4*v,t,.0003);tone('sine',rnd(2040,2120),2020,.016,.27*v,t,.0004);tone('sine',3150,3100,.01,.11*v,t,.0004);noise('bandpass',750,2,.01,.6*v,t,.0004)}
+  else if(theme==='bread'){/* 말랑하게 눌리고 겉껍질이 바스락 */keyCore(t,v*.75,.4,.9);noise('lowpass',340,.9,.07,1.1*v,t,.005);[.006,.017,.029].forEach((d,i)=>noise('bandpass',rnd(2600,3300),1.2,.004,(.8-i*.15)*v,t+d,.0005))}
+  else if(theme==='clear'){/* 속이 빈 아크릴의 맑은 '톡' */keyCore(t,v*.9,1,.7);noise('bandpass',3600,3,.006,1.4*v,t,.0003);noise('bandpass',650,6,.035,1.1*v,t+.001,.001);tone('sine',rnd(1600,1650),1590,.05,.1*v,t)}
+  else if(theme==='moss'){/* 돌 키캡 '탁' + 이끼 사각 */keyCore(t,v*.85,.8,.9);noise('bandpass',rnd(2600,2800),4,.008,1.4*v,t,.0004);noise('highpass',2800,.7,.05,.12*v,t+.003,.006)}
+  else keyCore(t,v)}
+function mossCanvas(){const S=256,c=mk(S,S),x=c.getContext('2d');x.fillStyle='#4a5a1e';x.fillRect(0,0,S,S);
+  for(let i=0;i<5200;i++){const px=Math.random()*S,py=Math.random()*S,l=Math.random()*5+1.5,a=Math.random()*6.283;const g=Math.random();x.strokeStyle=g<.45?`rgba(${120+Math.random()*50|0},${150+Math.random()*40|0},${40+Math.random()*30|0},.85)`:g<.8?`rgba(${80+Math.random()*30|0},${115+Math.random()*30|0},${30+Math.random()*20|0},.8)`:`rgba(${30+Math.random()*20|0},${50+Math.random()*20|0},${15},.8)`;x.lineWidth=Math.random()*1.2+.5;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}return c}
+let MOSSTEX=null;
+function addMoss(g,KW,KD,TH,KH,u){let seed=7;const R=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};const rr=(a,b)=>a+(b-a)*R();
+  if(!MOSSTEX){MOSSTEX=tex(mossCanvas());MOSSTEX.wrapS=MOSSTEX.wrapT=T.RepeatWrapping}
+  const patches=[[-.95,.25,.55],[-.55,.05,.4],[-.2,.3,.35],[.15,-.05,.3],[.55,.25,.38],[.95,-.2,.3],[-.75,-.3,.3],[.35,.32,.28],[1.1,.3,.25]];
+  const dens=(x,z)=>{let m=0;patches.forEach(([px,pz,r])=>{const d=Math.hypot(x-px,(z-pz)*1.3)/r;m=Math.max(m,1-d)});return m};
+  const geo=new T.IcosahedronGeometry(1,2);const pp=geo.attributes.position;for(let i=0;i<pp.count;i++){const k=1+(Math.sin(pp.getX(i)*9.1)*Math.cos(pp.getZ(i)*7.3)+Math.sin(pp.getY(i)*11.7))*.12;pp.setXYZ(i,pp.getX(i)*k,pp.getY(i)*k,pp.getZ(i)*k)}geo.computeVertexNormals();
+  const mat=new T.MeshStandardMaterial({map:MOSSTEX,bumpMap:MOSSTEX,bumpScale:.005,roughness:1,envMapIntensity:.3});
+  const list=[];for(let i=0;i<9000&&list.length<1700;i++){const x=rr(-KW/2-.02,KW/2+.02),z=rr(-KD/2-.02,KD/2+.02);const d=dens(x,z);if(R()>d*1.9)continue;
+    const onTop=d>.45&&R()<.55;const r=rr(.01,.026)*(.7+d*.6);list.push([x,onTop?TH+KH*rr(.75,1.05):TH+rr(.01,KH*.75),z,r,R()])}
+  const im=new T.InstancedMesh(geo,mat,list.length);const o=new T.Object3D(),col=new T.Color();
+  list.forEach(([x,y,z,r,q],i)=>{o.position.set(x,y,z);o.rotation.set(rr(0,6),rr(0,6),rr(0,6));o.scale.set(r*rr(1,1.6),r*rr(.55,.9),r*rr(1,1.6));o.updateMatrix();im.setMatrixAt(i,o.matrix);col.setHSL(.17+q*.06,.45+q*.2,.38+q*.16);im.setColorAt(i,col)});
+  g.add(im);
+  // flowers & sprigs
+  const petal=new T.SphereGeometry(1,10,6),ctr=new T.SphereGeometry(1,10,8);
+  const wM=new T.MeshStandardMaterial({color:C(0xf7f7f2),roughness:.6}),pM=new T.MeshStandardMaterial({color:C(0xd9529a),roughness:.55}),yM=new T.MeshStandardMaterial({color:C(0xf2c518),roughness:.7}),lM=new T.MeshStandardMaterial({color:C(0x5f8f3a),roughness:.7}),sM=new T.MeshStandardMaterial({color:C(0x6f9a46),roughness:.8});
+  const fl=[];const pick=()=>{for(let i=0;i<80;i++){const x=rr(-KW/2,KW/2),z=rr(-KD/2,KD/2);if(dens(x,z)>.25)return[x,z]}return[0,0]};
+  for(let i=0;i<6;i++)fl.push(['d',...pick()]);for(let i=0;i<11;i++)fl.push(['p',...pick()]);for(let i=0;i<16;i++)fl.push(['s',...pick()]);
+  const nW=6*14,nP=11*5,nC=17,nL=16*5;const W_=new T.InstancedMesh(petal,wM,nW),P_=new T.InstancedMesh(petal,pM,nP),Y_=new T.InstancedMesh(ctr,yM,nC),L_=new T.InstancedMesh(petal,lM,nL+11*2);
+  let iw=0,ip=0,ic=0,il=0;const par=new T.Object3D(),ch=new T.Object3D();par.add(ch);
+  const put=(m,idx,px,py,pz,rx,ry,rz,sx,sy,sz,lx=0,ly=0,lz=0)=>{par.position.set(px,py,pz);par.rotation.set(rx,ry,rz,'YXZ');ch.position.set(lx,ly,lz);ch.rotation.set(0,0,0);ch.scale.set(sx,sy,sz);par.updateMatrixWorld(true);m.setMatrixAt(idx,ch.matrixWorld)};
+  fl.forEach(([k,x,z])=>{const y=TH+KH*rr(.9,1.25),tx=rr(-.5,.5),tz=rr(-.5,.5),ry=rr(0,6.28);
+    if(k==='d'){const R0=rr(.045,.06);for(let j=0;j<14;j++){const a=j/14*6.283;put(W_,iw++,x,y,z,tx,ry+a,tz,R0*.55,R0*.07,R0*.17,R0*.55,0,0)}put(Y_,ic++,x,y+.002,z,tx,ry,tz,R0*.3,R0*.17,R0*.3)}
+    else if(k==='p'){const R0=rr(.022,.03);for(let j=0;j<5;j++){const a=j/5*6.283;put(P_,ip++,x,y,z,tx,ry+a,tz,R0*.55,R0*.1,R0*.36,R0*.5,0,0)}put(Y_,ic++,x,y+.002,z,tx,ry,tz,R0*.22,R0*.14,R0*.22);for(let j=0;j<2;j++)put(L_,il++,x,y-.004,z,tx,ry+j*3.1+.6,tz,.016,.003,.007,.016,0,0)}
+    else{for(let j=0;j<5;j++){const a=ry+j*1.3;put(L_,il++,x+Math.cos(a)*.012*j*.4,y-.01+j*.006,z+Math.sin(a)*.012*j*.4,rr(-.4,.4),a,rr(-.3,.3),.013,.0025,.008,.012,0,0)}}});
+  [W_,P_,Y_,L_].forEach(m=>{m.count=m===W_?iw:m===P_?ip:m===Y_?ic:il;m.instanceMatrix.needsUpdate=true;g.add(m)})}
 function buildKeyboard(){
   const theme=CAPS[state.cap]?state.cap:'basic';
   const g=new T.Group();const hit=[];const u=.15,gap=.011,KW=16*u,KD=5*u,M=.075,CW=KW+M*2,CD=KD+M*2,TH=.07;
-  const KH={basic:.072,jelly:.082,ceramic:.07,bread:.09,clear:.078}[theme];
+  const KH={basic:.072,jelly:.082,ceramic:.07,bread:.09,clear:.078,moss:.076}[theme];
   // case
   let caseMat,plateMat;
   if(theme==='basic'){caseMat=new T.MeshPhysicalMaterial({color:C(0x8fb09c),transparent:true,depthWrite:false,roughness:.18,clearcoat:1,clearcoatRoughness:.1,envMapIntensity:1});clearPlastic(caseMat,.34,.5,.35);plateMat=new T.MeshStandardMaterial({color:C(0xdfe6e0),roughness:.6})}
   else if(theme==='jelly'){caseMat=new T.MeshStandardMaterial({color:C(0x7f9a6c),roughness:.62,metalness:.05,envMapIntensity:.6});plateMat=new T.MeshStandardMaterial({color:C(0x6f8a5e),roughness:.7})}
   else if(theme==='bread'){caseMat=new T.MeshStandardMaterial({color:C(0xe9d6ac),roughness:.65,envMapIntensity:.6});plateMat=new T.MeshStandardMaterial({color:C(0xd9c08e),roughness:.7})}
   else if(theme==='clear'){caseMat=new T.MeshPhysicalMaterial({color:C(0xa9cdf0),transparent:true,depthWrite:false,roughness:.04,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:1.1,sheen:C(0x3a3050)});clearPlastic(caseMat,.05,.55,.12,.8);plateMat=new T.MeshPhysicalMaterial({color:C(0x0e1620),transparent:true,opacity:.5,roughness:.1,clearcoat:1,envMapIntensity:.8})}
+  else if(theme==='moss'){const st=tex(stoneCanvas('#2a2f33',16));st.wrapS=st.wrapT=T.RepeatWrapping;caseMat=new T.MeshStandardMaterial({map:st,bumpMap:st,bumpScale:.002,roughness:.62,envMapIntensity:.55});plateMat=new T.MeshStandardMaterial({color:C(0x1b2023),roughness:.9})}
   else {caseMat=steelMat({color:0xf6f7f8,roughness:.6});plateMat=new T.MeshStandardMaterial({color:C(0xd5d9dc),roughness:.5,metalness:.3})}
   const tray=new T.Mesh(roundedBox(CW,TH,CD,.035,4),caseMat);tray.position.y=TH/2;tray.userData={part:'case'};g.add(tray);hit.push(tray);
   const rr=(w,h,r)=>{const sh=new T.Shape();sh.moveTo(-w/2+r,-h/2);sh.lineTo(w/2-r,-h/2);sh.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);sh.lineTo(w/2,h/2-r);sh.quadraticCurveTo(w/2,h/2,w/2-r,h/2);sh.lineTo(-w/2+r,h/2);sh.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);sh.lineTo(-w/2,-h/2+r);sh.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);return sh};
@@ -1108,12 +1132,14 @@ function buildKeyboard(){
     const bat=new T.Mesh(roundedBox(.5,.018,.16,.008,2),silver);bat.position.set(-.35,TH*.35,-.18);g.add(bat);
     [[.5,-.2],[.62,-.2],[.2,.15],[-.8,.1],[.85,.12]].forEach(([x,z],i)=>{const ch=new T.Mesh(new T.BoxGeometry(i<2?.05:.08,.008,i<2?.05:.06),i<2?gold:new T.MeshStandardMaterial({color:C(0x20262e),roughness:.4}));ch.position.set(x,TH*.5,z);g.add(ch)});
     const sw=new T.Mesh(new T.BoxGeometry(.04,.02,.02),gold);sw.position.set(CW/2-.09,TH*.5,-CD/2+.04);g.add(sw)}
+  if(theme==='moss')addMoss(g,KW,KD,TH,KH,u);
   if(theme==='ceramic'){const kn=new T.Mesh(new T.CylinderGeometry(.06,.06,.06,40),new T.MeshStandardMaterial({color:C(0x3a3d42),metalness:.8,roughness:.3}));kn.position.set(CW/2-.035,TH+.07,-CD/2+.035);g.add(kn)}
   // keys
   const keys=[];const side={};const sideMat=(kind,ri,ci)=>{
     if(theme==='basic'){const k=kind==='o'?'o':kind==='s'?'s':'w';return side[k]||(side[k]=new T.MeshPhysicalMaterial({color:C(k==='o'?0xe8551c:k==='s'?0xb9cbbf:0xe9e7e1),roughness:.55,clearcoat:.1,envMapIntensity:.7}))}
     if(theme==='jelly'){const pal=[0x1f6a2e,0x3f9a3c,0x7fd07a,0x6fd0c0,0xf08aa8,0xf6d36a,0xe9f2e4];const idx=Math.max(0,Math.min(pal.length-1,Math.floor((ci*1.0+(4-ri)*1.2)/3.1)));const c=pal[idx];const mm=new T.MeshPhysicalMaterial({color:C(c),transparent:true,opacity:.8,roughness:.1,clearcoat:1,clearcoatRoughness:.04,emissive:C(c),emissiveIntensity:.35,envMapIntensity:.8});mm.userData.hex=c;return mm}
     if(theme==='ceramic')return side.c||(side.c=new T.MeshPhysicalMaterial({map:tex(CRACKLE||(CRACKLE=crackleCanvas())),color:C(0xb4c6ce),roughness:.28,clearcoat:.5,clearcoatRoughness:.12,envMapIntensity:.45}));
+    if(theme==='moss')return side.m||(side.m=new T.MeshStandardMaterial({map:tex(stoneCanvas('#33383c',18)),color:C(0x8a9094),bumpMap:BUMP,bumpScale:.002,roughness:.72,envMapIntensity:.3}));
     if(theme==='bread'){const roll=kind==='m'||kind==='o'||kind==='s';return side[roll?'r':'b']||(side[roll?'r':'b']=new T.MeshStandardMaterial({color:C(roll?0xc07a36:0xf2e4c6),roughness:.75,bumpMap:BUMP,bumpScale:.003,envMapIntensity:.5}))}
     const m=new T.MeshPhysicalMaterial({color:C(0x7aaee2),transparent:true,depthWrite:false,roughness:.03,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:.9});clearPlastic(m,.07,.5,.14,.62);return side.x||(side.x=m)};
   const stemMat=new T.MeshStandardMaterial({color:C(0xcfe2f0),roughness:.4,transparent:true,opacity:.45,depthWrite:false});
@@ -1122,6 +1148,7 @@ function buildKeyboard(){
     const lc=kbLegend(theme,lab,wu,kind,[ri,ci],sm.userData&&sm.userData.hex);let top;
     if(theme==='jelly'){top=sm.clone();top.map=tex(lc);top.color=new T.Color(1,1,1);top.emissiveIntensity=.12}
     else if(theme==='clear'){top=sm}
+    else if(theme==='moss'){top=new T.MeshStandardMaterial({map:tex(lc),color:C(0x9aa0a4),roughness:.68,envMapIntensity:.3})}
     else if(theme==='ceramic'){top=new T.MeshPhysicalMaterial({map:tex(lc),color:C(0xbccdd4),roughness:.28,clearcoat:.5,clearcoatRoughness:.12,envMapIntensity:.45})}
     else top=new T.MeshPhysicalMaterial({map:tex(lc),roughness:theme==='bread'?.7:.5,clearcoat:theme==='bread'?.05:.15,clearcoatRoughness:.5,bumpMap:theme==='bread'?BUMP:null,bumpScale:.003,envMapIntensity:.6});
     const cap=new T.Mesh(geo,[sm,sm,top,sm,sm,sm]);cap.userData={part:'key'};
@@ -1268,7 +1295,7 @@ function landSound(mode){if(!on()||mode==='chip')return;const now=performance.no
 /* ================= stage control ================= */
 function stepSpring(sp,soft){const K=soft?.06:.22,D=soft?.9:.72;for(const k of ['x','y','r','sx','sy']){const vk='v'+k;sp[vk]=(sp[vk]-sp[k]*K)*D;sp[k]+=sp[vk]}}
 let flash=0,shake=0;
-function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.22-f0)*Math.max(0,Math.min(1,state.size||0));const d=o.radius/Math.tan(f/2*fill);
+function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*Math.max(0,Math.min(1,state.size||0));const d=o.radius/Math.tan(f/2*fill);
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
   if(cur){scene.remove(cur.group)}
