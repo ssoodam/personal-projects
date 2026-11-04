@@ -502,6 +502,11 @@ function makeEnv(r){const pm=new T.PMREMGenerator(r);const t=pm.fromScene(new T.
 const scene=new T.Scene();scene.environment=makeEnv(renderer);
 function addLights(s){const k=new T.DirectionalLight(0xffffff,1.1);k.position.set(-3,6,5);s.add(k);const r=new T.DirectionalLight(0xffffff,.9);r.position.set(3,4,-5);s.add(r);s.add(new T.AmbientLight(0xffffff,.12))}
 addLights(scene);
+/* 그림자: 바닥 접지 그림자 + 자기 그림자 */renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+const KEY=scene.children.find(o=>o.isDirectionalLight);KEY.castShadow=true;KEY.shadow.mapSize.set(2048,2048);Object.assign(KEY.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.5,far:20});KEY.shadow.bias=-.0004;KEY.shadow.normalBias=.02;KEY.shadow.radius=4;
+const shadowFloor=new T.Mesh(new T.PlaneGeometry(40,40),new T.ShadowMaterial({opacity:.3}));shadowFloor.rotation.x=-Math.PI/2;shadowFloor.receiveShadow=true;scene.add(shadowFloor);
+let SMUDGE=null;function smudgeTex(){const S=512,c=mk(S,S),x=c.getContext('2d');x.fillStyle='rgb(235,235,235)';x.fillRect(0,0,S,S);for(let i=0;i<70;i++){const r=Math.random()*60+15,px=Math.random()*S,py=Math.random()*S;const g=x.createRadialGradient(px,py,0,px,py,r);const v=200+Math.random()*30|0;g.addColorStop(0,`rgba(${v},${v},${v},.5)`);g.addColorStop(1,`rgba(${v},${v},${v},0)`);x.fillStyle=g;x.fillRect(px-r,py-r,r*2,r*2)}x.strokeStyle='rgba(255,255,255,.35)';for(let i=0;i<120;i++){x.lineWidth=Math.random()*.8+.2;x.beginPath();const px=Math.random()*S,py=Math.random()*S,a=Math.random()*6.28,l=Math.random()*40+5;x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}grain(c,10);const t=tex(c,false);t.wrapS=t.wrapT=T.RepeatWrapping;return t}
+function polish(root){if(!SMUDGE)SMUDGE=smudgeTex();root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];const solid=ms.every(m=>m&&!m.transparent&&!(m.isShadowMaterial));o.castShadow=solid&&!o.isSprite;o.receiveShadow=solid;ms.forEach(m=>{if(m&&(m.isMeshStandardMaterial)&&!m.roughnessMap&&!m.transparent&&!m.userData.noSmudge){m.roughnessMap=SMUDGE;m.needsUpdate=true}})})}
 const cam=new T.PerspectiveCamera(30,1,.05,100);
 const debris=new T.Group();scene.add(debris);
 const ANISO=renderer.capabilities.getMaxAnisotropy();
@@ -581,7 +586,7 @@ function prism(outer,holes,depth,mat,bevel,uvf){
 }
 function place(mesh,src,Mx,c){const W=src.matrixWorld.clone();if(Mx)W.multiply(Mx);W.multiply(_m4.makeTranslation(c[0],c[1],0));W.decompose(mesh.position,mesh.quaternion,mesh.scale)}
 const pieces=[];
-function addPiece(mesh,o){debris.add(mesh);const p=Object.assign({mesh,v:new T.Vector3(),w:new T.Vector3(),g:13,drag:1,rest:.3,fric:.7,life:rnd(3,4.2),age:0,delay:0,r:.06,flutter:false,ph:rnd(0,6.28),squish:false,sq:0,mode:'wood',base:mesh.scale.clone()},o);pieces.push(p);return p}
+function addPiece(mesh,o){debris.add(mesh);mesh.traverse(m=>{if(m.isMesh&&!(m.material&&m.material.transparent))m.castShadow=true});const p=Object.assign({mesh,v:new T.Vector3(),w:new T.Vector3(),g:13,drag:1,rest:.3,fric:.7,life:rnd(3,4.2),age:0,delay:0,r:.06,flutter:false,ph:rnd(0,6.28),squish:false,sq:0,mode:'wood',base:mesh.scale.clone()},o);pieces.push(p);return p}
 function clearPieces(){pieces.forEach(p=>{debris.remove(p.mesh);if(!p.keepGeo)p.mesh.geometry.dispose()});pieces.length=0}
 const _q=new T.Quaternion(),_e=new T.Euler(),_v=new T.Vector3();
 function updatePieces(dt){
@@ -596,7 +601,7 @@ function updatePieces(dt){
     if(p.sq>.01){p.sq*=Math.pow(.88,dt*60);m.scale.set(p.base.x*s*(1+p.sq*.35),p.base.y*s*(1-p.sq*.45),p.base.z*s*(1+p.sq*.35))}else m.scale.copy(p.base).multiplyScalar(s);
   }
 }
-function boxPiece(w,h,d,mat,worldPos,quat){const m=new T.Mesh(new T.BoxGeometry(w,h,d),mat);m.position.copy(worldPos);if(quat)m.quaternion.copy(quat);return m}
+function boxPiece(w,h,d,mat,worldPos,quat){const m=new T.Mesh(bevBox(w,h,d),mat);m.position.copy(worldPos);if(quat)m.quaternion.copy(quat);return m}
 
 /* ================= builders ================= */
 function spring(){return {x:0,y:0,r:0,sx:0,sy:0,vx:0,vy:0,vr:0,vsx:0,vsy:0}}
@@ -604,11 +609,11 @@ function base(o){return Object.assign({sp:spring(),hits:[],floor:0,fill:.78,fill
 
 function buildDesk(){
   const g=new T.Group();const hit=[];const L=3.0,Wd=1.6,th=.11,topY=.86,n=5,pw=Wd/n;
-  for(let i=0;i<n;i++){const cv=plankCanvas();const mat=M.wood(cv);const m=new T.Mesh(new T.BoxGeometry(L,th,pw-.01),mat);m.position.set(0,topY,-Wd/2+pw*(i+.5));m.userData={part:'plank',cv,mat,L,w:pw-.01,th};g.add(m);hit.push(m)}
+  for(let i=0;i<n;i++){const cv=plankCanvas();const mat=M.wood(cv);const m=new T.Mesh(bevBox(L,th,pw-.01),mat);m.position.set(0,topY,-Wd/2+pw*(i+.5));m.userData={part:'plank',cv,mat,L,w:pw-.01,th};g.add(m);hit.push(m)}
   const legMat=M.wood(legCanvas()),apMat=M.wood(plankCanvas());const lh=topY-th/2;
-  for(const sx of [-1,1])for(const sz of [-1,1]){const m=new T.Mesh(new T.BoxGeometry(.12,lh,.12),legMat);m.position.set(sx*(L/2-.16),lh/2,sz*(Wd/2-.16));m.userData={part:'leg',h:lh};g.add(m);hit.push(m)}
-  for(const sz of [-1,1]){const m=new T.Mesh(new T.BoxGeometry(L-.32,.12,.04),apMat);m.position.set(0,lh-.06,sz*(Wd/2-.16));m.userData={part:'apron',len:L-.32,axis:'x'};g.add(m);hit.push(m)}
-  for(const sx of [-1,1]){const m=new T.Mesh(new T.BoxGeometry(.04,.12,Wd-.32),apMat);m.position.set(sx*(L/2-.16),lh-.06,0);m.userData={part:'apron',len:Wd-.32,axis:'z'};g.add(m);hit.push(m)}
+  for(const sx of [-1,1])for(const sz of [-1,1]){const m=new T.Mesh(bevBox(.12,lh,.12),legMat);m.position.set(sx*(L/2-.16),lh/2,sz*(Wd/2-.16));m.userData={part:'leg',h:lh};g.add(m);hit.push(m)}
+  for(const sz of [-1,1]){const m=new T.Mesh(bevBox(L-.32,.12,.04),apMat);m.position.set(0,lh-.06,sz*(Wd/2-.16));m.userData={part:'apron',len:L-.32,axis:'x'};g.add(m);hit.push(m)}
+  for(const sx of [-1,1]){const m=new T.Mesh(bevBox(.04,.12,Wd-.32),apMat);m.position.set(sx*(L/2-.16),lh-.06,0);m.userData={part:'apron',len:Wd-.32,axis:'z'};g.add(m);hit.push(m)}
   return base({kind:'desk',group:g,hittables:hit,center:new T.Vector3(0,.45,0),radius:1.75,camDir:new T.Vector3(0,.62,1),floor:0,fill:.8,
     onHit(h,k){const m=h.object;if(m.userData.part==='plank'&&h.uv){const cv=m.userData.cv;woodDamage(cv,h.uv.x*cv.width,(1-h.uv.y)*cv.height,cv.width*.35);m.userData.mat.map.needsUpdate=true;m.userData.hits=(m.userData.hits||[]).concat([m.worldToLocal(h.point.clone())])}
       chipBoxes(h.point,m.material,6,.035);this.sp.vy-=.012*k;this.sp.vsy-=.02*k;this.sp.vsx+=.012*k},
@@ -628,9 +633,9 @@ function buildDesk(){
 function buildWindow(){
   const g=new T.Group();const OW=1.5,OH=1.9,bar=.13,dep=.14,ow=OW-bar*2,oh=OH-bar*2;const hit=[];
   const bars=[[OW,bar,0,OH/2-bar/2],[OW,bar,0,-OH/2+bar/2],[bar,oh,-OW/2+bar/2,0],[bar,oh,OW/2-bar/2,0]];
-  bars.forEach(b=>{const m=new T.Mesh(new T.BoxGeometry(b[0],b[1],dep),M.paint);m.position.set(b[2],b[3],0);m.userData={part:'bar',w:b[0],h:b[1]};g.add(m);hit.push(m)});
-  const mul=new T.Mesh(new T.BoxGeometry(.05,oh,.05),M.paint);mul.userData={part:'bar',w:.05,h:oh};g.add(mul);
-  const sill=new T.Mesh(new T.BoxGeometry(OW+.26,.07,.32),M.paint);sill.position.set(0,-OH/2-.035,.07);sill.userData={part:'sill'};g.add(sill);
+  bars.forEach(b=>{const m=new T.Mesh(bevBox(b[0],b[1],dep),M.paint);m.position.set(b[2],b[3],0);m.userData={part:'bar',w:b[0],h:b[1]};g.add(m);hit.push(m)});
+  const mul=new T.Mesh(bevBox(.05,oh,.05),M.paint);mul.userData={part:'bar',w:.05,h:oh};g.add(mul);
+  const sill=new T.Mesh(bevBox(OW+.26,.07,.32),M.paint);sill.position.set(0,-OH/2-.035,.07);sill.userData={part:'sill'};g.add(sill);
   const seaT=tex(IMG.city);
   const view=new T.Mesh(new T.PlaneGeometry(ow,oh),new T.MeshBasicMaterial({map:seaT,toneMapped:false,transparent:true}));view.position.z=-.05;view.userData={part:'view'};g.add(view);
   const crack=mk(1024,Math.round(1024*oh/ow));const crackT=tex(crack);
@@ -677,6 +682,8 @@ function buildPaper(){
 }
 function roundedBox(w,h,d,r,seg){r=Math.min(r,w/2,h/2,d/2)*.999;const geo=new T.BoxGeometry(w,h,d,seg,seg,seg);const p=geo.attributes.position;const hw=w/2-r,hh=h/2-r,hd=d/2-r;const v=new T.Vector3(),c=new T.Vector3();
   for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(clamp(v.x,-hw,hw),clamp(v.y,-hh,hh),clamp(v.z,-hd,hd));v.sub(c);if(v.lengthSq()>0)v.setLength(r);v.add(c);p.setXYZ(i,v.x,v.y,v.z)}geo.computeVertexNormals();return geo}
+/* 하드서피스 베벨: 각진 모서리를 살짝 깎아 하이라이트가 맺히게 (모델링 스킬: bevel/supporting edges) */
+function bevBox(w,h,d){const m=Math.min(w,h,d);return m<.004?new T.BoxGeometry(w,h,d):roundedBox(w,h,d,Math.min(.01,m*.22),2)}
 function buildJelly(){
   const g=new T.Group();const S=1.25;const geo=roundedBox(S,S*.92,S,.22,22);geo.translate(0,S*.46,0);const mat=M.jelly();
   const m=new T.Mesh(geo,mat);g.add(m);const core=new T.Mesh(roundedBox(S*.62,S*.55,S*.62,.18,8),M.jellyCore);core.position.y=S*.46;g.add(core);
@@ -873,7 +880,7 @@ function breadGeo(){if(BREAD)return BREAD;const P=[],Nn=[],Cc=[],I=[];let off=0;
       const top=Math.max(0,y);tmp.copy(gold).lerp(brown,Math.pow(top,1.4)*.85);const crease=Math.max(0,(e-.7)/.3);tmp.lerp(cream,Math.pow(crease,1.5)*.85);if(y<-.2)tmp.lerp(cream,.25);
       let NX=nx/ax,NY=ny/(ry*(y<0?.55:1)),NZ=nz/(ry*1.25);const l=Math.hypot(NX,NY,NZ);NX/=l;NY/=l;NZ/=l;const RX=NX*ca-NZ*sa,RZ=NX*sa+NZ*ca;
       return [X,ly,Z,RX,NY,RZ,tmp.clone()]})});
-  const salt=C(0xfbfbf6);for(let i=0;i<9;i++){const b=new T.BoxGeometry(.0055,.005,.0055);const sx=rnd(-.03,.03),sz=rnd(-.03,.03);const q=new T.Euler(rnd(0,3),rnd(0,3),rnd(0,3));const m=new T.Matrix4().makeRotationFromEuler(q);const v=new T.Vector3();
+  const salt=C(0xfbfbf6);for(let i=0;i<9;i++){const b=bevBox(.0055,.005,.0055);const sx=rnd(-.03,.03),sz=rnd(-.03,.03);const q=new T.Euler(rnd(0,3),rnd(0,3),rnd(0,3));const m=new T.Matrix4().makeRotationFromEuler(q);const v=new T.Vector3();
     add(b,(x,y,z,nx,ny,nz)=>{v.set(x,y,z).applyMatrix4(m);const n=new T.Vector3(nx,ny,nz).applyMatrix4(m);return [v.x+sx,v.y+.069,v.z+sz,n.x,n.y,n.z,salt]})}
   const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(P,3));geo.setAttribute('normal',new T.Float32BufferAttribute(Nn,3));geo.setAttribute('color',new T.Float32BufferAttribute(Cc,3));geo.setIndex(I);geo.translate(0,.017,0);return BREAD=geo}
 function ventCanvas(){const c=mk(256,64),x=c.getContext('2d');x.fillStyle='#202124';for(let r=0;r<6;r++)for(let k=0;k<32;k++){x.beginPath();x.arc(6+k*7.8+(r%2)*3.9,7+r*10,2.3,0,6.283);x.fill()}return c}
@@ -889,20 +896,20 @@ function buildOven(){
   const breadMat=new T.MeshPhysicalMaterial({vertexColors:true,roughness:.55,clearcoat:.35,clearcoatRoughness:.45,bumpMap:BUMP,bumpScale:.004,envMapIntensity:.6});
   const add=(m,ud,h=true)=>{m.userData=Object.assign({part:'body'},ud||{});g.add(m);if(h)hit.push(m);return m};
   // shell
-  add(new T.Mesh(new T.BoxGeometry(.05,DH*N,D),steelD)).position.set(-W/2+.025,SH+DH*N/2,0);
-  add(new T.Mesh(new T.BoxGeometry(.05,DH*N,D),steelD)).position.set(W/2-.025,SH+DH*N/2,0);
-  add(new T.Mesh(new T.BoxGeometry(W,.06,D),steel)).position.set(0,TOP+.03,0);
-  add(new T.Mesh(new T.BoxGeometry(W,DH*N,.05),steelD),{},false).position.set(0,SH+DH*N/2,-D/2+.025);
+  add(new T.Mesh(bevBox(.05,DH*N,D),steelD)).position.set(-W/2+.025,SH+DH*N/2,0);
+  add(new T.Mesh(bevBox(.05,DH*N,D),steelD)).position.set(W/2-.025,SH+DH*N/2,0);
+  add(new T.Mesh(bevBox(W,.06,D),steel)).position.set(0,TOP+.03,0);
+  add(new T.Mesh(bevBox(W,DH*N,.05),steelD),{},false).position.set(0,SH+DH*N/2,-D/2+.025);
   const plate=add(new T.Mesh(new T.PlaneGeometry(.5,.09),new T.MeshBasicMaterial({map:tex(plateCanvas()),toneMapped:false})),{part:'door'},false);plate.position.set(-W/2+.4,TOP-.035,D/2+.032);
   const decks=[];
   for(let i=0;i<N;i++){const y0=SH+DH*i,yc=y0+DH/2;
     // front frame pieces around window
     const fz=D/2;const pieces=[[W,(DH-wh)/2+.0,0,y0+(DH-wh)/4+wh/2+ (DH-wh)/4 - (DH-wh)/4],];
     const topH=(DH-wh)/2,botH=(DH-wh)/2;
-    [[W,topH,0,yc+wh/2+topH/2],[W,botH,0,yc-wh/2-botH/2],[(W/2+wx-ww/2),wh,-W/2+(W/2+wx-ww/2)/2,yc],[W/2-(wx+ww/2),wh,(wx+ww/2)+(W/2-(wx+ww/2))/2,yc]].forEach(b=>{const m=add(new T.Mesh(new T.BoxGeometry(b[0],b[1],.05),steel),{part:'door',deck:i});m.position.set(b[2],b[3],fz)});
-    const seam=new T.Mesh(new T.BoxGeometry(W,.012,.052),black);seam.position.set(0,y0+.006,fz);g.add(seam);
+    [[W,topH,0,yc+wh/2+topH/2],[W,botH,0,yc-wh/2-botH/2],[(W/2+wx-ww/2),wh,-W/2+(W/2+wx-ww/2)/2,yc],[W/2-(wx+ww/2),wh,(wx+ww/2)+(W/2-(wx+ww/2))/2,yc]].forEach(b=>{const m=add(new T.Mesh(bevBox(b[0],b[1],.05),steel),{part:'door',deck:i});m.position.set(b[2],b[3],fz)});
+    const seam=new T.Mesh(bevBox(W,.012,.052),black);seam.position.set(0,y0+.006,fz);g.add(seam);
     // cavity
-    const cav=new T.Mesh(new T.BoxGeometry(ww+.1,wh+.12,D*.8),new T.MeshBasicMaterial({color:0xb4561a,side:T.BackSide,toneMapped:false}));cav.position.set(wx,yc,fz-D*.4);g.add(cav);
+    const cav=new T.Mesh(bevBox(ww+.1,wh+.12,D*.8),new T.MeshBasicMaterial({color:0xb4561a,side:T.BackSide,toneMapped:false}));cav.position.set(wx,yc,fz-D*.4);g.add(cav);
     for(const sd of [-1,1]){const sw=new T.Mesh(new T.PlaneGeometry(D*.8,wh+.12),new T.MeshBasicMaterial({color:0x9a4614,toneMapped:false,side:T.DoubleSide}));sw.rotation.y=Math.PI/2;sw.position.set(wx+sd*(ww/2+.005),yc,fz-D*.4);g.add(sw)}const back=new T.Mesh(new T.PlaneGeometry(ww+.1,wh+.12),glowMat);back.position.set(wx,yc,fz-D*.8+.01);g.add(back);
     const floor=new T.Mesh(new T.PlaneGeometry(ww+.1,D*.8),new T.MeshStandardMaterial({color:C(0x5a2a12),roughness:.9,emissive:C(0xa04410),emissiveIntensity:.8}));floor.rotation.x=-Math.PI/2;floor.position.set(wx,yc-wh/2-.05,fz-D*.4);g.add(floor);
     const lamp=new T.Mesh(new T.PlaneGeometry(ww,.04),new T.MeshBasicMaterial({color:0xffe2b0,toneMapped:false}));lamp.rotation.x=Math.PI/2;lamp.position.set(wx,yc+wh/2+.05,fz-.2);g.add(lamp);
@@ -917,17 +924,17 @@ function buildOven(){
     const hb=new T.Mesh(new T.CylinderGeometry(.022,.022,ww*.9,18),black);hb.rotation.z=Math.PI/2;hb.position.set(wx,yc+wh/2+.07,fz+.11);add(hb,{part:'door',deck:i});
     for(const s of [-1,1]){const so=new T.Mesh(new T.CylinderGeometry(.016,.016,.09,10),black);so.rotation.x=Math.PI/2;so.position.set(wx+s*ww*.42,yc+wh/2+.07,fz+.06);add(so,{part:'door',deck:i})}
     // control
-    const cp=add(new T.Mesh(new T.BoxGeometry(.22,DH-.1,.02),blackG),{part:'panel',deck:i});cp.position.set(cpx,yc,fz+.035);
+    const cp=add(new T.Mesh(bevBox(.22,DH-.1,.02),blackG),{part:'panel',deck:i});cp.position.set(cpx,yc,fz+.035);
     const ledT=tex(ledCanvas(['230','210','190'][i]));const led=new T.Mesh(new T.PlaneGeometry(.17,.065),new T.MeshBasicMaterial({map:ledT,toneMapped:false}));led.position.set(cpx,yc+.1,fz+.047);g.add(led);
     for(let b=0;b<3;b++){const bt=new T.Mesh(new T.CylinderGeometry(.016,.016,.012,14),M.chrome);bt.rotation.x=Math.PI/2;bt.position.set(cpx-.05+b*.05,yc-.08,fz+.052);add(bt,{part:'button',deck:i})}
     decks.push({glass,over,crack,crackT,led});
   }
   // cabinet + castors
-  const CB=SH-.12;const cab=add(new T.Mesh(new T.BoxGeometry(W,CB,D),steel),{part:'stand'});cab.position.set(0,.12+CB/2,0);
-  for(const sx of [-1,1]){const dr=add(new T.Mesh(new T.BoxGeometry(W/2-.06,CB-.08,.012),steel),{part:'door'});dr.position.set(sx*(W/4-.005),.12+CB/2,D/2+.006);const hd=add(new T.Mesh(new T.BoxGeometry(.025,.12,.02),black),{part:'door'});hd.position.set(sx*.07,.12+CB/2+.04,D/2+.022)}
-  const sp=new T.Mesh(new T.BoxGeometry(.012,CB-.08,.016),black);sp.position.set(0,.12+CB/2,D/2+.004);g.add(sp);
-  const bot=add(new T.Mesh(new T.BoxGeometry(W,.05,D),steel),{part:'body'});bot.position.set(0,SH-.025,0);
-  for(const sx of [-1,1])for(const sz of [-1,1]){const br=add(new T.Mesh(new T.BoxGeometry(.1,.04,.1),steelD),{part:'stand'});br.position.set(sx*(W/2-.12),.1,sz*(D/2-.12));const wl=add(new T.Mesh(new T.CylinderGeometry(.045,.045,.04,20),black),{part:'stand'});wl.rotation.x=Math.PI/2;wl.rotation.y=Math.PI/2;wl.position.set(sx*(W/2-.12),.045,sz*(D/2-.12))}
+  const CB=SH-.12;const cab=add(new T.Mesh(bevBox(W,CB,D),steel),{part:'stand'});cab.position.set(0,.12+CB/2,0);
+  for(const sx of [-1,1]){const dr=add(new T.Mesh(bevBox(W/2-.06,CB-.08,.012),steel),{part:'door'});dr.position.set(sx*(W/4-.005),.12+CB/2,D/2+.006);const hd=add(new T.Mesh(bevBox(.025,.12,.02),black),{part:'door'});hd.position.set(sx*.07,.12+CB/2+.04,D/2+.022)}
+  const sp=new T.Mesh(bevBox(.012,CB-.08,.016),black);sp.position.set(0,.12+CB/2,D/2+.004);g.add(sp);
+  const bot=add(new T.Mesh(bevBox(W,.05,D),steel),{part:'body'});bot.position.set(0,SH-.025,0);
+  for(const sx of [-1,1])for(const sz of [-1,1]){const br=add(new T.Mesh(bevBox(.1,.04,.1),steelD),{part:'stand'});br.position.set(sx*(W/2-.12),.1,sz*(D/2-.12));const wl=add(new T.Mesh(new T.CylinderGeometry(.045,.045,.04,20),black),{part:'stand'});wl.rotation.x=Math.PI/2;wl.rotation.y=Math.PI/2;wl.position.set(sx*(W/2-.12),.045,sz*(D/2-.12))}
   g.rotation.y=-.22;
   g.traverse(m=>{if(m.isMesh&&(m.material===steel||m.material===steelD))boxUV(m,.9)});return base({kind:'oven',group:g,hittables:hit,center:new T.Vector3(0,TOP/2+.05,0),radius:1.45,camDir:new T.Vector3(.2,.18,1),floor:0,fill:.86,fillN:.86,
     onHit(h,k,px,py){const m=h.object,ud=m.userData;
@@ -994,7 +1001,7 @@ function buildLaptop(){
   const base_=new T.Mesh(roundedBox(W,BT,D,.024,4),alu);base_.position.y=BT/2;base_.userData={part:'base'};g.add(base_);hit.push(base_);
   const KW=W*.86,u=KW/14.5,kd=u*.94,gap=u*.13;
   const KD=kd*5.5+kd*.5;
-  const well=new T.Mesh(new T.BoxGeometry(KW+u*.2,.003,KD+u*.25),new T.MeshStandardMaterial({color:0x0a0a0c,roughness:.7}));const kz0=-D/2+.09;well.position.set(0,BT+.0005,kz0+(KD+u*.25)/2);g.add(well);
+  const well=new T.Mesh(bevBox(KW+u*.2,.003,KD+u*.25),new T.MeshStandardMaterial({color:0x0a0a0c,roughness:.7}));const kz0=-D/2+.09;well.position.set(0,BT+.0005,kz0+(KD+u*.25)/2);g.add(well);
   const padMat=new T.MeshStandardMaterial({color:C(0x7f8288),metalness:.35,roughness:.32,envMapIntensity:.8});
   const PW=W*.42,PD=D*.36;const pad=new T.Mesh(roundedBox(PW,.004,PD,.002,2),padMat);pad.position.set(0,BT+.001,D/2-.07-PD/2);pad.userData={part:'base'};g.add(pad);hit.push(pad);
   const L=['`','1','2','3','4','5','6','7','8','9','0','-','='];
@@ -1146,14 +1153,14 @@ function buildKeyboard(){
   const CR=(theme==='basic'||theme==='clear')?.1:theme==='bread'||theme==='jelly'?.06:.04;const tray=new T.Mesh(roundedBox(CW,TH,CD,CR,6),caseMat);tray.position.y=TH/2;tray.userData={part:'case'};g.add(tray);hit.push(tray);
   const rr=(w,h,r)=>{const sh=new T.Shape();sh.moveTo(-w/2+r,-h/2);sh.lineTo(w/2-r,-h/2);sh.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);sh.lineTo(w/2,h/2-r);sh.quadraticCurveTo(w/2,h/2,w/2-r,h/2);sh.lineTo(-w/2+r,h/2);sh.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);sh.lineTo(-w/2,-h/2+r);sh.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);return sh};
   const fs=rr(CW,CD,CR);fs.holes.push(rr(KW+.016,KD+.016,.012));const frame=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.04,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:2,curveSegments:12}),caseMat);frame.rotation.x=-Math.PI/2;frame.position.y=TH;frame.userData={part:'case'};g.add(frame);hit.push(frame);
-  const plate=new T.Mesh(new T.BoxGeometry(KW+.01,.006,KD+.01),plateMat);plate.position.y=TH+.003;g.add(plate);
+  const plate=new T.Mesh(bevBox(KW+.01,.006,KD+.01),plateMat);plate.position.y=TH+.003;g.add(plate);
   if(theme==='basic'||theme==='clear'){const cm=caseMat;[[-CW/2,-.25],[-CW/2,.25],[CW/2,-.25],[CW/2,.25]].forEach(([x,z])=>{const c=new T.Mesh(roundedBox(.03,.05,.16,.012,3),cm);c.position.set(x,TH*.7,z*CD);g.add(c)});[[-.35],[.35]].forEach(([fx])=>{const c=new T.Mesh(roundedBox(.2,.04,.03,.012,3),cm);c.position.set(fx*CW,TH*.7,-CD/2);g.add(c);const c2=c.clone();c2.position.z=CD/2;g.add(c2)})}
   if(theme==='basic'){[[-.05,0x3a7bff],[0,0x3cff6a],[.05,0xff3a5a]].forEach(([dx,c])=>{const l=new T.Mesh(new T.SphereGeometry(.012,10,8),new T.MeshBasicMaterial({color:c,toneMapped:false}));l.position.set(-CW/2+.16+dx,TH+.046,-CD/2+.035);g.add(l)})}
   if(theme==='clear'){/* 투명 틀 속으로 비치는 내부 부품 */const silver=new T.MeshStandardMaterial({color:C(0xc9d2dc),metalness:.9,roughness:.25});const gold=new T.MeshStandardMaterial({color:C(0xe0b560),metalness:.9,roughness:.3});
-    const pcb=new T.Mesh(new T.BoxGeometry(KW*.96,.004,KD*.92),new T.MeshPhysicalMaterial({color:C(0x9fd6e8),transparent:true,opacity:.28,roughness:.2,depthWrite:false}));pcb.position.y=TH*.55;g.add(pcb);
+    const pcb=new T.Mesh(bevBox(KW*.96,.004,KD*.92),new T.MeshPhysicalMaterial({color:C(0x9fd6e8),transparent:true,opacity:.28,roughness:.2,depthWrite:false}));pcb.position.y=TH*.55;g.add(pcb);
     const bat=new T.Mesh(roundedBox(.5,.018,.16,.008,2),silver);bat.position.set(-.35,TH*.35,-.18);g.add(bat);
-    [[.5,-.2],[.62,-.2],[.2,.15],[-.8,.1],[.85,.12]].forEach(([x,z],i)=>{const ch=new T.Mesh(new T.BoxGeometry(i<2?.05:.08,.008,i<2?.05:.06),i<2?gold:new T.MeshStandardMaterial({color:C(0x20262e),roughness:.4}));ch.position.set(x,TH*.5,z);g.add(ch)});
-    const sw=new T.Mesh(new T.BoxGeometry(.04,.02,.02),gold);sw.position.set(CW/2-.09,TH*.5,-CD/2+.04);g.add(sw)}
+    [[.5,-.2],[.62,-.2],[.2,.15],[-.8,.1],[.85,.12]].forEach(([x,z],i)=>{const ch=new T.Mesh(bevBox(i<2?.05:.08,.008,i<2?.05:.06),i<2?gold:new T.MeshStandardMaterial({color:C(0x20262e),roughness:.4}));ch.position.set(x,TH*.5,z);g.add(ch)});
+    const sw=new T.Mesh(bevBox(.04,.02,.02),gold);sw.position.set(CW/2-.09,TH*.5,-CD/2+.04);g.add(sw)}
   if(theme==='moss')addMoss(g,KW,KD,TH,KH,u);
   if(theme==='ceramic'){const kn=new T.Mesh(new T.CylinderGeometry(.06,.06,.06,40),new T.MeshStandardMaterial({color:C(0x3a3d42),metalness:.8,roughness:.3}));kn.position.set(CW/2-.035,TH+.07,-CD/2+.035);g.add(kn)}
   // keys
@@ -1179,7 +1186,7 @@ function buildKeyboard(){
     const k=new T.Group();k.add(cap);
     if(theme==='jelly'&&((ri*7+ci*3)%9===0||lab==='SPACE')){const n=lab==='SPACE'?5:2;for(let j=0;j<n;j++){const lf=new T.Mesh(LEAF_GEO,jLeafMat[j%3]);lf.scale.set(.026,.005,.011);lf.position.set((j-(n-1)/2)*(lab==='SPACE'?.08:.018),KH*.5,(j%2?.01:-.008));lf.rotation.set(rnd(-.4,.4),rnd(0,3),rnd(-.5,.5));k.add(lf)}}
     if(theme==='clear'){const cr=new T.Mesh(CRYS_GEO,crysMat);cr.scale.set(w*.36,KH*.55,d*.36);cr.position.y=KH*.62;k.add(cr)}
-    if(theme==='clear'){const st=new T.Mesh(new T.BoxGeometry(.008,KH*.55,.026),stemMat);st.position.y=KH*.4;const st2=st.clone();st2.rotation.y=Math.PI/2;k.add(st,st2);const ring=new T.Mesh(new T.CylinderGeometry(.018,.018,KH*.5,16,1,true),stemMat);ring.position.y=KH*.4;k.add(ring)}
+    if(theme==='clear'){const st=new T.Mesh(bevBox(.008,KH*.55,.026),stemMat);st.position.y=KH*.4;const st2=st.clone();st2.rotation.y=Math.PI/2;k.add(st,st2);const ring=new T.Mesh(new T.CylinderGeometry(.018,.018,KH*.5,16,1,true),stemMat);ring.position.y=KH*.4;k.add(ring)}
     const x=-KW/2+(xu+wu/2)*u,z=-KD/2+(ri+.5)*u;const y0=TH+.006;k.position.set(x,y0,z);k.userData={y0,press:0,label:lab==='BACK'?'BACKSPACE':lab};cap.userData.key=k;g.add(k);keys.push(k);hit.push(cap);xu+=wu})});
   g.rotation.x=.08;g.rotation.y=-.06;
   const soft=theme==='jelly'||theme==='bread';
@@ -1260,9 +1267,9 @@ function buildLighter(){
   const body=new T.Mesh(roundedBox(W,H,D,.05,6),bodyMat);body.position.y=H/2;body.renderOrder=3;g.add(body);
   // inner butane & parts
   const liq=new T.Mesh(roundedBox(W-.05,H*.74,D-.05,.035,4),new T.MeshPhysicalMaterial({color:C(0xff2f78),transparent:true,opacity:.34,roughness:.05,depthWrite:false,envMapIntensity:.6}));liq.position.y=H*.37+.02;liq.renderOrder=1;g.add(liq);
-  const meni=new T.Mesh(new T.BoxGeometry(W-.06,.006,D-.06),new T.MeshBasicMaterial({color:C(0xffc0d8),transparent:true,opacity:.7,depthWrite:false}));meni.position.y=H*.74+.02;meni.renderOrder=2;g.add(meni);
+  const meni=new T.Mesh(bevBox(W-.06,.006,D-.06),new T.MeshBasicMaterial({color:C(0xffc0d8),transparent:true,opacity:.7,depthWrite:false}));meni.position.y=H*.74+.02;meni.renderOrder=2;g.add(meni);
   const inner=new T.MeshPhysicalMaterial({color:C(0xff3b80),transparent:true,opacity:.55,roughness:.2,depthWrite:false});
-  const rib=new T.Mesh(new T.BoxGeometry(.018,H*.86,D-.06),inner);rib.position.set(.02,H*.45,0);rib.renderOrder=2;g.add(rib);
+  const rib=new T.Mesh(bevBox(.018,H*.86,D-.06),inner);rib.position.set(.02,H*.45,0);rib.renderOrder=2;g.add(rib);
   const wick=new T.Mesh(new T.CylinderGeometry(.012,.012,H*.86,10),new T.MeshStandardMaterial({color:C(0xd8285e),roughness:.4}));wick.position.set(-.12,H*.47,0);g.add(wick);
   const tube=new T.Mesh(new T.CylinderGeometry(.03,.03,.32,14),new T.MeshStandardMaterial({color:C(0xc9cdd2),metalness:.9,roughness:.25}));tube.position.set(-.12,H*.86,0);g.add(tube);
   const spring=new T.Mesh(new T.TorusKnotGeometry(.022,.004,80,6,14,1),new T.MeshStandardMaterial({color:C(0xd6d9dd),metalness:.9,roughness:.3}));spring.scale.set(1,3.2,1);spring.position.set(-.12,H*.86,0);g.add(spring);
@@ -1332,7 +1339,7 @@ function buildSwitches(){
   plates.forEach(([mat,n,x])=>{const P=1.02;const pl=new T.Mesh(roundedBox(P,P,.1,.06,5),mat);pl.position.set(x,0,0);pl.userData={plate:true};g.add(pl);hit.push(pl);
     const xs=n===2?[-.15,.15]:[0];const sx=n===2?[-.36,.36]:[-.25,.25];
     sx.forEach(s=>{const sc=new T.Group();const hd=new T.Mesh(new T.CylinderGeometry(.034,.036,.016,20),chrome);hd.rotation.x=Math.PI/2;sc.add(hd);
-      const c1=new T.Mesh(new T.BoxGeometry(.04,.007,.006),dark),c2=c1.clone();c1.position.z=c2.position.z=.009;c2.rotation.z=Math.PI/2;sc.add(c1,c2);sc.position.set(x+s,0,.058);g.add(sc)});
+      const c1=new T.Mesh(bevBox(.04,.007,.006),dark),c2=c1.clone();c1.position.z=c2.position.z=.009;c2.rotation.z=Math.PI/2;sc.add(c1,c2);sc.position.set(x+s,0,.058);g.add(sc)});
     xs.forEach(dx=>{const tg=new T.Group();tg.position.set(x+dx,0,.05);
       const fl=new T.Mesh(new T.CylinderGeometry(.1,.105,.014,36),chrome);fl.rotation.x=Math.PI/2;fl.position.z=.007;tg.add(fl);
       const nut=new T.Mesh(new T.CylinderGeometry(.078,.078,.045,40,1,true),knurl);nut.rotation.x=Math.PI/2;nut.position.z=.036;tg.add(nut);
@@ -1366,7 +1373,7 @@ function buildPills(){
   const W=2.0,H=1.02;const foil=new T.Mesh(roundedBox(W,H,.018,.05,4),new T.MeshStandardMaterial({map:FOIL,bumpMap:FOIL,bumpScale:.004,color:C(0x5a5e64),metalness:1,roughness:.34,envMapIntensity:.8}));g.add(foil);
   // 절취선
   const lineM=new T.MeshStandardMaterial({color:C(0x8b8f94),metalness:.9,roughness:.5});
-  for(let i=1;i<5;i++){const l=new T.Mesh(new T.BoxGeometry(.006,H*.96,.02),lineM);l.position.x=-W/2+i*W/5;g.add(l)}const lh=new T.Mesh(new T.BoxGeometry(W*.97,.006,.02),lineM);g.add(lh);
+  for(let i=1;i<5;i++){const l=new T.Mesh(bevBox(.006,H*.96,.02),lineM);l.position.x=-W/2+i*W/5;g.add(l)}const lh=new T.Mesh(bevBox(W*.97,.006,.02),lineM);g.add(lh);
   const bubMat=new T.MeshPhysicalMaterial({color:C(0xdfe6ee),transparent:true,opacity:.22,depthWrite:false,roughness:.04,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.1,side:T.DoubleSide});
   const rimMat=new T.MeshStandardMaterial({color:C(0x7d8188),metalness:1,roughness:.3,envMapIntensity:.8});
   const bubG=capsuleGeo(.115,.19,32);const pillA=capsuleGeo(.082,.095,24),pillB=capsuleGeo(.086,.085,24);
@@ -1406,7 +1413,7 @@ function buildPills(){
 function build(t){return t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
 
 /* small effects */
-function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(new T.BoxGeometry(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
+function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(bevBox(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
 function chipShards(pt,n,src){for(let i=0;i<n;i++){const k=3,poly=[];const s=rnd(.015,.04);for(let j=0;j<k;j++){const a=j/k*6.283+rnd(-.5,.5);poly.push([Math.cos(a)*s,Math.sin(a)*s])}const pr=prism(poly,[],.006,[M.shardFace,M.shardEdge],0);pr.mesh.position.copy(pt);if(src){const q=new T.Quaternion();src.getWorldQuaternion(q);pr.mesh.quaternion.copy(q)}addPiece(pr.mesh,{v:new T.Vector3(rnd(-1.5,1.5),rnd(.5,3),rnd(.5,2.5)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.005,life:rnd(1,1.6),mode:'chip'})}const s=project(pt);glints(s.x,s.y,8)}
 function chipPaper(pt,n,mat){for(let i=0;i<n;i++){const s=rnd(.03,.07);const m=new T.Mesh(new T.PlaneGeometry(s,s*rnd(.5,1)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1,1),rnd(.5,2),rnd(0,1)),w:new T.Vector3(),g:2,drag:.98,flutter:true,r:.005,life:rnd(1.6,2.4),mode:'chip'})}}
 function dropBlobs(pt,n){const s=project(pt);for(let i=0;i<n;i++)parts.push({x:s.x,y:s.y,vx:rnd(-4,4),vy:rnd(-6,-2),g:.35,life:rnd(30,50),age:0,size:rnd(3,7),col:pick(['#ff2b62','#ff7a9c','#c80f45']),type:'drop'})}
@@ -1488,7 +1495,7 @@ function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
   if(cur){if(cur.onUp)cur.onUp();if(cur.cleanup)cur.cleanup();scene.remove(cur.group)}
-  state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;scene.add(cur.group);cur.base=cur.group.position.clone();
+  state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;polish(cur.group);scene.add(cur.group);shadowFloor.visible=cur.floor>-3;shadowFloor.position.y=cur.floor+.002;cur.base=cur.group.position.clone();
   state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
   if(drop&&!reduced){cur.sp.y=1.6;cur.sp.vy=0}
   $('#tName').textContent=t.name;$('#tDesc').textContent=t.desc;$('#tSpec').textContent=t.kind==='keyboard'?`키캡 ${CAPS[state.cap].name}(${CAPS[state.cap].en}) · 무선 · 소리 ${CAP_WORDS[state.cap][0]}`:t.spec;$('#capSet').hidden=t.kind!=='keyboard';renderHp();
