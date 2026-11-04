@@ -1434,9 +1434,10 @@ function drawParts(){
 
 /* ================= audio ================= */
 let ac=null,master=null,noiseBuf=null;
-function ensureAudio(){if(ac){if(ac.state==='suspended')ac.resume();return}try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();const comp=ac.createDynamicsCompressor();master.connect(comp);comp.connect(ac.destination);applyVol();noiseBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){ac=null}}
+function ensureAudio(){try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}if(ac){if(ac.state!=='running'){try{ac.resume()}catch(e){}}return}try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();const comp=ac.createDynamicsCompressor();master.connect(comp);comp.connect(ac.destination);applyVol();noiseBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){ac=null}}
 function applyVol(){if(master)master.gain.value=state.muted?0:state.vol}
 const on=()=>ac&&!state.muted&&state.vol>0;
+/* 아이폰 등: 터치가 끝날 때·화면에 돌아올 때 오디오를 다시 깨움 */['touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,()=>ensureAudio(),{passive:true}));document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ac)ensureAudio()});
 function env(g,t,peak,dec,att){att=att||.002;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,peak),t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+dec)}
 function tone(type,f0,f1,dec,peak,t,att){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dec*.7);env(g,t,peak,dec,att);o.connect(g);g.connect(master);o.start(t);o.stop(t+dec+.05)}
 function noise(ft,freq,q,dec,peak,t,att){const s=ac.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=rnd(.8,1.2);const f=ac.createBiquadFilter();f.type=ft;f.frequency.value=freq;f.Q.value=q;const g=ac.createGain();env(g,t,peak,dec,att);s.connect(f);f.connect(g);g.connect(master);s.start(t,Math.random());s.stop(t+dec+.05)}
