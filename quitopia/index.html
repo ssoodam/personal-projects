@@ -1341,10 +1341,11 @@ function buildSwitches(){
       const bat=new T.Group();bat.position.z=.07;const rod=new T.Mesh(new T.CylinderGeometry(.013,.019,.19,20),chrome);rod.position.y=.095;bat.add(rod);const tip=new T.Mesh(new T.SphereGeometry(.019,18,12),chrome);tip.position.y=.19;tip.scale.multiplyScalar(.8);tip.scale.set(1,.7,1);bat.add(tip);
       bat.rotation.x=1.05;tg.add(bat);g.add(tg);const st={on:true,a:1.05,v:0};tg.userData.st=st;tg.userData.bat=bat;toggles.push(tg);[fl,nut,rod,tip].forEach(m=>{m.userData.tg=tg;hit.push(m)})})});
   g.position.y=.9;
-  function snd(on_){if(!on())return;const t=ac.currentTime+.002;/* 무겁게 울리는 금속 토글 '철컥' + 나무판 울림 */
-    noise('bandpass',rnd(2100,2300),1.6,.006,1.1,t,.0003);noise('bandpass',rnd(900,1000),2.5,.012,.9,t+.001,.0004);
-    tone('sine',on_?150:135,105,.16,.24,t+.002,.002);tone('sine',on_?290:260,220,.09,.12,t+.002,.001);noise('bandpass',420,4,.1,.5,t+.003,.002);
-    tone('sine',rnd(880,940),870,.22,.035,t+.004,.001);tone('sine',rnd(1480,1560),1470,.14,.02,t+.004,.001);noise('lowpass',300,.8,.05,.5,t+.004,.002)}
+  function snd(on_){if(!on())return;const t=ac.currentTime+.002;/* 높고 또렷한 토글 '딱!' */
+    noise('bandpass',rnd(3400,3800),1.8,.004,1.5,t,.0002);noise('bandpass',rnd(2200,2500),2.2,.006,.8,t,.0002);
+    tone('sine',on_?rnd(2950,3050):rnd(2750,2850),2700,.03,.07,t,.0002);tone('sine',rnd(4300,4500),4300,.02,.035,t,.0002);
+    noise('highpass',6000,.7,.003,.35,t,.0002);tone('sine',on_?720:680,600,.025,.05,t,.0005);
+    noise('bandpass',rnd(4500,5000),3,.003,.4,t+.012,.0002)}
   function setExp(){const n=toggles.filter(t=>t.userData.st.on).length;renderer.toneMappingExposure=.82*(.42+.58*n/toggles.length)}
   return base({kind:'switch',group:g,hittables:hit,center:new T.Vector3(0,.9,0),radius:1.8,camDir:new T.Vector3(.42,.08,1),floor:-5,fill:1.12,fillN:1.12,
     onHit(h,k,px,py){let tg=h.object.userData.tg;if(!tg){let best=1e9;toggles.forEach(t=>{const p=t.getWorldPosition(new T.Vector3());const d=p.distanceTo(h.point);if(d<best){best=d;tg=t}})}
@@ -1383,11 +1384,11 @@ function buildPills(){
   function crumple(src){const g_=src.clone().toNonIndexed?src.clone():src.clone();const p=g_.attributes.position;const planes=[];for(let i=0;i<9;i++){const d=new T.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize();planes.push([d,rnd(-.08,.08),rnd(.008,.022)])}
     const v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);let dz=0;planes.forEach(([d,o_,a])=>{dz+=Math.abs(v.dot(d)-o_)<.03?-a:a*.2*Math.sign(Math.sin(v.dot(d)*90))});const k=Math.max(0,v.z/.115);v.z=v.z*(.8+rnd(-.1,.1))+dz*k;v.x*=1+rnd(-.05,.05)*k;v.y*=1+rnd(-.03,.03)*k;p.setXYZ(i,v.x,v.y,v.z)}
     const ng=g_.index?g_.toNonIndexed():g_;ng.computeVertexNormals();return ng}
-  function pop(){if(!on())return;const t=ac.currentTime+.002;/* 플라스틱 '빠직' + 은박 '바스락 찌직' */
-    noise('bandpass',rnd(1500,1900),1.4,.008,1.2,t,.0003);crackle(t+.004,.09,2600,.6,.85);
-    crackle(t+.03,.22,4800,.75,.6);crackle(t+.05,.2,7000,.45,.5);noise('bandpass',5200,1.2,.16,.12,t+.03,.01);
-    for(let i=0;i<6;i++)noise('bandpass',rnd(3000,6500),3,.004,rnd(.4,.9),t+.04+i*rnd(.018,.03),.0002);
-    noise('bandpass',1700,1.5,.006,.9,t+.11,.0003);tone('sine',rnd(900,1100),700,.03,.07,t+.11,.0005)}
+  function pop(){if(!on())return;const t=ac.currentTime+.002;/* 쨍한 플라스틱 '빠직' + 플라스틱 구겨짐 + 은박 바스락 */
+    noise('bandpass',rnd(3800,4400),1.6,.006,1.4,t,.0002);noise('highpass',5500,.7,.004,.5,t,.0002);
+    crackle(t+.004,.16,5200,.8,.7);crackle(t+.02,.2,7600,.6,.6);crackle(t+.06,.18,3600,.35,.5);
+    for(let i=0;i<9;i++)noise('bandpass',rnd(3500,8000),4,.003,rnd(.4,1),t+.01+i*rnd(.012,.024),.0002);
+    noise('bandpass',rnd(3000,3300),2,.005,.9,t+.12,.0002);tone('sine',rnd(2400,2700),2300,.02,.05,t+.12,.0003)}
   return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.7,.1),radius:1.25,camDir:new T.Vector3(.12,.62,1),floor:0,fill:.86,fillN:1,
     onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
