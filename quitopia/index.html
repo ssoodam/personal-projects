@@ -1341,7 +1341,10 @@ function buildSwitches(){
       const bat=new T.Group();bat.position.z=.07;const rod=new T.Mesh(new T.CylinderGeometry(.013,.019,.19,20),chrome);rod.position.y=.095;bat.add(rod);const tip=new T.Mesh(new T.SphereGeometry(.019,18,12),chrome);tip.position.y=.19;tip.scale.multiplyScalar(.8);tip.scale.set(1,.7,1);bat.add(tip);
       bat.rotation.x=1.05;tg.add(bat);g.add(tg);const st={on:true,a:1.05,v:0};tg.userData.st=st;tg.userData.bat=bat;toggles.push(tg);[fl,nut,rod,tip].forEach(m=>{m.userData.tg=tg;hit.push(m)})})});
   g.position.y=.9;
-  function snd(on_){if(!on())return;const t=ac.currentTime+.002;noise('bandpass',rnd(2400,2700),2,.005,2.4*.35,t,.0003);tone('sine',rnd(1750,1850),1700,.02,.06,t,.0004);tone('sine',on_?340:300,240,.035,.1,t,.001);tone('sine',3300,3250,.035,.025,t+.004,.0005);noise('bandpass',1200,1.2,.004,.5,t+.006,.0003)}
+  function snd(on_){if(!on())return;const t=ac.currentTime+.002;/* 무겁게 울리는 금속 토글 '철컥' + 나무판 울림 */
+    noise('bandpass',rnd(2100,2300),1.6,.006,1.1,t,.0003);noise('bandpass',rnd(900,1000),2.5,.012,.9,t+.001,.0004);
+    tone('sine',on_?150:135,105,.16,.24,t+.002,.002);tone('sine',on_?290:260,220,.09,.12,t+.002,.001);noise('bandpass',420,4,.1,.5,t+.003,.002);
+    tone('sine',rnd(880,940),870,.22,.035,t+.004,.001);tone('sine',rnd(1480,1560),1470,.14,.02,t+.004,.001);noise('lowpass',300,.8,.05,.5,t+.004,.002)}
   function setExp(){const n=toggles.filter(t=>t.userData.st.on).length;renderer.toneMappingExposure=.82*(.42+.58*n/toggles.length)}
   return base({kind:'switch',group:g,hittables:hit,center:new T.Vector3(0,.9,0),radius:1.8,camDir:new T.Vector3(.42,.08,1),floor:-5,fill:1.12,fillN:1.12,
     onHit(h,k,px,py){let tg=h.object.userData.tg;if(!tg){let best=1e9;toggles.forEach(t=>{const p=t.getWorldPosition(new T.Vector3());const d=p.distanceTo(h.point);if(d<best){best=d;tg=t}})}
@@ -1358,30 +1361,45 @@ const PILL_SETS=[[0xf2c21b,0x1f3f9e],[0xe8a27a,0xc8202e],[0x7fd23f,0x7fd23f],[0x
 function buildPills(){
   const g=new T.Group();const set=PILL_SETS[(state.pillSet=(state.pillSet||0))%PILL_SETS.length];
   if(!FOIL){FOIL=tex(foilCanvas());FOIL.wrapS=FOIL.wrapT=T.RepeatWrapping;FOIL.repeat.set(3,1.6)}
-  const W=2.0,H=1.02;const foil=new T.Mesh(roundedBox(W,H,.018,.05,4),new T.MeshStandardMaterial({map:FOIL,bumpMap:FOIL,bumpScale:.004,color:C(0x6c7076),metalness:1,roughness:.36,envMapIntensity:.75}));g.add(foil);
+  const W=2.0,H=1.02;const foil=new T.Mesh(roundedBox(W,H,.018,.05,4),new T.MeshStandardMaterial({map:FOIL,bumpMap:FOIL,bumpScale:.004,color:C(0x5a5e64),metalness:1,roughness:.34,envMapIntensity:.8}));g.add(foil);
   // 절취선
   const lineM=new T.MeshStandardMaterial({color:C(0x8b8f94),metalness:.9,roughness:.5});
   for(let i=1;i<5;i++){const l=new T.Mesh(new T.BoxGeometry(.006,H*.96,.02),lineM);l.position.x=-W/2+i*W/5;g.add(l)}const lh=new T.Mesh(new T.BoxGeometry(W*.97,.006,.02),lineM);g.add(lh);
   const bubMat=new T.MeshPhysicalMaterial({color:C(0xdfe6ee),transparent:true,opacity:.22,depthWrite:false,roughness:.04,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.1,side:T.DoubleSide});
+  const rimMat=new T.MeshStandardMaterial({color:C(0x7d8188),metalness:1,roughness:.3,envMapIntensity:.8});
   const bubG=capsuleGeo(.115,.19,32);const pillA=capsuleGeo(.082,.095,24),pillB=capsuleGeo(.086,.085,24);
   const mA=new T.MeshPhysicalMaterial({color:C(set[0]),roughness:.25,clearcoat:.8,clearcoatRoughness:.15}),mB=new T.MeshPhysicalMaterial({color:C(set[1]),roughness:.25,clearcoat:.8,clearcoatRoughness:.15});
   const cells=[];const hit=[foil];
   for(let r=0;r<2;r++)for(let c=0;c<5;c++){const x=-W/2+(c+.5)*W/5,y=(r?-1:1)*H/4;
+    {const o_=new T.Shape();const r=.128,l=.19;o_.moveTo(-r,-l/2);o_.lineTo(-r,l/2);o_.absarc(0,l/2,r,Math.PI,0,true);o_.lineTo(r,-l/2);o_.absarc(0,-l/2,r,0,Math.PI,true);const hl=new T.Path();const r2=.119;hl.moveTo(-r2,-l/2);hl.lineTo(-r2,l/2);hl.absarc(0,l/2,r2,Math.PI,0,true);hl.lineTo(r2,-l/2);hl.absarc(0,-l/2,r2,0,Math.PI,true);o_.holes.push(hl);const rim=new T.Mesh(new T.ShapeGeometry(o_,16),rimMat);rim.position.set(x,y,.0101);g.add(rim)}
     const bub=new T.Mesh(bubG,bubMat);bub.position.set(x,y,.01);bub.scale.set(1,1,.62);bub.renderOrder=3;g.add(bub);
     const pill=new T.Group();const a=new T.Mesh(pillA,mA);a.position.y=-.045;const b=new T.Mesh(pillB,mB);b.position.y=.05;pill.add(a,b);pill.position.set(x,y,.03);pill.rotation.z=rnd(-.08,.08);pill.scale.set(1,1,.9);g.add(pill);
     const cell={bub,pill,done:false,x,y,crush:0};bub.userData.cell=cell;a.userData.cell=cell;b.userData.cell=cell;cells.push(cell);hit.push(bub)}
   g.rotation.x=-.55;g.position.y=1.0;
-  function pop(){if(!on())return;const t=ac.currentTime+.002;crackle(t,.07,3200,.5,.8);noise('highpass',4200,.7,.02,.2,t+.01,.001);noise('bandpass',1800,1.5,.006,.9,t+.035,.0003);tone('sine',rnd(900,1100),700,.03,.08,t+.035,.0005)}
+  const crumpMat=new T.MeshPhysicalMaterial({color:C(0xf2f6fa),transparent:true,depthWrite:false,roughness:.02,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:.9,flatShading:true,side:T.DoubleSide});clearPlastic(crumpMat,.0,.3,.22,.5);
+  const holeMat=new T.MeshBasicMaterial({color:0x060607});const shardMat=new T.MeshStandardMaterial({map:FOIL,color:C(0xb5b9be),metalness:1,roughness:.22,flatShading:true,side:T.DoubleSide,envMapIntensity:1.3});
+  function stadium(r,l){const sh=new T.Shape();sh.moveTo(-r,-l/2);sh.lineTo(-r,l/2);sh.absarc(0,l/2,r,Math.PI,0,true);sh.lineTo(r,-l/2);sh.absarc(0,-l/2,r,0,Math.PI,true);return new T.ShapeGeometry(sh,16)}
+  function shardGeo(){const n=5+(Math.random()*4|0),pos=[];const c=[0,0,0];let prev=null;for(let i=0;i<=n;i++){const a=i/n*6.283,r=rnd(.012,.04);const p=[Math.cos(a)*r,Math.sin(a)*r,rnd(-.012,.012)];if(prev)pos.push(...c,...prev,...p);prev=p}const g_=new T.BufferGeometry();g_.setAttribute('position',new T.Float32BufferAttribute(pos,3));g_.computeVertexNormals();return g_}
+  function crumple(src){const g_=src.clone().toNonIndexed?src.clone():src.clone();const p=g_.attributes.position;const planes=[];for(let i=0;i<9;i++){const d=new T.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize();planes.push([d,rnd(-.08,.08),rnd(.008,.022)])}
+    const v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);let dz=0;planes.forEach(([d,o_,a])=>{dz+=Math.abs(v.dot(d)-o_)<.03?-a:a*.2*Math.sign(Math.sin(v.dot(d)*90))});const k=Math.max(0,v.z/.115);v.z=v.z*(.8+rnd(-.1,.1))+dz*k;v.x*=1+rnd(-.05,.05)*k;v.y*=1+rnd(-.03,.03)*k;p.setXYZ(i,v.x,v.y,v.z)}
+    const ng=g_.index?g_.toNonIndexed():g_;ng.computeVertexNormals();return ng}
+  function pop(){if(!on())return;const t=ac.currentTime+.002;/* 플라스틱 '빠직' + 은박 '바스락 찌직' */
+    noise('bandpass',rnd(1500,1900),1.4,.008,1.2,t,.0003);crackle(t+.004,.09,2600,.6,.85);
+    crackle(t+.03,.22,4800,.75,.6);crackle(t+.05,.2,7000,.45,.5);noise('bandpass',5200,1.2,.16,.12,t+.03,.01);
+    for(let i=0;i<6;i++)noise('bandpass',rnd(3000,6500),3,.004,rnd(.4,.9),t+.04+i*rnd(.018,.03),.0002);
+    noise('bandpass',1700,1.5,.006,.9,t+.11,.0003);tone('sine',rnd(900,1100),700,.03,.07,t+.11,.0005)}
   return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.7,.1),radius:1.25,camDir:new T.Vector3(.12,.62,1),floor:0,fill:.86,fillN:1,
     onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
-      cell.done=true;cell.crush=1;pop();{const hole=new T.Mesh(new T.CircleGeometry(1,24),new T.MeshStandardMaterial({color:C(0x1c1d20),roughness:.7}));hole.scale.set(.085,.16,1);hole.position.set(cell.x,cell.y,.0105);g.add(hole);for(let j=0;j<5;j++){const a=j/5*6.283+rnd(-.3,.3);const f=new T.Mesh(new T.CircleGeometry(1,3),new T.MeshStandardMaterial({map:FOIL,color:C(0x8a8e94),metalness:1,roughness:.35,side:T.DoubleSide}));f.scale.set(.05,.035,1);f.position.set(cell.x+Math.cos(a)*.06,cell.y+Math.sin(a)*.12,.016);f.rotation.set(rnd(-.8,.8),rnd(-.8,.8),a);g.add(f)}}
+      cell.done=true;cell.crush=1;pop();{cell.bub.geometry=crumple(bubG);cell.bub.material=crumpMat;
+        const hole=new T.Mesh(stadium(.088,.15),holeMat);hole.position.set(cell.x,cell.y,.0102);g.add(hole);
+        for(let j=0;j<rnd(4,7)|0;j++){const sh=new T.Mesh(shardGeo(),shardMat);const a=rnd(0,6.283),rr_=rnd(.02,.07);sh.position.set(cell.x+Math.cos(a)*rr_*.7,cell.y+Math.sin(a)*rr_*1.4,rnd(.012,.04));sh.rotation.set(rnd(-1.2,1.2),rnd(-1.2,1.2),rnd(0,6.28));g.add(sh)}}
       const pl=cell.pill;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
       addPiece(pl,{v:n.multiplyScalar(rnd(.6,1)).add(new T.Vector3(rnd(-.4,.4),-.2,rnd(1.2,2))),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.08,rest:.5,fric:.75,mode:'pill',keepGeo:true,life:rnd(4.5,6),g:9.8});
       popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
       if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;setTarget('pills',true)}},2200)}
       return 'nosound'},
-    update(){cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);const z=.62-.38*(1-c.crush);c.bub.scale.set(1+.06*(1-c.crush),1-.04*(1-c.crush),Math.max(.22,z));c.bub.rotation.z=.05*(1-c.crush)}})}});
+    update(){cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
 function build(t){return t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
