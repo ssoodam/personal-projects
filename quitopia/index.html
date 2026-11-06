@@ -170,10 +170,22 @@ button,input{font:inherit;color:inherit}
 .go{align-self:flex-start;background:var(--main);color:var(--on-main);border:0;border-radius:999px;padding:12px 26px;font-family:var(--en);font-weight:800;font-size:14px;letter-spacing:.02em;cursor:pointer}
 .go:hover{filter:brightness(1.12)}
 
-.foot{max-width:1440px;margin:0 auto;padding-block:36px 48px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:56px}
+.foot{max-width:1440px;margin:0 auto;padding-block:36px 48px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:28px}
 .foot .times{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
 .foot input[type=time]{border:1px solid var(--line);background:var(--bg-2);border-radius:8px;padding:6px 10px;font-variant-numeric:tabular-nums}
 .foot .hint{font-size:13px;color:var(--ink-soft);margin:0;max-width:50ch}
+.install{max-width:1440px;margin:56px auto 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:1px solid var(--line);border-radius:22px;padding:18px 20px;background:var(--bg-2)}
+.install img{width:56px;height:56px;border-radius:14px;flex:none}
+.install .t{flex:1;min-width:200px}
+.install .t b{display:block;font-family:var(--en);font-weight:800;font-size:16px;letter-spacing:-.01em}
+.install .t b em{font-style:normal;color:var(--hot)}
+.install .t p{margin:4px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.5}
+.install .go{align-self:center}
+.a2sheet{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.a2sheet .box{width:100%;max-width:480px;margin:0 12px calc(84px + env(safe-area-inset-bottom,0px));background:var(--bg-2);border:1px solid var(--line);border-radius:22px;padding:20px;color:var(--ink);font-family:var(--body)}
+.a2sheet ol{margin:12px 0 16px;padding-left:20px;font-size:15px;line-height:1.9}
+.a2sheet .arrow{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);color:var(--hot);animation:a2b 1s ease-in-out infinite}
+@keyframes a2b{50%{transform:translate(-50%,8px)}}
 .ghost{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer}
 
 @media (max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}}
@@ -277,6 +289,12 @@ button,input{font:inherit;color:inherit}
     </div>
   </section>
 </main>
+
+<div class="wrap-x"><section class="install" id="install" hidden>
+  <img src="/icon-192.png" alt="">
+  <div class="t"><b>QUIT<em>OPIA</em> 앱으로 쓰기</b><p>홈 화면에 추가하면 주소창 없이 앱처럼 바로 열려요.</p></div>
+  <button class="go" id="installBtn" type="button">홈 화면에 추가</button>
+</section></div>
 
 <footer class="foot wrap-x">
   <div class="times">
@@ -1624,22 +1642,20 @@ new ResizeObserver(resize).observe(stage);resize();renderSnd();renderStats();clo
 setTarget(state.id,false);$('#loading').remove();requestAnimationFrame(frame);renderCards();
 })();
 </script>
-<script>/* home-screen install card */(function(){var ua=navigator.userAgent||'';
-if(/KAKAOTALK/.test(ua))return;
-var ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
-if(!ios&&!and)return;
-if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone)return;
-var K='qt:a2hs',seen=0;try{seen=+localStorage.getItem(K)||0}catch(e){}
-if(Date.now()-seen<7*864e5)return;
+<script>/* fixed install section */(function(){var sec=document.getElementById('install'),btn=document.getElementById('installBtn');if(!sec)return;
+var ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/.test(ua),kakao=/KAKAOTALK/.test(ua),mac=/Macintosh/.test(ua)&&!ios,safari=/Safari/.test(ua)&&!/Chrome|CriOS|FxiOS|EdgiOS|Android/.test(ua);
+function standalone(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone}
+if(standalone())return;sec.hidden=false;
 var deferred=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e});
-function close(d){try{localStorage.setItem(K,Date.now())}catch(e){}d.style.opacity='0';d.style.transform='translateY(12px)';setTimeout(function(){d.remove()},250)}
-function show(){if(document.getElementById('a2hs'))return;var d=document.createElement('div');d.id='a2hs';
-var share='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-var how=ios?'아래 '+share+' <b>공유</b> 버튼 → <b>홈 화면에 추가</b>':(deferred?'버튼 하나로 홈 화면에 설치돼요.':'오른쪽 위 <b>⋮</b> 메뉴 → <b>홈 화면에 추가</b>');
-d.innerHTML='<div style="display:flex;gap:12px;align-items:center"><img src="/icon-192.png" width="44" height="44" style="border-radius:11px;flex:none" alt=""><div style="flex:1;min-width:0"><div style="font-family:var(--en);font-weight:800;font-size:14px;letter-spacing:-.01em">QUIT<span style="color:var(--hot)">OPIA</span> 앱으로 쓰기</div><div style="font-size:13px;line-height:1.5;color:var(--ink-soft);margin-top:2px">'+how+'</div></div><button id="a2x" aria-label="닫기" style="flex:none;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--ink-soft);font-size:18px">✕</button></div>'+(deferred?'<button id="a2go" style="width:100%;margin-top:12px;border:0;border-radius:999px;padding:10px 0;background:var(--main);color:var(--on-main);font:inherit;font-weight:700">홈 화면에 설치</button>':'');
-d.setAttribute('style','color:var(--ink);position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9998;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;padding:14px 14px 14px 16px;box-shadow:0 12px 40px rgba(0,0,0,.5);font-family:var(--body);transition:opacity .25s,transform .25s;opacity:0;transform:translateY(12px);max-width:480px;margin:0 auto');
-document.body.appendChild(d);requestAnimationFrame(function(){d.style.opacity='1';d.style.transform='none'});
-document.getElementById('a2x').onclick=function(){close(d)};
-var g=document.getElementById('a2go');if(g)g.onclick=function(){deferred.prompt();deferred.userChoice.then(function(){close(d)})};}
-addEventListener('appinstalled',function(){var d=document.getElementById('a2hs');if(d)close(d)});
-addEventListener('load',function(){setTimeout(show,4000)});})();</script>
+addEventListener('appinstalled',function(){sec.hidden=true});
+var share='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+function sheet(title,steps,arrow){var s=document.createElement('div');s.className='a2sheet';s.innerHTML='<div class="box" role="dialog" aria-label="'+title+'"><b style="font-family:var(--en);font-weight:800;font-size:16px">'+title+'</b><ol>'+steps.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ol><button class="go" type="button" style="width:100%">알겠어요</button></div>'+(arrow?'<svg class="arrow" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>':'');
+s.addEventListener('click',function(e){if(e.target===s||e.target.tagName==='BUTTON')s.remove()});document.body.appendChild(s)}
+btn.onclick=function(){
+ if(deferred){deferred.prompt();deferred.userChoice.then(function(r){if(r&&r.outcome==='accepted')sec.hidden=true});deferred=null;return}
+ if(kakao){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(location.href);return}
+ if(ios){if(!safari&&!/CriOS|EdgiOS/.test(ua)){sheet('사파리에서 열어 주세요',['이 페이지를 <b>Safari</b>로 열어 주세요.','아래 '+share+' <b>공유</b> 버튼 → <b>홈 화면에 추가</b>'],false);return}
+  sheet('홈 화면에 추가하기',['화면 아래(또는 주소창 옆) '+share+' <b>공유</b> 버튼을 누르세요.','목록을 내려서 <b>홈 화면에 추가</b>를 누르세요.','오른쪽 위 <b>추가</b>를 누르면 끝!'],true);return}
+ if(and){sheet('홈 화면에 추가하기',['오른쪽 위 <b>⋮</b> 메뉴를 누르세요.','<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 누르세요.','<b>설치</b>를 누르면 끝!'],false);return}
+ if(mac&&safari){sheet('Dock에 추가하기',['메뉴 막대에서 <b>파일 → Dock에 추가</b>를 누르세요.'],false);return}
+ sheet('앱으로 설치하기',['주소창 오른쪽의 <b>설치</b> 아이콘을 누르세요.','또는 브라우저 메뉴에서 <b>앱 설치 / 홈 화면에 추가</b>를 찾으세요.'],false)};})();</script>
