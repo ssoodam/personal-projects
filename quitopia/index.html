@@ -1624,3 +1624,22 @@ new ResizeObserver(resize).observe(stage);resize();renderSnd();renderStats();clo
 setTarget(state.id,false);$('#loading').remove();requestAnimationFrame(frame);renderCards();
 })();
 </script>
+<script>/* home-screen install card */(function(){var ua=navigator.userAgent||'';
+if(/KAKAOTALK/.test(ua))return;
+var ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
+if(!ios&&!and)return;
+if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone)return;
+var K='qt:a2hs',seen=0;try{seen=+localStorage.getItem(K)||0}catch(e){}
+if(Date.now()-seen<7*864e5)return;
+var deferred=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e});
+function close(d){try{localStorage.setItem(K,Date.now())}catch(e){}d.style.opacity='0';d.style.transform='translateY(12px)';setTimeout(function(){d.remove()},250)}
+function show(){if(document.getElementById('a2hs'))return;var d=document.createElement('div');d.id='a2hs';
+var share='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+var how=ios?'아래 '+share+' <b>공유</b> 버튼 → <b>홈 화면에 추가</b>':(deferred?'버튼 하나로 홈 화면에 설치돼요.':'오른쪽 위 <b>⋮</b> 메뉴 → <b>홈 화면에 추가</b>');
+d.innerHTML='<div style="display:flex;gap:12px;align-items:center"><img src="/icon-192.png" width="44" height="44" style="border-radius:11px;flex:none" alt=""><div style="flex:1;min-width:0"><div style="font-family:var(--en);font-weight:800;font-size:14px;letter-spacing:-.01em">QUIT<span style="color:var(--hot)">OPIA</span> 앱으로 쓰기</div><div style="font-size:13px;line-height:1.5;color:var(--ink-soft);margin-top:2px">'+how+'</div></div><button id="a2x" aria-label="닫기" style="flex:none;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--ink-soft);font-size:18px">✕</button></div>'+(deferred?'<button id="a2go" style="width:100%;margin-top:12px;border:0;border-radius:999px;padding:10px 0;background:var(--main);color:var(--on-main);font:inherit;font-weight:700">홈 화면에 설치</button>':'');
+d.setAttribute('style','color:var(--ink);position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9998;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;padding:14px 14px 14px 16px;box-shadow:0 12px 40px rgba(0,0,0,.5);font-family:var(--body);transition:opacity .25s,transform .25s;opacity:0;transform:translateY(12px);max-width:480px;margin:0 auto');
+document.body.appendChild(d);requestAnimationFrame(function(){d.style.opacity='1';d.style.transform='none'});
+document.getElementById('a2x').onclick=function(){close(d)};
+var g=document.getElementById('a2go');if(g)g.onclick=function(){deferred.prompt();deferred.userChoice.then(function(){close(d)})};}
+addEventListener('appinstalled',function(){var d=document.getElementById('a2hs');if(d)close(d)});
+addEventListener('load',function(){setTimeout(show,4000)});})();</script>
