@@ -89,6 +89,11 @@ button,input{font:inherit;color:inherit}
 .info p.desc{margin:0;font-size:14px;line-height:1.55;word-break:keep-all}
 .spec{margin:0;font-size:12px;color:var(--ink-soft);word-break:keep-all}
 .meter{display:flex;flex-direction:column;gap:4px}
+.wtimes{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:nowrap}
+.wtimes label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-soft);flex:1;min-width:0;white-space:nowrap}
+.wtimes input{border:1px solid var(--main);background:var(--bg-2);color:var(--ink);border-radius:999px;padding:4px 8px;width:100%;max-width:130px;min-width:0;font-family:var(--en);font-weight:700;font-size:12px;font-variant-numeric:tabular-nums;color-scheme:dark}
+.wtimes span{color:var(--hot);font-weight:700;flex:none}
+.wtimes input::-webkit-calendar-picker-indicator{margin-left:2px;padding:0;width:11px;filter:invert(.8)}
 .meter-l{display:flex;justify-content:space-between;font-family:var(--en);font-size:10.5px;font-weight:700;letter-spacing:.08em;font-variant-numeric:tabular-nums}
 .bar{height:8px;border-radius:999px;background:var(--bg-2);border:1px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ink);border-radius:999px;transition:width .2s}
@@ -232,6 +237,7 @@ button,input{font:inherit;color:inherit}
     <div class="meter">
       <div class="meter-l"><span>WORKDAY</span><span id="workTxt">0%</span></div>
       <div class="bar m"><i id="workBar" style="width:0%"></i></div>
+      <div class="wtimes"><label>출근<input id="tStart" type="time" value="09:00"></label><span aria-hidden="true">→</span><label>퇴근<input id="tEnd" type="time" value="18:00"></label></div>
     </div>
   </div>
   <div class="stage" id="stage" tabindex="0" role="button" aria-label="두드리기. 클릭, 탭, 또는 아무 키나 누르세요">
@@ -299,8 +305,6 @@ button,input{font:inherit;color:inherit}
 
 <footer class="foot wrap-x">
   <div class="times">
-    <div class="field"><label for="tStart">START · 출근</label><input id="tStart" type="time" value="09:00"></div>
-    <div class="field"><label for="tEnd">END · 퇴근</label><input id="tEnd" type="time" value="18:00"></div>
     <button class="ghost" id="resetBtn" type="button">오늘 기록 지우기</button>
   </div>
   <p class="hint">조용한 곳이라면 위의 SOUND ON을 눌러 끄고 화면 효과만 즐겨도 돼요. 기록과 설정은 이 브라우저에만 저장돼요. 3D는 three.js, 나무와 바닷가 사진 질감은 three.js 예제 텍스처를 썼어요.</p>
