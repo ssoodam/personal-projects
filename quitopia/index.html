@@ -1640,6 +1640,23 @@ function buildPills(){
     noise('bandpass',rnd(3800,4200),1.3,.012,1.5,t,.0003);noise('highpass',5000,.7,.008,.45,t,.0003);
     noise('bandpass',rnd(3000,3400),1,.035,.9,t+.035,.002);noise('bandpass',rnd(4200,4600),1,.03,.6,t+.07,.002);
     noise('bandpass',5500,.8,.12,.28,t+.02,.02)}
+  /* 알약 물리: 알약 하나 = 축 위의 공 3개(길이 고정), 바닥·서로 충돌 */
+  const PH=.092,PR=.084,_a=new T.Vector3(),_b=new T.Vector3(),_d=new T.Vector3();
+  function stepPills(dt,fl){const sub=3,h=dt/sub,G=9.8*h*h;
+    for(let it=0;it<sub;it++){
+      for(const r of rolling){if(r.sleep)continue;for(const q of r.P){const vx=(q.x.x-q.o.x)*.999,vy=(q.x.y-q.o.y)*.999,vz=(q.x.z-q.o.z)*.999;q.o.copy(q.x);q.x.x+=vx;q.x.y+=vy-G;q.x.z+=vz}}
+      for(let k=0;k<4;k++){
+        for(const r of rolling){if(r.sleep)continue;const P=r.P;
+          [[0,1,PH],[1,2,PH],[0,2,PH*2]].forEach(([i,j,L])=>{_d.subVectors(P[j].x,P[i].x);const l=_d.length()||1e-6;_d.multiplyScalar((l-L)/l*.5);P[i].x.add(_d);P[j].x.sub(_d)});
+          for(const q of P){if(q.x.y<fl+PR){const vy=q.x.y-q.o.y,vx=q.x.x-q.o.x,vz=q.x.z-q.o.z;q.x.y=fl+PR;if(k===0){if(vy<-.02&&performance.now()-r.tk>90){r.tk=performance.now();landSound('pill')}q.o.y=q.x.y+vy*.45;q.o.x=q.x.x-vx*.86;q.o.z=q.x.z-vz*.86}}}}
+        for(let a_=0;a_<rolling.length;a_++)for(let b_=a_+1;b_<rolling.length;b_++){const A=rolling[a_],B=rolling[b_];if(A.sleep&&B.sleep)continue;
+          for(const p of A.P)for(const q of B.P){_d.subVectors(q.x,p.x);const l=_d.length();if(l<PR*2&&l>1e-6){_d.multiplyScalar((PR*2-l)/l*.5);
+            if(A.sleep){q.x.add(_d.multiplyScalar(2))}else if(B.sleep){p.x.sub(_d.multiplyScalar(2))}else{p.x.sub(_d);q.x.add(_d)}}}}}
+    }
+    for(const r of rolling){if(r.sleep)continue;let mv=0;for(const q of r.P)mv=Math.max(mv,q.x.distanceTo(q.o));r.still=mv<.0004?r.still+1:0;if(r.still>40)r.sleep=true;
+      const P=r.P;r.mesh.position.copy(P[1].x);_a.subVectors(P[2].x,P[0].x).normalize();r.mesh.quaternion.setFromUnitVectors(_b.set(0,1,0),_a).multiply(r.q0)}
+    for(const r of rolling){if(!r.sleep)continue;for(const o of rolling){if(o===r||o.sleep)continue;if(o.P[1].x.distanceTo(r.P[1].x)<PH*2+PR*2.2){r.sleep=false;r.still=0;break}}}
+  }
   return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.62,.45),radius:1.5,camDir:new T.Vector3(.12,.8,1),floor:0,fill:.88,fillN:1,
     onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
@@ -1647,13 +1664,16 @@ function buildPills(){
         const hole=new T.Mesh(stadium(.088,.15),holeMat);hole.position.set(cell.x,cell.y,.0102);g.add(hole);
         for(let j=0;j<rnd(4,7)|0;j++){const sh=new T.Mesh(shardGeo(),shardMat);const a=rnd(0,6.283),rr_=rnd(.02,.07);sh.position.set(cell.x+Math.cos(a)*rr_*.7,cell.y+Math.sin(a)*rr_*1.4,-rnd(.012,.04));sh.rotation.set(rnd(-1.2,1.2),rnd(-1.2,1.2),rnd(0,6.28));g.add(sh)}}
       const hb=new T.Mesh(stadium(.088,.15),holeMat);hb.position.set(cell.x,cell.y,-.0102);hb.rotation.y=Math.PI;g.add(hb);
-      const pl=cell.pill;pl.position.z=-.04;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
-      rolling.push(addPiece(pl,{v:n.multiplyScalar(rnd(1.1,1.6)).add(new T.Vector3(rnd(-.35,.35),-.25,0)),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.075,rest:.5,fric:.8,mode:'pill',keepGeo:true,life:1e9,g:9.8}));
+      const pl=cell.pill;pl.position.z=-.04;g.updateMatrixWorld(true);debris.attach(pl);pl.updateMatrixWorld(true);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
+      {const v0=n.multiplyScalar(rnd(1.1,1.6)).add(new T.Vector3(rnd(-.35,.35),-.25,rnd(.6,1)));const tw=new T.Vector3(rnd(-1,1),rnd(-.5,.5),rnd(-1,1)).multiplyScalar(.9);
+        const P=[-PH,0,PH].map((yy,j)=>{const w=pl.localToWorld(new T.Vector3(0,yy,0));const vv=v0.clone().addScaledVector(tw,j-1);return{x:w,o:w.clone().addScaledVector(vv,-1/180)}});
+        const q0=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),P[2].x.clone().sub(P[0].x).normalize()).invert().multiply(pl.quaternion);
+        rolling.push({mesh:pl,P,q0,still:0,sleep:false,tk:0})}
       popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
       if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;clearPieces();setTarget('pills',true)}},2200)}
       return 'nosound'},
-    update(){for(let i=rolling.length-1;i>=0;i--){const p=rolling[i];if(!pieces.includes(p)){rolling.splice(i,1);continue}const m=p.mesh;if(p.settled)continue;if(m.position.y-p.r<=this.floor+.02){if(!p.rolled){p.rolled=true;p.v.z+=rnd(1.3,1.8);p.v.x+=rnd(-.5,.5);p.fric=.955}const sp=Math.hypot(p.v.x,p.v.z);
-        if(sp<.05&&Math.abs(p.v.y)<.4){p.v.set(0,0,0);p.w.set(0,0,0);p.g=0;p.settled=true;m.rotation.set(Math.PI/2,rnd(0,6.283),rnd(-.15,.15),'YXZ');m.position.y=this.floor+.075}else p.w.set(p.v.z/p.r*.5,p.w.y*.9,-p.v.x/p.r*.5)}}
+    cleanup(){rolling.forEach(r=>debris.remove(r.mesh));rolling.length=0},
+    update(dt){stepPills(Math.min(dt||1/60,1/30),this.floor);
       cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
