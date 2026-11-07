@@ -776,9 +776,10 @@ function buildDesk(){
   ['#2f6fb5','#e04a3a','#2f9e63','#f2c230','#6d4bb5','#2f6fb5','#888'].forEach((c2,k)=>{const h=rnd(.2,.26);B(.055,h,.17,new T.MeshStandardMaterial({color:c2,roughness:.55}),.7+k*.07,topY+.35+h/2,bz+.12,'box',{r:.06})});
   /* 모니터 */
   const blk=new T.MeshStandardMaterial({color:0x17181b,roughness:.4,metalness:.2});const mz=-Wd/2+.3;
-  B(.32,.015,.2,blk,-.2,topY+th/2+.008,mz,'box',{r:.08});B(.05,.3,.04,blk,-.2,topY+.17,mz-.03,'box',{r:.05});
-  B(.92,.56,.035,blk,-.2,topY+.47,mz,'box',{r:.3});
-  const scr=new T.Mesh(new T.PlaneGeometry(.86,.5),new T.MeshBasicMaterial({map:tex(deskScreenCanvas()),toneMapped:false}));scr.position.set(-.2,topY+.47,mz+.019);add(scr,'screen',{r:.2});
+  B(.32,.015,.2,blk,-.2,topY+th/2+.008,mz,'monitor',{r:.08});B(.05,.3,.04,blk,-.2,topY+.17,mz-.03,'monitor',{r:.05});
+  B(.92,.56,.035,blk,-.2,topY+.47,mz,'monitor',{r:.3});
+  const dsc=deskScreenCanvas(),dscT=tex(dsc);const scr=new T.Mesh(new T.PlaneGeometry(.86,.5),new T.MeshBasicMaterial({map:dscT,toneMapped:false}));scr.position.set(-.2,topY+.47,mz+.019);add(scr,'screen',{r:.2});
+  const crk=mk(1024,600),crkT=tex(crk);const over=new T.Mesh(new T.PlaneGeometry(.86,.5),new T.MeshBasicMaterial({map:crkT,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2}));over.position.set(-.2,topY+.47,mz+.022);g.add(over);const scrHits=[];
   /* 키보드·마우스 */
   const kbC=mk(512,160),kx=kbC.getContext('2d');kx.fillStyle='#eef0f2';kx.fillRect(0,0,512,160);for(let r=0;r<5;r++)for(let c3=0;c3<15;c3++){kx.fillStyle='#fbfcfd';kx.fillRect(10+c3*33,10+r*29,28,24);kx.strokeStyle='#cfd3d8';kx.strokeRect(10+c3*33,10+r*29,28,24)}
   const kb=new T.Mesh(bevBox(.62,.025,.2),[0,0,new T.MeshStandardMaterial({map:tex(kbC),roughness:.5}),0,0,0].map(m=>m||new T.MeshStandardMaterial({color:0xe6e8eb,roughness:.5})));kb.position.set(-.2,topY+th/2+.013,.2);add(kb,'box',{r:.1});
@@ -799,18 +800,25 @@ function buildDesk(){
   ao(L+.4,Wd+.4,0,.002,0,.35);ao(PW+.25,PD+.25,px,.003,pz,.55);
   g.position.y=0;
   return base({kind:'desk',group:g,hittables:hit,center:new T.Vector3(0,.82,-.05),radius:1.68,camDir:new T.Vector3(0,.56,1),floor:0,fill:.88,fillN:.96,
-    onHit(h,k){const m=h.object;if(m.userData.part==='plank'&&h.uv){const c2=m.userData.cv;laminateCrack(c2,m.userData,h.uv.x*c2.width,(1-h.uv.y)*c2.height,c2.width);m.userData.mat.map.needsUpdate=true;m.userData.hits=(m.userData.hits||[]).concat([m.worldToLocal(h.point.clone())])}
+    onHit(h,k,px,py){const m=h.object;
+      if(m===scr&&h.uv){const uv=h.uv;crackGlass(crk,uv.x*1024,(1-uv.y)*600,1024*rnd(.14,.24));const x=dsc.getContext('2d'),cw=dsc.width,ch=dsc.height;for(let i=0;i<4;i++){x.fillStyle=pick(['rgba(255,0,90,.55)','rgba(0,220,255,.5)','rgba(80,255,80,.45)','rgba(255,255,255,.7)']);x.fillRect(0,rnd(0,ch),cw,rnd(1,5))}x.fillStyle=pick(['rgba(255,0,90,.35)','rgba(0,220,255,.35)']);x.fillRect(uv.x*cw+rnd(-10,10),0,rnd(1,3),ch);dscT.needsUpdate=true;crkT.needsUpdate=true;scrHits.push(scr.worldToLocal(h.point.clone()));chipShards(h.point,4,scr);sound('glass',k*.8);popWord(px,py-16,pick(['응답 없음','#REF!','엑셀 강제 종료','저장 안 함']),1);this.sp.vsy-=.01*k;return 'nosound'}
+      if(m.userData.part==='monitor'){sound('laptop',k);popWord(px,py-16,hitWord('laptop'),1);this.sp.vsy-=.01*k;return 'nosound'}
+      if(m.userData.part==='plank'&&h.uv){const c2=m.userData.cv;laminateCrack(c2,m.userData,h.uv.x*c2.width,(1-h.uv.y)*c2.height,c2.width);m.userData.mat.map.needsUpdate=true;m.userData.hits=(m.userData.hits||[]).concat([m.worldToLocal(h.point.clone())])}
       chipBoxes(h.point,m.material&&!Array.isArray(m.material)?m.material:topMat,4,.03);this.sp.vy-=.012*k;this.sp.vsy-=.02*k;this.sp.vsx+=.012*k},
     shatter(pt){
       g.updateMatrixWorld(true);
       for(const m of [...g.children]){
-        const ud=m.userData;if(m===aoG){m.visible=false;continue}
+        const ud=m.userData;if(m===aoG){m.visible=false;continue}if(m===over){g.remove(over);continue}
+        if(m===scr){const SW_=.86,SH_=.5,fwd=new T.Vector3(0,0,1);const hl=scrHits.slice(-3);if(!hl.length)hl.push(new T.Vector3());const seeds=[];hl.forEach(q=>{for(let i=0;i<12;i++){const a=rnd(0,6.283),r=Math.pow(Math.random(),1.5)*.5;seeds.push([q.x+Math.cos(a)*r,q.y+Math.sin(a)*r])}});for(let i=0;i<8;i++)seeds.push([rnd(-SW_/2,SW_/2),rnd(-SH_/2,SH_/2)]);
+          const b={x0:-SW_/2,x1:SW_/2,y0:-SH_/2,y1:SH_/2};const smat=new T.MeshBasicMaterial({map:dscT,toneMapped:false});
+          voronoi(seeds.filter(q=>q[0]>b.x0&&q[0]<b.x1&&q[1]>b.y0&&q[1]<b.y1),b).forEach(poly=>{const pr=prism(poly,[],.01,[smat,M.shardEdge],0,(x,y)=>[(x+SW_/2)/SW_,(y+SH_/2)/SH_]);place(pr.mesh,scr,null,pr.c);addPiece(pr.mesh,{v:new T.Vector3(rnd(-2,2),rnd(0,3),0).addScaledVector(fwd,rnd(1.5,4)),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.02,rest:.2,mode:'glass',delay:rnd(0,.1)})});
+          g.remove(scr);continue}
         if(ud.part==='plank'){const hl=(ud.hits||[]).slice(-4);const seeds=[];for(let i=0;i<9;i++)seeds.push([rnd(-ud.L/2,ud.L/2),rnd(-ud.w/2,ud.w/2)]);hl.forEach(p=>{for(let i=0;i<3;i++)seeds.push([p.x+rnd(-.15,.15),-p.z+rnd(-.1,.1)])});
           const b={x0:-ud.L/2,y0:-ud.w/2,x1:ud.L/2,y1:ud.w/2};const Mx=new T.Matrix4().makeRotationX(-Math.PI/2);
           voronoi(seeds,b,6,1).forEach(poly=>{const pp=jag(poly,.012);const pr=prism(pp,[],ud.th,ud.mat,0,(x,y)=>[(x+ud.L/2)/ud.L,(y+ud.w/2)/ud.w]);place(pr.mesh,m,Mx,pr.c);
             const d=_v.copy(pr.mesh.position).sub(pt);d.y=0;d.normalize();addPiece(pr.mesh,{v:new T.Vector3(d.x*rnd(1.5,4.5),rnd(2.5,6.5),d.z*rnd(1.5,4.5)+rnd(0,1.5)),w:new T.Vector3(rnd(-8,8),rnd(-5,5),rnd(-8,8)),r:.05,rest:.3,mode:'wood'})})}
         else{const wp=new T.Vector3();m.getWorldPosition(wp);const d=_v.copy(wp).sub(pt);d.y=0;if(d.lengthSq()<1e-6)d.set(rnd(-1,1),0,1);d.normalize();debris.attach(m);
-          const fl=ud.part==='paper';addPiece(m,{v:new T.Vector3(d.x*rnd(1,3.5),rnd(fl?1:1.5,fl?3:5),d.z*rnd(1,3)+rnd(0,1.2)),w:new T.Vector3(rnd(-6,6),rnd(-4,4),rnd(-6,6)),r:ud.r||.05,rest:.25,mode:ud.part==='metal'?'metal':fl?'paper':'wood',flutter:fl,drag:fl?.96:1})}
+          const fl=ud.part==='paper';addPiece(m,{v:new T.Vector3(d.x*rnd(1,3.5),rnd(fl?1:1.5,fl?3:5),d.z*rnd(1,3)+rnd(0,1.2)),w:new T.Vector3(rnd(-6,6),rnd(-4,4),rnd(-6,6)),r:ud.r||.05,rest:.25,mode:ud.part==='metal'?'metal':ud.part==='monitor'?'plastic':fl?'paper':'wood',flutter:fl,drag:fl?.96:1})}
       }
     }});
 }
