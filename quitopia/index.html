@@ -57,8 +57,7 @@ addEventListener('DOMContentLoaded',function(){setTimeout(function(){var d=docum
 }
 html,body{background:var(--bg);color:var(--ink)}
 /* 미리보기 카드 질감: 짙은 그라디언트 + 블루 빛 + 그레인 + 파티클 */
-body{background:radial-gradient(ellipse 55% 600px at 100% 560px,rgba(127,147,255,.30),rgba(58,70,144,.14) 50%,transparent 78%) no-repeat,radial-gradient(ellipse 40% 400px at 0% 0%,rgba(127,147,255,.10),transparent 70%) no-repeat,linear-gradient(160deg,#17171D,#0B0B0F 900px,#09090C) no-repeat,var(--bg)}
-.grainfx{position:fixed;inset:0;z-index:9000;pointer-events:none;opacity:.55;background-size:180px 180px}
+body{background:radial-gradient(ellipse 55% 600px at 100% 560px,rgba(127,147,255,.30),rgba(58,70,144,.14) 50%,transparent 78%) no-repeat,radial-gradient(ellipse 40% 400px at 0% 0%,rgba(127,147,255,.10),transparent 70%) no-repeat,var(--grain-img,linear-gradient(transparent,transparent)),linear-gradient(160deg,#17171D,#0B0B0F 900px,#09090C) no-repeat,var(--bg);background-size:auto,auto,180px 180px,auto}
 .dustfx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .dustfx i{position:absolute;border-radius:50%;background:#C9D0FF;animation:dust var(--d) ease-in-out var(--dl) infinite alternate}
 .dustfx b{position:absolute;width:var(--s);height:var(--s);color:#F6F9DC;animation:twk var(--d) ease-in-out var(--dl) infinite}
@@ -236,7 +235,10 @@ button,input{font:inherit;color:inherit}
   .logo small{display:none}
 }
 @media (prefers-reduced-motion:reduce){.band-group{animation-duration:90s}}
-.card,.wd,.install,.wd-pop{background-image:radial-gradient(ellipse 80% 70% at 100% 100%,rgba(127,147,255,.13),transparent 70%),var(--grain-img,none);background-size:auto,180px 180px}
+.card,.wd,.install,.wd-pop{background-image:var(--grain-soft,none);background-size:180px 180px}
+/* 블루 면: 마멋과 같은 무광 입체 + 밝은 그레인 */
+.coil{filter:url(#blueMatte)}
+.band,.wd-ok{background-image:var(--grain-blue,none),linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,0) 45%,rgba(8,10,40,.22));background-size:180px 180px,auto}
 </style>
 
 <header class="top wrap-x">
@@ -276,7 +278,17 @@ button,input{font:inherit;color:inherit}
   </div>
   <div class="stage" id="stage" tabindex="0" role="button" aria-label="두드리기. 클릭, 탭, 또는 아무 키나 누르세요">
     <svg id="mallet" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="mlS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a3d1c"/><stop offset=".28" stop-color="#c47c4a"/><stop offset=".5" stop-color="#b0683a"/><stop offset="1" stop-color="#5e2c12"/></linearGradient><radialGradient id="mlH" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#d48e5c"/><stop offset=".5" stop-color="#a65c30"/><stop offset="1" stop-color="#5a2a10"/></radialGradient></defs><g transform="translate(36 164) rotate(-43.03)"><path d="M10 -9 Q60 -10.5 120 -8 L194 -5.5 Q201 0 194 5.5 L120 8 Q60 10.5 10 9 Z" fill="#1e1006" opacity=".3" transform="translate(4 4)"/><path d="M10 -9 Q60 -10.5 120 -8 L194 -5.5 Q201 0 194 5.5 L120 8 Q60 10.5 10 9 Z" fill="url(#mlS)"/><g fill="none" stroke="#5e2c12" stroke-linecap="round" opacity=".5"><path d="M24 -4 Q80 -6 140 -3.5 T194 -2.5" stroke-width=".7"/><path d="M30 2 Q90 3.5 150 1.5 T192 2" stroke-width=".6"/><path d="M60 -1 Q110 0 176 -.5" stroke-width=".45"/><path d="M40 5 Q100 6 170 4" stroke-width=".45" opacity=".7"/><path d="M50 -6.5 Q120 -6 186 -4" stroke-width=".4" opacity=".7"/></g><path d="M8 -8 L60 -8" stroke="#e8a874" stroke-width="1.6" opacity=".35" stroke-linecap="round"/><circle cx="0" cy="0" r="19" fill="url(#mlH)"/><g fill="none" stroke="#6a3418" opacity=".35"><path d="M-14 -6 Q0 -10 14 -5" stroke-width=".7"/><path d="M-15 2 Q0 -2 15 3" stroke-width=".6"/></g><ellipse cx="-6" cy="-8" rx="7" ry="4" fill="#fff" opacity=".25" transform="rotate(-20 -6 -8)"/></g></svg>
-    <svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="blueMatte" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="11" result="b"/>
+<feDiffuseLighting in="b" surfaceScale="9" diffuseConstant="1" lighting-color="#fff" result="l"><feDistantLight azimuth="235" elevation="52"/></feDiffuseLighting>
+<feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1=".8" k2=".38" k3="0" k4="0" result="sh"/>
+<feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="21" result="n"/>
+<feColorMatrix in="n" type="matrix" values="0 0 0 0 .92  0 0 0 0 .94  0 0 0 0 1  0 0 0 -1 .6" result="g"/>
+<feComposite in="g" in2="SourceAlpha" operator="in" result="gi"/>
+<feComposite in="gi" in2="sh" operator="over" result="o"/>
+<feComposite in="o" in2="SourceAlpha" operator="in"/>
+</filter></svg>
+<svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
     <div class="bigtype" aria-hidden="true"><span class="l1">GO</span><span class="l2">HOME</span><span class="l3">집에 가고 싶다</span></div>
     <canvas id="scene"></canvas>
     <canvas id="fx" aria-hidden="true"></canvas>
@@ -1602,7 +1614,7 @@ function doHit(px,py,fromKey){
   if(cur.kind==='moktak'&&fromKey)malletStrike(px,py);
   const res=cur.onHit(h,k,px,py,fromKey);
   if(res!=='nosound'&&cur.kind!=='bubble'){const mat=cur.t.mat;sound(mat,k);popWord(px,py-16,hitWord(mat),1,state.combo>=8&&state.combo%4===0)}
-  if(cur.kind==='desk'){dustCloud(px,py,6,['#c69560','#e2c39a','#8a5a2e'])}
+  
   if(cur.kind==='drum')popWord(px,py-16,hitWord('drum'),1);
   afterHit();
   if(res!=='nohp'&&isFinite(state.hp)){state.hp--;renderHp();if(state.hp<=0)smash(h.point,px,py)}
@@ -1612,7 +1624,7 @@ function smash(pt,px,py){
   state.breaking=true;state.stats.broken++;store.set('stats',state.stats);renderStats();const mode=cur.t.mat;
   breakSound(mode);shake=reduced?0:.14;flash=mode==='glass'||mode==='oven'||mode==='laptop'||mode==='metal'?.4:.15;if(mode==='metal'&&!reduced)shake=.24;const c=cur;
   setTimeout(()=>{c.shatter(pt);if(c.kind!=='word')scene.remove(c.group);
-    if(mode==='wood')dustCloud(px,py,40,['#c69560','#e2c39a','#8a5a2e']);if(mode==='glass')glints(px,py,40);if(mode==='metal'){sparks(px,py,80);glints(px,py,24);dustCloud(px,py,22,['#3a3a3a','#5a5a5a','#7a7a7a'])}if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='keyboard'){glints(px,py,24);if(state.cap==='bread')dustCloud(px,py,18,['#e8c38a','#c98a42','#f4dfb4']);else if(state.cap==='jelly')dropBlobs(pt,14);else dustCloud(px,py,10,['#d8d6d0','#b8b6b0'])}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
+    if(mode==='glass')glints(px,py,40);if(mode==='metal'){sparks(px,py,80);glints(px,py,24);dustCloud(px,py,22,['#3a3a3a','#5a5a5a','#7a7a7a'])}if(mode==='oven'){sparks(px,py,40);glints(px,py,30);dustCloud(px,py,20,['#3a3a3a','#555','#777'])}if(mode==='laptop'){sparks(px,py,30);glints(px,py,30)}if(mode==='keyboard'){glints(px,py,24);if(state.cap==='bread')dustCloud(px,py,18,['#e8c38a','#c98a42','#f4dfb4']);else if(state.cap==='jelly')dropBlobs(pt,14);else dustCloud(px,py,10,['#d8d6d0','#b8b6b0'])}if(mode==='phone'){sparks(px,py,14);dustCloud(px,py,12,['#cfd1d5','#9a9da3'])}if(mode==='jelly')dropBlobs(pt,30);
     popWord(px,py-24,BREAK_WORD[mode]||'SMASHED!',1.5,true)},reduced?0:70);
   setTimeout(()=>{if(cur===c){setTarget(state.id,true)}},mode==='paper'?2600:2000);
 }
@@ -1709,7 +1721,7 @@ btn.onclick=function(){
  sheet('앱으로 설치하기',['주소창 오른쪽의 <b>설치</b> 아이콘을 누르세요.','또는 브라우저 메뉴에서 <b>앱 설치 / 홈 화면에 추가</b>를 찾으세요.'],false)};})();</script>
 <script>
 /* 그레인 텍스처(한 번만 생성) + 떠다니는 파티클 */
-(function(){try{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d'),d=x.createImageData(180,180);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=Math.random()<.5?20:11}x.putImageData(d,0,0);const u='url('+c.toDataURL()+')';document.documentElement.style.setProperty('--grain-img',u);const g=document.createElement('div');g.className='grainfx';g.setAttribute('aria-hidden','true');g.style.backgroundImage=u;document.body.appendChild(g)}catch(e){}
+(function(){try{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d'),d=x.createImageData(180,180);const mk=(f)=>{for(let i=0;i<d.data.length;i+=4)f(d.data,i);x.putImageData(d,0,0);return 'url('+c.toDataURL()+')'},R0=Math.random,st=document.documentElement.style;st.setProperty('--grain-img',mk((a,i)=>{const v=R0()*255|0;a[i]=a[i+1]=a[i+2]=v;a[i+3]=R0()<.5?16:9}));st.setProperty('--grain-soft',mk((a,i)=>{const v=R0()*255|0;a[i]=a[i+1]=a[i+2]=v;a[i+3]=R0()<.5?6:3}));st.setProperty('--grain-blue',mk((a,i)=>{const w=R0()<.5;a[i]=w?236:6;a[i+1]=w?240:8;a[i+2]=w?255:40;a[i+3]=(R0()*R0()*60)|0}))}catch(e){}
 const box=document.getElementById('dust');if(!box)return;const R=Math.random,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;let h='';
 for(let i=0;i<46;i++){const r=R(),x=r<.55?55+R()*45:R()*100,y=r<.55?35+R()*65:R()*100,s=(1+R()*2.2).toFixed(1);h+=`<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${s}px;height:${s}px;--o:${(.25+R()*.55).toFixed(2)};--dx:${(R()*16-8).toFixed(0)}px;--d:${(5+R()*7).toFixed(1)}s;--dl:${(-R()*8).toFixed(1)}s${reduce?';animation:none':''}"></i>`}
 [[8,14,12],[64,12,10],[92,30,14],[30,84,9],[78,88,11],[48,6,8]].forEach(([x,y,s],k)=>{h+=`<b style="left:${x}%;top:${y}%;--s:${s}px;--d:${(3.5+k*.7).toFixed(1)}s;--dl:${(-k*.9).toFixed(1)}s${reduce?';animation:none;opacity:.6':''}"></b>`});box.innerHTML=h})();
