@@ -1336,7 +1336,9 @@ function addMoss(g,KW,KD,TH,KH,u){let seed=7;const R=()=>{seed=(seed*16807)%2147
     if(k==='d'){const R0=rr(.045,.06);for(let j=0;j<14;j++){const a=j/14*6.283;put(W_,iw++,x,y,z,tx,ry+a,tz,R0*.55,R0*.07,R0*.17,R0*.55,0,0)}put(Y_,ic++,x,y+.002,z,tx,ry,tz,R0*.3,R0*.17,R0*.3)}
     else if(k==='p'){const R0=rr(.022,.03);for(let j=0;j<5;j++){const a=j/5*6.283;put(P_,ip++,x,y,z,tx,ry+a,tz,R0*.55,R0*.1,R0*.36,R0*.5,0,0)}put(Y_,ic++,x,y+.002,z,tx,ry,tz,R0*.22,R0*.14,R0*.22);for(let j=0;j<2;j++)put(L_,il++,x,y-.004,z,tx,ry+j*3.1+.6,tz,.016,.003,.007,.016,0,0)}
     else{for(let j=0;j<5;j++){const a=ry+j*1.3;put(L_,il++,x+Math.cos(a)*.012*j*.4,y-.01+j*.006,z+Math.sin(a)*.012*j*.4,rr(-.4,.4),a,rr(-.3,.3),.013,.0025,.008,.012,0,0)}}});
-  [W_,P_,Y_,L_].forEach(m=>{m.count=m===W_?iw:m===P_?ip:m===Y_?ic:il;m.instanceMatrix.needsUpdate=true;g.add(m)})}
+  [W_,P_,Y_,L_].forEach(m=>{m.count=m===W_?iw:m===P_?ip:m===Y_?ic:il;m.instanceMatrix.needsUpdate=true;g.add(m)});return dens}
+/* 나뭇잎 사락사락: 짧은 고음 잡음 알갱이 여러 개 */
+function leafRustle(v=1){if(!on())return;const t=ac.currentTime+.004;const n=3+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const dt=i*rnd(.025,.05)+rnd(0,.015);crackle(t+dt,rnd(.05,.09),rnd(3800,6200),.22*v,.45);noise('bandpass',rnd(2600,4200),.9,rnd(.03,.06),.05*v,t+dt,.006)}noise('highpass',5200,.6,.14,.025*v,t,.03)}
 function buildKeyboard(){
   const theme=CAPS[state.cap]?state.cap:'basic';
   const g=new T.Group();const hit=[];const u=.15,gap=.011,KW=16*u,KD=5*u,M=.075,CW=KW+M*2,CD=KD+M*2,TH=.07;
@@ -1360,7 +1362,10 @@ function buildKeyboard(){
     const bat=new T.Mesh(roundedBox(.5,.018,.16,.008,2),silver);bat.position.set(-.35,TH*.35,-.18);g.add(bat);
     [[.5,-.2],[.62,-.2],[.2,.15],[-.8,.1],[.85,.12]].forEach(([x,z],i)=>{const ch=new T.Mesh(bevBox(i<2?.05:.08,.008,i<2?.05:.06),i<2?gold:new T.MeshStandardMaterial({color:C(0x20262e),roughness:.4}));ch.position.set(x,TH*.5,z);g.add(ch)});
     const sw=new T.Mesh(bevBox(.04,.02,.02),gold);sw.position.set(CW/2-.09,TH*.5,-CD/2+.04);g.add(sw)}
-  if(theme==='moss')addMoss(g,KW,KD,TH,KH,u);
+  let mossD=null;if(theme==='moss')mossD=addMoss(g,KW,KD,TH,KH,u);
+  const mossAt=pt=>{if(!mossD)return 0;const lp=g.worldToLocal(pt.clone());return mossD(lp.x,lp.z)};
+  let brushT=0,brushP=null;const onBrush=e=>{if(!mossD||cur.group!==g)return;const now=performance.now();if(now-brushT<70)return;const r=stage.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const sp=brushP?Math.hypot(x-brushP[0],y-brushP[1]):0;brushP=[x,y];if(sp<6)return;const h=pickAt(x,y);if(!h)return;const d=mossAt(h.point);if(d>.2){brushT=now;ensureAudio();leafRustle(Math.min(.8,.25+sp/120)*Math.min(1,d*1.6))}};
+  if(theme==='moss')stage.addEventListener('pointermove',onBrush);
   if(theme==='ceramic'){const kn=new T.Mesh(new T.CylinderGeometry(.06,.06,.06,40),new T.MeshStandardMaterial({color:C(0x3a3d42),metalness:.8,roughness:.3}));kn.position.set(CW/2-.035,TH+.07,-CD/2+.035);g.add(kn)}
   // keys
   const keys=[];const side={};const sideMat=(kind,ri,ci)=>{
@@ -1394,7 +1399,9 @@ function buildKeyboard(){
     onHit(h,k,px,py){const m=h.object,ud=m.userData;
       if(ud.part==='key'){const kk=ud.key;kk.userData.press=1;keyThock(theme,Math.min(1.15,.75+k*.25));if(Math.random()<.2){const n=keys[Math.floor(Math.random()*keys.length)];n.userData.press=.5}}
       else{const n=keys.reduce((b,q)=>{const d=q.getWorldPosition(new T.Vector3()).distanceTo(h.point);return d<b[0]?[d,q]:b},[1e9,null])[1];if(n)n.userData.press=1;keyThock(theme,Math.min(1.15,.75+k*.25));keys.forEach(q=>{if(Math.random()<.12)q.userData.press=.3+Math.random()*.3})}
+      if(mossD){const d=mossAt(h.point);if(d>.12)leafRustle(Math.min(1,.45+d)*Math.min(1.1,.7+k*.2))}
       popWord(px,py-16,capWord(theme),1);this.sp.vsy-=(soft?.016:.007)*k;return 'nosound'},
+    cleanup(){stage.removeEventListener('pointermove',onBrush)},
     update(){keys.forEach(q=>{const u_=q.userData;u_.press*=soft?.85:.72;q.position.y=u_.y0-.03*u_.press;if(theme==='jelly')q.scale.set(1+.1*u_.press,1-.22*u_.press,1+.1*u_.press);else if(theme==='bread')q.scale.set(1+.06*u_.press,1-.18*u_.press,1+.06*u_.press)})},
     shatter(pt){g.updateMatrixWorld(true);const mode=soft?'jelly':'plastic';
       keys.forEach(q=>{debris.attach(q);addPiece(q,{v:new T.Vector3(rnd(-3,3),rnd(3,7),rnd(-1,3.5)),w:new T.Vector3(rnd(-14,14),rnd(-14,14),rnd(-14,14)),r:.05,rest:soft?.5:.4,fric:.6,mode,squish:soft,keepGeo:true,life:rnd(2.8,4)})});
