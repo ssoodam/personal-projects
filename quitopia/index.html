@@ -1652,7 +1652,7 @@ function buildPills(){
       popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
       if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;setTarget('pills',true)}},2200)}
       return 'nosound'},
-    update(){for(let i=rolling.length-1;i>=0;i--){const p=rolling[i];if(!pieces.includes(p)){rolling.splice(i,1);continue}const m=p.mesh;if(m.position.y-p.r<=this.floor+.02){if(!p.rolled){p.rolled=true;p.v.z=rnd(1.7,2.4);p.v.x=rnd(-.7,.7);p.fric=.988;p.rest=.25}p.w.set(p.v.z/p.r*.55,0,-p.v.x/p.r*.55)}}
+    update(){for(let i=rolling.length-1;i>=0;i--){const p=rolling[i];if(!pieces.includes(p)){rolling.splice(i,1);continue}const m=p.mesh;if(m.position.y-p.r<=this.floor+.02){if(!p.rolled){p.rolled=true;p.v.z=rnd(1.9,2.3);p.v.x=rnd(-.5,.5);p.fric=.97;p.rest=.2}if(m.position.z>.95){p.v.x*=.85;p.v.z*=.85}if(Math.hypot(p.v.x,p.v.z)<.06){p.v.x=p.v.z=0}p.w.set(p.v.z/p.r*.55,0,-p.v.x/p.r*.55)}}
       cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
