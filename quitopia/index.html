@@ -241,7 +241,9 @@ button,input{font:inherit;color:inherit}
 .coil-img{position:absolute;z-index:0;pointer-events:none;max-width:none;user-select:none;-webkit-user-drag:none}
 .band,.wd-ok{background-image:var(--grain-blue,none),linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.07) 34%,rgba(255,255,255,0) 52%,rgba(8,10,40,.38));background-size:180px 180px,auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 8px rgba(4,6,30,.4)}
 /* 물건 뒤 광채 */
-.shade,.halo{position:absolute;left:50%;top:52%;width:min(78vw,900px);height:min(52vw,600px);transform:translate(-50%,-50%);z-index:2;pointer-events:none;border-radius:50%;transition:left .35s,top .35s,width .35s,height .35s}
+.shade,.halo{position:absolute;left:50%;top:52%;width:min(78vw,900px);height:min(52vw,600px);transform:translate(-50%,-50%);z-index:2;pointer-events:none;border-radius:50%}
+.shade{z-index:1}
+.stage .bigtype{z-index:2}
 .card h3{position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.6)}
 .shade{background:radial-gradient(closest-side,rgba(3,4,13,.8),rgba(3,4,13,.56) 48%,rgba(3,4,13,.22) 76%,transparent)}
 .halo{background:radial-gradient(closest-side,rgba(232,236,255,.22),rgba(160,176,255,.12) 45%,rgba(110,128,255,.04) 70%,transparent);opacity:.85}
@@ -1603,7 +1605,7 @@ function landSound(mode){if(!on()||mode==='chip')return;const now=performance.no
 /* ================= stage control ================= */
 function stepSpring(sp,soft){const K=soft?.06:.22,D=soft?.9:.72;for(const k of ['x','y','r','sx','sy']){const vk='v'+k;sp[vk]=(sp[vk]-sp[k]*K)*D;sp[k]+=sp[vk]}}
 let flash=0,shake=0;
-function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){if(camera===cam){clearTimeout(fitCam._t);fitCam._t=setTimeout(placeHalo,60);setTimeout(placeHalo,700)}const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*(camera===cam?Math.max(0,Math.min(1,state.size||0)):0);const d=o.radius/Math.tan(f/2*fill);
+function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*(camera===cam?Math.max(0,Math.min(1,state.size||0)):0);const d=o.radius/Math.tan(f/2*fill);
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
   if(cur){if(cur.onUp)cur.onUp();if(cur.cleanup)cur.cleanup();scene.remove(cur.group);const og=cur.group;setTimeout(()=>{try{disposeDeep(og)}catch(e){}},0)}
@@ -1715,18 +1717,31 @@ $('#resetBtn').addEventListener('click',()=>{state.stats={date:today(),hits:0,br
 /* 블루 물결: 광택 필터를 한 번만 그려서 이미지로 고정(매 프레임 다시 계산하지 않게) */
 function bakeCoil(){try{const el=document.querySelector('.coil'),pa=$('#coilPath'),st=el.parentElement;const r=el.getBoundingClientRect(),q=st.getBoundingClientRect();if(r.width<10||r.height<10)return;
 const w=parseFloat(getComputedStyle(pa).strokeWidth)||40;const P=Math.ceil(w*1.4),W=Math.round(r.width+2*P),H=Math.round(r.height+2*P),D=Math.min(2,devicePixelRatio||1);const sx=r.width/1200,sy=r.height/400;
-const T2=Math.PI*2*6.5,segs=[[],[]];let cur=null,side=-1;for(let t=0;t<=T2+1e-6;t+=.03){const x=(-40+(t/T2)*1280-58*Math.sin(t))*sx+P,y=(200-130*Math.cos(t)+Math.sin(t*.37)*30)*sy+P;const sd=Math.cos(t)>0?0:1;if(sd!==side){if(cur)cur.push([x,y]);cur=[[x,y]];segs[sd].push(cur);side=sd}else cur.push([x,y])}
-const mk=()=>{const c=document.createElement('canvas');c.width=W*D;c.height=H*D;const x=c.getContext('2d');x.scale(D,D);x.lineCap='round';x.lineJoin='round';return[c,x]};
+const T2=Math.PI*2*6.5,dt=.02;const pt=t=>[(-40+(t/T2)*1280-58*Math.sin(t))*sx+P,(200-130*Math.cos(t)+Math.sin(t*.37)*30)*sy+P];const run=(a,b)=>{const o=[];for(let t=a;t<b;t+=dt)o.push(pt(t));o.push(pt(b));return o};
+const mk=()=>{const c=document.createElement('canvas');c.width=W*D;c.height=H*D;const x=c.getContext('2d');x.scale(D,D);x.lineJoin='round';return[c,x]};
 const path=(x,pts)=>{x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let k=1;k<pts.length;k++)x.lineTo(pts[k][0],pts[k][1])};
-const lerp=(a,b,t)=>a.map((v,k)=>Math.round(v+(b[k]-v)*t));const C0=[22,28,92],C1=[75,92,196],C2=[150,165,255];
-function tube(x,pts,dark){const n=14;for(let k=0;k<n;k++){const f=k/(n-1);const col=f<.55?lerp(C0,C1,f/.55):lerp(C1,C2,(f-.55)/.45);const m=dark?.82:1;x.strokeStyle=`rgb(${col[0]*m|0},${col[1]*m|0},${col[2]*m|0})`;x.lineWidth=w*(1-f*.8);x.save();x.translate(-w*.10*f,-w*.16*f);path(x,pts);x.stroke();x.restore()}
- x.save();x.globalCompositeOperation='source-atop';x.translate(-w*.17,-w*.24);x.strokeStyle='rgba(232,237,255,.6)';x.shadowColor='rgba(220,228,255,.7)';x.shadowBlur=w*.3;x.lineWidth=w*.16;path(x,pts);x.stroke();x.restore();
- x.save();x.globalCompositeOperation='source-atop';x.translate(w*.16,w*.26);x.strokeStyle='rgba(140,155,255,.45)';x.shadowColor='rgba(140,155,255,.6)';x.shadowBlur=w*.2;x.lineWidth=w*.1;path(x,pts);x.stroke();x.restore()}
-function grain(x){const g=x.getImageData(0,0,W*D,H*D),a=g.data;for(let k=0;k<a.length;k+=4){if(!a[k+3])continue;const n=(Math.random()-.5)*26;a[k]+=n;a[k+1]+=n;a[k+2]+=n}x.putImageData(g,0,0)}
-const[tc,tx]=mk();const lay=(sd,dark)=>{const[c,x]=mk();segs[sd].forEach(pts=>{tx.save();tx.setTransform(1,0,0,1,0,0);tx.clearRect(0,0,W*D,H*D);tx.restore();tube(tx,pts,dark);x.drawImage(tc,0,0,W,H)});return c};const cb=lay(0,true),cf=lay(1,false);
-const [out,xo]=mk();xo.drawImage(cb,0,0,W,H);xo.save();xo.shadowColor='rgba(2,3,16,.75)';xo.shadowBlur=w*.55;xo.shadowOffsetY=w*.12;xo.drawImage(cf,0,0,W,H);xo.restore();xo.drawImage(cf,0,0,W,H);xo.setTransform(1,0,0,1,0,0);grain(xo);
+const lerp=(a,b,t)=>a.map((v,k)=>Math.round(v+(b[k]-v)*t));const C0=[20,26,88],C1=[75,92,196],C2=[146,162,255],C3=[226,232,255];
+/* 가운데 대칭 원통 음영(잘라 이어 붙여도 이음새가 안 보임) */
+function tube(x,pts,capA,capB){const n=18;for(let k=0;k<n;k++){const f=k/(n-1);const col=f<.5?lerp(C0,C1,f/.5):f<.82?lerp(C1,C2,(f-.5)/.32):lerp(C2,C3,(f-.82)/.18);x.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;x.lineWidth=w*(1-f*.86);x.lineCap='butt';path(x,pts);x.stroke();
+  if(capA||capB){x.fillStyle=x.strokeStyle;for(const [on,p0] of [[capA,pts[0]],[capB,pts[pts.length-1]]])if(on){x.beginPath();x.arc(p0[0],p0[1],x.lineWidth/2,0,6.283);x.fill()}}}}
+/* 1) 한 줄 전체를 하나의 원통으로 */
+const [A,xa]=mk();tube(xa,run(0,T2),true,true);
+/* 2) 교차점마다: 뒤 가닥 → 그림자 → 앞 가닥 순으로 다시 그려서 부드러운 원형 마스크로 얹음 */
+const all=[];for(let t=0;t<=T2;t+=dt)all.push([t,pt(t)]);
+const xs_=[];for(const [t,p0] of all){if(Math.cos(t)>=0)continue;let best=null;for(const [u,q0] of all){if(Math.abs(u-t)<1.6||Math.cos(u)<0)continue;const d=Math.hypot(q0[0]-p0[0],q0[1]-p0[1]);if(d<w*.9&&(!best||d<best.d))best={t,u,d}}if(best){const prev=xs_[xs_.length-1];if(prev&&Math.abs(prev.t-t)<.8&&Math.abs(prev.u-best.u)<.8){if(best.d<prev.d)xs_[xs_.length-1]=best}else xs_.push(best)}}
+const [out,xo]=mk();xo.setTransform(1,0,0,1,0,0);xo.drawImage(A,0,0);
+const [Pc,xp]=mk(),[Fc,xfc]=mk(),[Mk,xmk]=mk();const clr=x=>{x.save();x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(0,0,W*D,H*D);x.restore()};
+for(const c of xs_){clr(xp);clr(xfc);clr(xmk);
+ tube(xp,run(Math.max(0,c.u-1.3),Math.min(T2,c.u+1.3)),c.u-1.3<=0,c.u+1.3>=T2);
+ tube(xfc,run(Math.max(0,c.t-1.3),Math.min(T2,c.t+1.3)),c.t-1.3<=0,c.t+1.3>=T2);
+ xp.save();xp.setTransform(1,0,0,1,0,0);xp.globalCompositeOperation='source-atop';xp.shadowColor='rgba(2,3,16,.8)';xp.shadowBlur=w*.45*D;xp.shadowOffsetY=w*.1*D;xp.drawImage(Fc,0,0);xp.restore();
+ xp.save();xp.setTransform(1,0,0,1,0,0);xp.drawImage(Fc,0,0);xp.restore();
+ const p0=pt(c.t),q0=pt(c.u),cx=(p0[0]+q0[0])/2,cy=(p0[1]+q0[1])/2,R=w*2.1;const g=xmk.createRadialGradient(cx,cy,0,cx,cy,R);g.addColorStop(0,'#000');g.addColorStop(.55,'#000');g.addColorStop(1,'rgba(0,0,0,0)');xmk.fillStyle=g;xmk.beginPath();xmk.arc(cx,cy,R,0,6.283);xmk.fill();
+ xmk.save();xmk.setTransform(1,0,0,1,0,0);xmk.globalCompositeOperation='source-in';xmk.drawImage(Pc,0,0);xmk.restore();
+ xo.drawImage(Mk,0,0)}
+const g=xo.getImageData(0,0,W*D,H*D),ga=g.data;for(let k=0;k<ga.length;k+=4){if(!ga[k+3])continue;const nn=(Math.random()-.5)*24;ga[k]+=nn;ga[k+1]+=nn;ga[k+2]+=nn}xo.putImageData(g,0,0);
 let im=st.querySelector('.coil-img');if(!im){im=document.createElement('img');im.className='coil-img';im.alt='';im.setAttribute('aria-hidden','true');el.after(im)}
-im.onload=()=>el.classList.add('baked');Object.assign(im.style,{left:(r.left-q.left-P)+'px',top:(r.top-q.top-P)+'px',width:W+'px',height:H+'px'});im.src=out.toDataURL('image/png')}catch(e){}}
+im.onload=()=>el.classList.add('baked');Object.assign(im.style,{left:(r.left-q.left-P)+'px',top:(r.top-q.top-P)+'px',width:W+'px',height:H+'px'});im.src=out.toDataURL('image/png')}catch(e){console.warn(e)}}
 bakeCoil();{let bt=0,lw=innerWidth;addEventListener('resize',()=>{if(Math.abs(innerWidth-lw)<2)return;lw=innerWidth;clearTimeout(bt);bt=setTimeout(bakeCoil,250)})}
 (function(){const w=[['e','QUITOPIA'],['k','집에 가자'],['e','GO HOME'],['k','쨍그랑'],['e','SMASH'],['k','칼퇴'],['e','RIP IT'],['k','뽁'],['e','OFF WORK'],['k','이불 속']];const g=w.map(s=>`<span class="${s[0]}">${s[1]}</span>`).join('');$('#band').innerHTML=`<div class="band-group">${g}</div>`.repeat(3)})();
 
