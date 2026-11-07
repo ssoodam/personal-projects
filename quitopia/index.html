@@ -1658,7 +1658,7 @@ function buildPills(){
       const P=r.P;r.mesh.position.copy(P[1].x);_a.subVectors(P[2].x,P[0].x).normalize();r.mesh.quaternion.setFromUnitVectors(_b.set(0,1,0),_a).multiply(r.q0)}
     for(const r of rolling){if(!r.sleep)continue;for(const o of rolling){if(o===r||o.sleep)continue;if(o.P[1].x.distanceTo(r.P[1].x)<PH*2+PR*2.2){r.sleep=false;r.still=0;break}}}
   }
-  return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.62,.45),radius:1.5,camDir:new T.Vector3(.12,.8,1),floor:-.9,fill:.88,fillN:1,
+  return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.82,.4),radius:1.5,camDir:new T.Vector3(.12,.8,1),floor:-.9,fill:.88,fillN:1,
     onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
       cell.done=true;cell.crush=1;pop();{cell.bub.geometry=crumple(bubG);cell.bub.material=crumpMat;
