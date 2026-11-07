@@ -1645,9 +1645,10 @@ function buildPills(){
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
       cell.done=true;cell.crush=1;pop();{cell.bub.geometry=crumple(bubG);cell.bub.material=crumpMat;
         const hole=new T.Mesh(stadium(.088,.15),holeMat);hole.position.set(cell.x,cell.y,.0102);g.add(hole);
-        for(let j=0;j<rnd(4,7)|0;j++){const sh=new T.Mesh(shardGeo(),shardMat);const a=rnd(0,6.283),rr_=rnd(.02,.07);sh.position.set(cell.x+Math.cos(a)*rr_*.7,cell.y+Math.sin(a)*rr_*1.4,rnd(.012,.04));sh.rotation.set(rnd(-1.2,1.2),rnd(-1.2,1.2),rnd(0,6.28));g.add(sh)}}
-      const pl=cell.pill;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
-      addPiece(pl,{v:n.multiplyScalar(rnd(.6,1)).add(new T.Vector3(rnd(-.4,.4),-.2,rnd(1.2,2))),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.08,rest:.5,fric:.75,mode:'pill',keepGeo:true,life:rnd(4.5,6),g:9.8});
+        for(let j=0;j<rnd(4,7)|0;j++){const sh=new T.Mesh(shardGeo(),shardMat);const a=rnd(0,6.283),rr_=rnd(.02,.07);sh.position.set(cell.x+Math.cos(a)*rr_*.7,cell.y+Math.sin(a)*rr_*1.4,-rnd(.012,.04));sh.rotation.set(rnd(-1.2,1.2),rnd(-1.2,1.2),rnd(0,6.28));g.add(sh)}}
+      const hb=new T.Mesh(stadium(.088,.15),holeMat);hb.position.set(cell.x,cell.y,-.0102);hb.rotation.y=Math.PI;g.add(hb);
+      const pl=cell.pill;pl.position.z=-.04;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
+      addPiece(pl,{v:n.multiplyScalar(rnd(1.3,2)).add(new T.Vector3(rnd(-.35,.35),-.25,0)),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.08,rest:.5,fric:.75,mode:'pill',keepGeo:true,life:rnd(4.5,6),g:9.8});
       popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
       if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;setTarget('pills',true)}},2200)}
       return 'nosound'},
