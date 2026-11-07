@@ -757,7 +757,7 @@ function buildDesk(){
   const metal=new T.MeshStandardMaterial({color:0xb9bdc4,metalness:.85,roughness:.32,envMapIntensity:1});const lh=topY-th/2;
   for(const z of [-Wd/2+.12,Wd/2-.12]){const c=new T.Mesh(new T.CylinderGeometry(.03,.03,lh,20),metal);c.position.set(-L/2+.14,lh/2,z);add(c,'metal',{r:.05});const f=new T.Mesh(new T.CylinderGeometry(.045,.05,.03,20),new T.MeshStandardMaterial({color:0x222,roughness:.7}));f.position.set(-L/2+.14,.015,z);add(f,'metal',{r:.03})}
   B(.05,.05,Wd-.24,metal,-L/2+.14,.1,0,'metal',{r:.05});B(L-.7,.05,.03,metal,-.2,lh-.05,-Wd/2+.12,'metal',{r:.05});
-  const oak=M.wood(oakCanvas());oak.color.set(0xffffff);oak.roughness=.5;const PW=.5,PD=.58,PH=.6,px=L/2-PW/2-.08,pz=-Wd/2+PD/2+.15;
+  const oak=M.wood(oakCanvas());oak.color.set(0xffffff);oak.roughness=.5;const PW=.5,PD=.58,PH=.6,px=L/2-PW/2-.08,pz=Wd/2-PD/2-.03;
   B(PW,PH,PD,oak,px,PH/2+.04,pz,'box',{r:.3});
   for(let k=0;k<3;k++){const h=[.14,.2,.2][k],y=[.56,.38,.17][k];B(PW-.04,h,.02,oak,px,y,pz+PD/2+.01,'box',{r:.1});B(.16,.016,.03,metal,px,y+h*.22,pz+PD/2+.035,'metal',{r:.03})}
   for(const dx of [-1,1])for(const dz of [-1,1]){const w=new T.Mesh(new T.SphereGeometry(.022,12,8),new T.MeshStandardMaterial({color:0x1b1b1b,roughness:.6}));w.position.set(px+dx*(PW/2-.05),.022,pz+dz*(PD/2-.06));add(w,'metal',{r:.02})}
@@ -798,7 +798,7 @@ function buildDesk(){
   ao(L,.26,0,sY,-Wd/2+.07,.5);ao(.26,Wd,-L/2+.07,sY,0,.45);
   ao(L+.4,Wd+.4,0,.002,0,.35);ao(PW+.25,PD+.25,px,.003,pz,.55);
   g.position.y=0;
-  return base({kind:'desk',group:g,hittables:hit,center:new T.Vector3(0,.9,-.05),radius:1.5,camDir:new T.Vector3(0,.68,1),floor:0,fill:.9,fillN:.98,
+  return base({kind:'desk',group:g,hittables:hit,center:new T.Vector3(0,.82,-.05),radius:1.68,camDir:new T.Vector3(0,.56,1),floor:0,fill:.88,fillN:.96,
     onHit(h,k){const m=h.object;if(m.userData.part==='plank'&&h.uv){const c2=m.userData.cv;laminateCrack(c2,m.userData,h.uv.x*c2.width,(1-h.uv.y)*c2.height,c2.width);m.userData.mat.map.needsUpdate=true;m.userData.hits=(m.userData.hits||[]).concat([m.worldToLocal(h.point.clone())])}
       chipBoxes(h.point,m.material&&!Array.isArray(m.material)?m.material:topMat,4,.03);this.sp.vy-=.012*k;this.sp.vsy-=.02*k;this.sp.vsx+=.012*k},
     shatter(pt){
