@@ -165,9 +165,9 @@ button,input{font:inherit;color:inherit}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .card{position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;text-align:left;background:var(--bg-2);border:1px solid var(--line);border-radius:22px;cursor:pointer;min-width:0;transition:border-color .2s,transform .2s}
 .card:hover{border-color:var(--ink-soft);transform:translateY(-2px)}
-.card[aria-pressed="true"]{border-color:var(--main);box-shadow:0 0 0 2px var(--main)}
+.card[aria-pressed="true"]{border-color:#8C9BFF;box-shadow:0 0 0 2px #4B5CC4,0 0 0 3px rgba(160,175,255,.35),0 10px 30px rgba(75,92,196,.25),inset 0 1px 0 rgba(200,210,255,.25)}
 .card-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.tag{white-space:nowrap;background:var(--main);color:var(--on-main);border-radius:999px;padding:3px 11px;font-family:var(--en);font-size:9.5px;font-weight:700;letter-spacing:.08em}
+.tag{white-space:nowrap;background:linear-gradient(180deg,#7C8CFF,#4B5CC4 52%,#3443A6);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -1px 3px rgba(4,6,30,.45),0 1px 3px rgba(0,0,0,.35);text-shadow:0 1px 0 rgba(10,14,60,.35);color:var(--on-main);border-radius:999px;padding:3px 11px;font-family:var(--en);font-size:9.5px;font-weight:700;letter-spacing:.08em}
 .inf{font-family:var(--body);font-size:1.6em;line-height:0;font-weight:700;vertical-align:-.1em}
 .card-hp{white-space:nowrap;font-family:var(--en);font-weight:800;font-size:15px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .card-prev{height:150px;display:grid;place-items:center;pointer-events:none}
@@ -241,7 +241,10 @@ button,input{font:inherit;color:inherit}
 .coil-img{position:absolute;z-index:0;pointer-events:none;max-width:none;user-select:none;-webkit-user-drag:none}
 .band,.wd-ok{background-image:var(--grain-blue,none),linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.07) 34%,rgba(255,255,255,0) 52%,rgba(8,10,40,.38));background-size:180px 180px,auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 8px rgba(4,6,30,.4)}
 /* 물건 뒤 광채 */
-.halo{position:absolute;left:50%;top:52%;width:min(78vw,900px);aspect-ratio:1.5;transform:translate(-50%,-50%);z-index:2;pointer-events:none;border-radius:50%;background:radial-gradient(closest-side,rgba(232,236,255,.36),rgba(160,176,255,.2) 40%,rgba(110,128,255,.07) 66%,transparent);opacity:.85}
+.shade,.halo{position:absolute;left:50%;top:52%;width:min(78vw,900px);height:min(52vw,600px);transform:translate(-50%,-50%);z-index:2;pointer-events:none;border-radius:50%;transition:left .35s,top .35s,width .35s,height .35s}
+.card h3{position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.6)}
+.shade{background:radial-gradient(closest-side,rgba(3,4,13,.8),rgba(3,4,13,.56) 48%,rgba(3,4,13,.22) 76%,transparent)}
+.halo{background:radial-gradient(closest-side,rgba(232,236,255,.22),rgba(160,176,255,.12) 45%,rgba(110,128,255,.04) 70%,transparent);opacity:.85}
 </style>
 
 <header class="top wrap-x">
@@ -270,7 +273,7 @@ button,input{font:inherit;color:inherit}
 <section class="hero" aria-label="두드리는 곳"><div class="dustfx" id="dust" aria-hidden="true"></div>
   <div class="info">
     <p class="eyebrow">NOW HITTING</p>
-    <h2 id="tName">나무 책상</h2>
+    <h2 id="tName">내 자리 책상</h2>
     <p class="desc" id="tDesc"></p>
     <p class="spec" id="tSpec"></p>
     <div class="meter">
@@ -297,7 +300,7 @@ button,input{font:inherit;color:inherit}
 </filter></svg>
 <svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
     <div class="bigtype" aria-hidden="true"><span class="l1">GO</span><span class="l2">HOME</span><span class="l3">집에 가고 싶다</span></div>
-    <div class="halo" id="halo" aria-hidden="true"></div><canvas id="scene"></canvas>
+    <div class="shade" id="shade" aria-hidden="true"></div><div class="halo" id="halo" aria-hidden="true"></div><canvas id="scene"></canvas>
     <canvas id="fx" aria-hidden="true"></canvas>
     <div class="pops" id="pops" aria-hidden="true"></div>
     <div class="combo" id="combo" hidden><b id="comboN">0</b><span>COMBO</span></div>
@@ -657,20 +660,20 @@ const TEX=['wood','glass','metal','jelly','paper'];
 const TEX_DESC={wood:'원목 글자. 결이 갈라지다가 결대로 쪼개져요.',glass:'유리 글자. 금이 쩍쩍 가다가 산산조각 나요.',metal:'쇠 글자. 찌그러지다가 바닥에 와르르 떨어져요.',jelly:'젤리 글자. 출렁이다가 으깨져 부스러져요.',paper:'종이 글자. 구겨지고 찢어지다가 갈가리 찢겨요.'};
 const TEX_HP={wood:26,glass:16,metal:28,jelly:22,paper:14};
 const TARGETS={
-  desk :{id:'desk',kind:'desk',mat:'wood',name:'나무 책상',tag:'WOOD',hp:28,desc:'하루 종일 붙어 앉아 있던 그 책상. 상판이 결대로 쪼개지고 다리가 부러져요.',spec:'재질 원목 · 상판 두께 25mm · 소리 둔탁함'},
-  glass:{id:'glass',kind:'glass',mat:'glass',name:'사무실 창문',tag:'GLASS',hp:14,desc:'빌딩 숲이 내다보이는데 나갈 수는 없는 창문. 유리도 창틀도 통째로 박살 나요.',spec:'재질 판유리 + 원목 창틀 · 소리 쨍그랑'},
-  paper:{id:'paper',kind:'paper',mat:'paper',name:'주간 보고서',tag:'PAPER',hp:12,desc:'반려된 그 보고서. 구기고 찢다 보면 갈가리 찢어져요.',spec:'재질 A4 복사지 · 80g/㎡ · 소리 찌익'},
-  jelly:{id:'jelly',kind:'jelly',mat:'jelly',name:'왕젤리',tag:'JELLY',hp:20,desc:'말랑말랑 출렁이는 큰 젤리. 많이 맞으면 으깨져서 부스러져요.',spec:'재질 젤라틴 · 한 변 13cm · 소리 물컹'},
-  drum :{id:'drum',kind:'drum',mat:'drum',name:'큰북',tag:'LEATHER',hp:Infinity,desc:'아무리 쳐도 멀쩡해요. 북 가죽이 출렁이는 걸 보면서 마음껏.',spec:'재질 코팅 가죽 · 지름 22인치 · 소리 둥'},
-  bubble:{id:'bubble',kind:'bubble',mat:'bubble',name:'뽁뽁이',tag:'PLASTIC',hp:Infinity,desc:'택배 상자에서 막 꺼낸 에어캡. 한 알씩 눌러 터뜨리면 납작하게 쭈글쭈글해져요.',spec:'재질 폴리에틸렌 에어캡 · 한 장 가득 · 소리 뽁'},
-  moktak:{id:'moktak',kind:'moktak',mat:'moktak',name:'목탁',tag:'TEMPLE',hp:Infinity,desc:'똑, 똑. 한 번 두드릴 때마다 번뇌가 하나씩 줄어요. 아무리 쳐도 깨지지 않아요.',spec:'재질 옻칠한 살구나무 · 방석 포함 · 소리 똑'},
-  oven :{id:'oven',kind:'oven',mat:'oven',name:'제빵 오븐',tag:'STEEL',hp:30,desc:'빵이 노릇노릇 구워지는 3단 오븐. 창마다 금이 가다가 유리, 문짝, 빵까지 전부 날아가요.',spec:'재질 스테인리스 + 강화유리 · 3단 · 소리 쾅'},
-  laptop:{id:'laptop',kind:'laptop',mat:'laptop',name:'디자이너 노트북',tag:'ALUMINUM',hp:20,desc:'렌더링 99%에서 멈춘 포스터_최종_final.psd. 화면이 깨지고 지지직거리다가 키캡이 우수수 쏟아져요.',spec:'재질 알루미늄 + 액정 · 13인치 · 소리 퍽'},
-  keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'조약돌 키보드',tag:'PEBBLE',hp:Infinity,desc:'도각도각 기계식 무선 키보드. 아무리 두드려도 멀쩡해요. 키캡은 KEYCAP에서 바꿀 수 있어요.',spec:'무선 · 키캡 5종 · 소리 도각'},
-  lighter:{id:'lighter',kind:'lighter',mat:'lighter',name:'불멍 라이터',tag:'FIRE',hp:Infinity,desc:'꾹 누르면 칙, 부싯돌이 튀고 불이 붙어요. 길게 누를수록 불길이 커져요. 손을 떼면 꺼져요. 스페이스바를 꾹 눌러도 돼요.',spec:'재질 투명 플라스틱 · 부탄가스 · 소리 칙 화르륵'},
-  switch:{id:'switch',kind:'switch',mat:'switch',name:'원목 토글 스위치',tag:'TOGGLE',hp:Infinity,desc:'호두나무와 메이플 판에 달린 토글 스위치 다섯 개. 딸깍딸깍 끌 때마다 화면이 조금씩 어두워져요. 다 끄면 퇴근.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
-  pills:{id:'pills',kind:'pills',mat:'pills',name:'알약 한 판',tag:'BLISTER',hp:Infinity,desc:'은박 뒤에 플라스틱 볼록이. 누르면 알약이 톡 빠져나와 바닥에 톡톡 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
-  phone:{id:'phone',kind:'phone',mat:'phone',name:'회사 전화기',tag:'PLASTIC',hp:18,desc:'부재중 37통. 수화기가 들썩이고 버튼이 눌리다가, 결국 산산조각 나요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
+  desk :{id:'desk',kind:'desk',mat:'wood',name:'내 자리 책상',tag:'WOOD',hp:28,desc:'아홉 시간째 붙어 있는 제일 친한 동료. 오늘은 얘부터 퇴근시켜요. 상판이 결대로 쪼개지고 다리가 부러져요.',spec:'재질 원목 · 상판 25mm · 결재 서류 받침 경력 3년'},
+  glass:{id:'glass',kind:'glass',mat:'glass',name:'안 열리는 창문',tag:'GLASS',hp:14,desc:'밖은 저렇게 가까운데 나만 못 나가요. 대신 유리랑 창틀을 통째로 먼저 내보내 드려요.',spec:'재질 판유리 + 원목 창틀 · 개방감 0% · 소리 쨍그랑'},
+  paper:{id:'paper',kind:'paper',mat:'paper',name:'반려된 주간 보고서',tag:'PAPER',hp:12,desc:'“방향성은 좋은데…”로 시작한 피드백, 벌써 v7. 이제 찢을 자격 충분해요. 갈가리 찢어져요.',spec:'재질 A4 80g · 수정 7회차 · 소리 찌익'},
+  jelly:{id:'jelly',kind:'jelly',mat:'jelly',name:'내 멘탈 왕젤리',tag:'JELLY',hp:20,desc:'겉은 괜찮은 척 출렁출렁. 근데 계속 맞으면 결국 으깨져요. 누구 얘기 같죠.',spec:'재질 젤라틴 · 13cm · 멘탈 강도 물컹'},
+  drum :{id:'drum',kind:'drum',mat:'drum',name:'회의실 큰북',tag:'LEATHER',hp:Infinity,desc:'회의 때 삼킨 말을 대신 둥둥. 결론 없는 회의처럼 아무리 쳐도 안 끝나요.',spec:'재질 코팅 가죽 · 22인치 · 발언권 무제한'},
+  bubble:{id:'bubble',kind:'bubble',mat:'bubble',name:'무한 뽁뽁이',tag:'PLASTIC',hp:Infinity,desc:'택배는 핑계고 이게 본품. 한 알씩 누르면 납작하게 쭈글쭈글해져요. 멈출 수 없음 주의.',spec:'재질 폴리에틸렌 · 중독성 상 · 소리 뽁'},
+  moktak:{id:'moktak',kind:'moktak',mat:'moktak',name:'번뇌 삭제 목탁',tag:'TEMPLE',hp:Infinity,desc:'똑 한 번에 번뇌 하나 삭제. 안 읽은 메일은 그대로지만 마음은 가벼워져요. 절대 안 깨져요.',spec:'재질 옻칠한 살구나무 · 방석 포함 · 소리 똑'},
+  oven :{id:'oven',kind:'oven',mat:'oven',name:'야근 3단 오븐',tag:'STEEL',hp:30,desc:'빵은 노릇노릇, 나는 바삭바삭. 창마다 금이 가다가 유리, 문짝, 빵까지 전부 날아가요.',spec:'재질 스테인리스 + 강화유리 · 3단 · 소리 쾅'},
+  laptop:{id:'laptop',kind:'laptop',mat:'laptop',name:'최종_진짜최종 노트북',tag:'ALUMINUM',hp:20,desc:'렌더링 99%에서 멈춘 포스터_최종_final_진짜.psd. 화면이 지지직대다 키캡이 우수수 쏟아져요. 백업은 하셨죠?',spec:'재질 알루미늄 + 액정 · 13인치 · 소리 퍽'},
+  keyboard:{id:'keyboard',kind:'keyboard',mat:'keyboard',name:'아무말 키보드',tag:'PEBBLE',hp:Infinity,desc:'보고서 대신 아무 말이나 도각도각. 아무리 두드려도 멀쩡해요. 키캡은 KEYCAP에서 골라요.',spec:'무선 · 키캡 5종 · 소리 도각'},
+  lighter:{id:'lighter',kind:'lighter',mat:'lighter',name:'불멍 라이터',tag:'FIRE',hp:Infinity,desc:'꾹 누르면 칙, 불이 붙고 길게 누를수록 커져요. 손 떼면 꺼져요. 사직서는 태우지 마세요(아직은). 스페이스바도 돼요.',spec:'재질 투명 플라스틱 · 부탄가스 · 소리 칙 화르륵'},
+  switch:{id:'switch',kind:'switch',mat:'switch',name:'퇴근 스위치',tag:'TOGGLE',hp:Infinity,desc:'딸깍 하나 끌 때마다 사무실 불이 하나씩 꺼져요. 다섯 개 다 끄면 퇴근 인정.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
+  pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
+  phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
 const getT=id=>id==='custom'?customTarget():TARGETS[id];
@@ -1600,7 +1603,7 @@ function landSound(mode){if(!on()||mode==='chip')return;const now=performance.no
 /* ================= stage control ================= */
 function stepSpring(sp,soft){const K=soft?.06:.22,D=soft?.9:.72;for(const k of ['x','y','r','sx','sy']){const vk='v'+k;sp[vk]=(sp[vk]-sp[k]*K)*D;sp[k]+=sp[vk]}}
 let flash=0,shake=0;
-function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*(camera===cam?Math.max(0,Math.min(1,state.size||0)):0);const d=o.radius/Math.tan(f/2*fill);
+function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){if(camera===cam){clearTimeout(fitCam._t);fitCam._t=setTimeout(placeHalo,60);setTimeout(placeHalo,700)}const vf=camera.fov*Math.PI/180;const hf=2*Math.atan(Math.tan(vf/2)*aspect);const f=Math.min(vf,hf);const f0=narrow?o.fillN:o.fill;const fill=f0+(1.85-f0)*(camera===cam?Math.max(0,Math.min(1,state.size||0)):0);const d=o.radius/Math.tan(f/2*fill);
   camera.position.copy(o.center).addScaledVector(o.camDir.clone().normalize(),d);camera.lookAt(o.center);camera.updateProjectionMatrix();o.camPos=camera.position.clone()}
 function setTarget(id,drop){
   if(cur){if(cur.onUp)cur.onUp();if(cur.cleanup)cur.cleanup();scene.remove(cur.group);const og=cur.group;setTimeout(()=>{try{disposeDeep(og)}catch(e){}},0)}
@@ -1629,6 +1632,10 @@ function doHit(px,py,fromKey){
   afterHit();
   if(res!=='nohp'&&isFinite(state.hp)){state.hp--;renderHp();if(state.hp<=0)smash(h.point,px,py)}
 }
+function placeHalo(){try{if(!cur||!cur.group)return;const bx=new T.Box3().setFromObject(cur.group);if(bx.isEmpty())return;const c=[];for(const X of[bx.min.x,bx.max.x])for(const Y of[bx.min.y,bx.max.y])for(const Z of[bx.min.z,bx.max.z]){const v=new T.Vector3(X,Y,Z).project(cam);c.push(v)}
+let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;c.forEach(v=>{const px=(v.x+1)/2*SW,py=(1-v.y)/2*SH;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py)});
+const cx=(x0+x1)/2,cy=(y0+y1)/2,bw=Math.min(SW*1.1,x1-x0),bh=Math.min(SH*1.1,y1-y0);if(!(bw>4&&bh>4))return;
+const sh=$('#shade').style,ha=$('#halo').style;Object.assign(sh,{left:cx+'px',top:cy+'px',width:(bw*1.55+80)+'px',height:(bh*1.55+80)+'px'});Object.assign(ha,{left:cx+'px',top:cy+'px',width:(bw*1.15+40)+'px',height:(bh*1.15+40)+'px'})}catch(e){}}
 function afterHit(){try{$('#halo').animate([{opacity:1,transform:'translate(-50%,-50%) scale(1.06)'},{opacity:.85,transform:'translate(-50%,-50%) scale(1)'}],{duration:420,easing:'ease-out'})}catch(e){}state.stats.hits++;store.set('stats',state.stats);renderStats();const cb=$('#combo');if(state.combo>=3){cb.hidden=false;$('#comboN').textContent=state.combo}clearTimeout(afterHit.to);afterHit.to=setTimeout(()=>{cb.hidden=true},700);if(state.combo>=10&&state.combo%5===0)shake=Math.max(shake,.05)}
 function smash(pt,px,py){
   state.breaking=true;state.stats.broken++;store.set('stats',state.stats);renderStats();const mode=cur.t.mat;
@@ -1706,7 +1713,20 @@ function clock(){const d=new Date();const n=d.getHours()*3600+d.getMinutes()*60+
 $('#resetBtn').addEventListener('click',()=>{state.stats={date:today(),hits:0,broken:0};store.set('stats',state.stats);renderStats()});
 (function(){const T2=Math.PI*2*6.5,pts=[];for(let t=0;t<=T2;t+=.08){const x=-40+(t/T2)*1280-58*Math.sin(t);const y=200-130*Math.cos(t)+Math.sin(t*.37)*30;pts.push(x.toFixed(1)+' '+y.toFixed(1))}$('#coilPath').setAttribute('d','M'+pts.join(' L'))})();
 /* 블루 물결: 광택 필터를 한 번만 그려서 이미지로 고정(매 프레임 다시 계산하지 않게) */
-function bakeCoil(){try{const el=document.querySelector('.coil'),pa=$('#coilPath'),st=el.parentElement;const r=el.getBoundingClientRect(),q=st.getBoundingClientRect();if(r.width<10||r.height<10)return;const sw=parseFloat(getComputedStyle(pa).strokeWidth)||40;const P=Math.ceil(sw*1.2),W=Math.round(r.width+2*P),H=Math.round(r.height+2*P);const sx=r.width/1200,sy=r.height/400;const d=pa.getAttribute('d').replace(/(-?[\d.]+) (-?[\d.]+)/g,(m,x,y)=>(x*sx+P).toFixed(1)+' '+(y*sy+P).toFixed(1));const f=document.getElementById('blueMatte').outerHTML.replace('x="-5%" y="-5%" width="110%" height="110%"','filterUnits="userSpaceOnUse" x="0" y="0" width="'+W+'" height="'+H+'"');const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${f}</defs><path d="${d}" fill="none" stroke="#4B5CC4" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" filter="url(#blueMatte)"/></svg>`;let im=st.querySelector('.coil-img');if(!im){im=document.createElement('img');im.className='coil-img';im.alt='';im.setAttribute('aria-hidden','true');el.after(im)}im.onload=()=>el.classList.add('baked');Object.assign(im.style,{left:(r.left-q.left-P)+'px',top:(r.top-q.top-P)+'px',width:W+'px',height:H+'px'});im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}catch(e){}}
+function bakeCoil(){try{const el=document.querySelector('.coil'),pa=$('#coilPath'),st=el.parentElement;const r=el.getBoundingClientRect(),q=st.getBoundingClientRect();if(r.width<10||r.height<10)return;
+const w=parseFloat(getComputedStyle(pa).strokeWidth)||40;const P=Math.ceil(w*1.4),W=Math.round(r.width+2*P),H=Math.round(r.height+2*P),D=Math.min(2,devicePixelRatio||1);const sx=r.width/1200,sy=r.height/400;
+const T2=Math.PI*2*6.5,segs=[[],[]];let cur=null,side=-1;for(let t=0;t<=T2+1e-6;t+=.03){const x=(-40+(t/T2)*1280-58*Math.sin(t))*sx+P,y=(200-130*Math.cos(t)+Math.sin(t*.37)*30)*sy+P;const sd=Math.cos(t)>0?0:1;if(sd!==side){if(cur)cur.push([x,y]);cur=[[x,y]];segs[sd].push(cur);side=sd}else cur.push([x,y])}
+const mk=()=>{const c=document.createElement('canvas');c.width=W*D;c.height=H*D;const x=c.getContext('2d');x.scale(D,D);x.lineCap='round';x.lineJoin='round';return[c,x]};
+const path=(x,pts)=>{x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let k=1;k<pts.length;k++)x.lineTo(pts[k][0],pts[k][1])};
+const lerp=(a,b,t)=>a.map((v,k)=>Math.round(v+(b[k]-v)*t));const C0=[22,28,92],C1=[75,92,196],C2=[150,165,255];
+function tube(x,pts,dark){const n=14;for(let k=0;k<n;k++){const f=k/(n-1);const col=f<.55?lerp(C0,C1,f/.55):lerp(C1,C2,(f-.55)/.45);const m=dark?.82:1;x.strokeStyle=`rgb(${col[0]*m|0},${col[1]*m|0},${col[2]*m|0})`;x.lineWidth=w*(1-f*.8);x.save();x.translate(-w*.10*f,-w*.16*f);path(x,pts);x.stroke();x.restore()}
+ x.save();x.globalCompositeOperation='source-atop';x.translate(-w*.17,-w*.24);x.strokeStyle='rgba(232,237,255,.6)';x.shadowColor='rgba(220,228,255,.7)';x.shadowBlur=w*.3;x.lineWidth=w*.16;path(x,pts);x.stroke();x.restore();
+ x.save();x.globalCompositeOperation='source-atop';x.translate(w*.16,w*.26);x.strokeStyle='rgba(140,155,255,.45)';x.shadowColor='rgba(140,155,255,.6)';x.shadowBlur=w*.2;x.lineWidth=w*.1;path(x,pts);x.stroke();x.restore()}
+function grain(x){const g=x.getImageData(0,0,W*D,H*D),a=g.data;for(let k=0;k<a.length;k+=4){if(!a[k+3])continue;const n=(Math.random()-.5)*26;a[k]+=n;a[k+1]+=n;a[k+2]+=n}x.putImageData(g,0,0)}
+const[tc,tx]=mk();const lay=(sd,dark)=>{const[c,x]=mk();segs[sd].forEach(pts=>{tx.save();tx.setTransform(1,0,0,1,0,0);tx.clearRect(0,0,W*D,H*D);tx.restore();tube(tx,pts,dark);x.drawImage(tc,0,0,W,H)});return c};const cb=lay(0,true),cf=lay(1,false);
+const [out,xo]=mk();xo.drawImage(cb,0,0,W,H);xo.save();xo.shadowColor='rgba(2,3,16,.75)';xo.shadowBlur=w*.55;xo.shadowOffsetY=w*.12;xo.drawImage(cf,0,0,W,H);xo.restore();xo.drawImage(cf,0,0,W,H);xo.setTransform(1,0,0,1,0,0);grain(xo);
+let im=st.querySelector('.coil-img');if(!im){im=document.createElement('img');im.className='coil-img';im.alt='';im.setAttribute('aria-hidden','true');el.after(im)}
+im.onload=()=>el.classList.add('baked');Object.assign(im.style,{left:(r.left-q.left-P)+'px',top:(r.top-q.top-P)+'px',width:W+'px',height:H+'px'});im.src=out.toDataURL('image/png')}catch(e){}}
 bakeCoil();{let bt=0,lw=innerWidth;addEventListener('resize',()=>{if(Math.abs(innerWidth-lw)<2)return;lw=innerWidth;clearTimeout(bt);bt=setTimeout(bakeCoil,250)})}
 (function(){const w=[['e','QUITOPIA'],['k','집에 가자'],['e','GO HOME'],['k','쨍그랑'],['e','SMASH'],['k','칼퇴'],['e','RIP IT'],['k','뽁'],['e','OFF WORK'],['k','이불 속']];const g=w.map(s=>`<span class="${s[0]}">${s[1]}</span>`).join('');$('#band').innerHTML=`<div class="band-group">${g}</div>`.repeat(3)})();
 
