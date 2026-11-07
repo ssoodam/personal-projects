@@ -56,6 +56,15 @@ addEventListener('DOMContentLoaded',function(){setTimeout(function(){var d=docum
   --gutter-r:max(16px, env(safe-area-inset-right, 0px));
 }
 html,body{background:var(--bg);color:var(--ink)}
+/* 미리보기 카드 질감: 짙은 그라디언트 + 블루 빛 + 그레인 + 파티클 */
+body{background:radial-gradient(ellipse 55% 600px at 100% 560px,rgba(127,147,255,.30),rgba(58,70,144,.14) 50%,transparent 78%) no-repeat,radial-gradient(ellipse 40% 400px at 0% 0%,rgba(127,147,255,.10),transparent 70%) no-repeat,linear-gradient(160deg,#17171D,#0B0B0F 900px,#09090C) no-repeat,var(--bg)}
+.grainfx{position:fixed;inset:0;z-index:9000;pointer-events:none;opacity:.55;background-size:180px 180px}
+.dustfx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.dustfx i{position:absolute;border-radius:50%;background:#C9D0FF;animation:dust var(--d) ease-in-out var(--dl) infinite alternate}
+.dustfx b{position:absolute;width:var(--s);height:var(--s);color:#F6F9DC;animation:twk var(--d) ease-in-out var(--dl) infinite}
+.dustfx b::before{content:"";position:absolute;inset:0;background:currentColor;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
+@keyframes dust{from{transform:translate(0,0);opacity:var(--o)}to{transform:translate(var(--dx),-14px);opacity:calc(var(--o)*.35)}}
+@keyframes twk{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:.9;transform:scale(1)}}
 body{font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s}
 *{box-sizing:border-box}
 button,input{font:inherit;color:inherit}
@@ -86,8 +95,8 @@ button,input{font:inherit;color:inherit}
 .wd-t{margin:0 0 10px;font-family:var(--en);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink-soft)}
 .wd-in{display:flex;align-items:flex-end;gap:8px}
 .wd-in label{flex:1;display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--ink-soft);min-width:0}
-.wd-in i{font-style:normal;color:var(--hot);font-weight:700;padding-bottom:9px}
-.wd-in input{width:100%;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 6px;font-family:var(--en);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color-scheme:dark}
+.wd-in .wd-dash{flex:none;width:12px;height:2px;border-radius:2px;background:var(--ink-soft);margin-bottom:18px}
+.wd-in input{-webkit-appearance:none;appearance:none;box-sizing:border-box;height:38px;text-align:left;width:100%;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 6px;font-family:var(--en);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color-scheme:dark}
 .wd-in input:focus{border-color:var(--main);outline:none}
 .wd-in input::-webkit-calendar-picker-indicator{filter:invert(.8);width:12px;margin-left:2px}
 .wd-ok{margin-top:12px;width:100%;border:0;border-radius:999px;background:var(--main);color:#fff;font-weight:700;font-size:13px;padding:8px;cursor:pointer}
@@ -227,6 +236,7 @@ button,input{font:inherit;color:inherit}
   .logo small{display:none}
 }
 @media (prefers-reduced-motion:reduce){.band-group{animation-duration:90s}}
+.card,.wd,.install,.wd-pop{background-image:radial-gradient(ellipse 80% 70% at 100% 100%,rgba(127,147,255,.13),transparent 70%),var(--grain-img,none);background-size:auto,180px 180px}
 </style>
 
 <header class="top wrap-x">
@@ -240,7 +250,7 @@ button,input{font:inherit;color:inherit}
       <button class="wd-set" id="wdSet" type="button" aria-expanded="false" aria-controls="wdPop" aria-label="출퇴근 시간 설정"><span id="wdRange">09:00–18:00</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
       <div class="wd-pop" id="wdPop" role="dialog" aria-label="출퇴근 시간" hidden>
         <p class="wd-t">WORK HOURS · 출퇴근 시간</p>
-        <div class="wd-in"><label><span>출근</span><input id="tStart" type="time" value="09:00"></label><i aria-hidden="true">→</i><label><span>퇴근</span><input id="tEnd" type="time" value="18:00"></label></div>
+        <div class="wd-in"><label><span>출근</span><input id="tStart" type="time" value="09:00"></label><i class="wd-dash" aria-hidden="true"></i><label><span>퇴근</span><input id="tEnd" type="time" value="18:00"></label></div>
         <button class="wd-ok" id="wdOk" type="button">완료</button>
       </div>
     </div>
@@ -252,7 +262,7 @@ button,input{font:inherit;color:inherit}
   </div>
 </header>
 
-<section class="hero" aria-label="두드리는 곳">
+<section class="hero" aria-label="두드리는 곳"><div class="dustfx" id="dust" aria-hidden="true"></div>
   <div class="info">
     <p class="eyebrow">NOW HITTING</p>
     <h2 id="tName">나무 책상</h2>
@@ -1697,3 +1707,10 @@ btn.onclick=function(){
  if(and){sheet('홈 화면에 추가하기',['오른쪽 위 <b>⋮</b> 메뉴를 누르세요.','<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 누르세요.','<b>설치</b>를 누르면 끝!'],false);return}
  if(mac&&safari){sheet('Dock에 추가하기',['메뉴 막대에서 <b>파일 → Dock에 추가</b>를 누르세요.'],false);return}
  sheet('앱으로 설치하기',['주소창 오른쪽의 <b>설치</b> 아이콘을 누르세요.','또는 브라우저 메뉴에서 <b>앱 설치 / 홈 화면에 추가</b>를 찾으세요.'],false)};})();</script>
+<script>
+/* 그레인 텍스처(한 번만 생성) + 떠다니는 파티클 */
+(function(){try{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d'),d=x.createImageData(180,180);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=Math.random()<.5?20:11}x.putImageData(d,0,0);const u='url('+c.toDataURL()+')';document.documentElement.style.setProperty('--grain-img',u);const g=document.createElement('div');g.className='grainfx';g.setAttribute('aria-hidden','true');g.style.backgroundImage=u;document.body.appendChild(g)}catch(e){}
+const box=document.getElementById('dust');if(!box)return;const R=Math.random,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;let h='';
+for(let i=0;i<46;i++){const r=R(),x=r<.55?55+R()*45:R()*100,y=r<.55?35+R()*65:R()*100,s=(1+R()*2.2).toFixed(1);h+=`<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${s}px;height:${s}px;--o:${(.25+R()*.55).toFixed(2)};--dx:${(R()*16-8).toFixed(0)}px;--d:${(5+R()*7).toFixed(1)}s;--dl:${(-R()*8).toFixed(1)}s${reduce?';animation:none':''}"></i>`}
+[[8,14,12],[64,12,10],[92,30,14],[30,84,9],[78,88,11],[48,6,8]].forEach(([x,y,s],k)=>{h+=`<b style="left:${x}%;top:${y}%;--s:${s}px;--d:${(3.5+k*.7).toFixed(1)}s;--dl:${(-k*.9).toFixed(1)}s${reduce?';animation:none;opacity:.6':''}"></b>`});box.innerHTML=h})();
+</script>
