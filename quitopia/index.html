@@ -1628,7 +1628,7 @@ function buildPills(){
     const bub=new T.Mesh(bubG,bubMat);bub.position.set(x,y,.01);bub.scale.set(1,1,.62);bub.renderOrder=3;g.add(bub);
     const pill=new T.Group();const a=new T.Mesh(pillA,mA);a.position.y=-.045;const b=new T.Mesh(pillB,mB);b.position.y=.05;pill.add(a,b);pill.position.set(x,y,.03);pill.rotation.z=rnd(-.08,.08);pill.scale.set(1,1,.9);g.add(pill);
     const cell={bub,pill,done:false,x,y,crush:0};bub.userData.cell=cell;a.userData.cell=cell;b.userData.cell=cell;cells.push(cell);hit.push(bub)}
-  g.position.y=1.2;
+  g.rotation.x=-.55;g.position.y=1.15;
   const crumpMat=new T.MeshPhysicalMaterial({color:C(0xf2f6fa),transparent:true,depthWrite:false,roughness:.02,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:.9,flatShading:true,side:T.DoubleSide});clearPlastic(crumpMat,.0,.3,.22,.5);
   const holeMat=new T.MeshBasicMaterial({color:0x060607});const shardMat=new T.MeshStandardMaterial({map:FOIL,color:C(0xb5b9be),metalness:1,roughness:.22,flatShading:true,side:T.DoubleSide,envMapIntensity:1.3});
   function stadium(r,l){const sh=new T.Shape();sh.moveTo(-r,-l/2);sh.lineTo(-r,l/2);sh.absarc(0,l/2,r,Math.PI,0,true);sh.lineTo(r,-l/2);sh.absarc(0,-l/2,r,0,Math.PI,true);return new T.ShapeGeometry(sh,16)}
@@ -1640,7 +1640,7 @@ function buildPills(){
     noise('bandpass',rnd(3800,4200),1.3,.012,1.5,t,.0003);noise('highpass',5000,.7,.008,.45,t,.0003);
     noise('bandpass',rnd(3000,3400),1,.035,.9,t+.035,.002);noise('bandpass',rnd(4200,4600),1,.03,.6,t+.07,.002);
     noise('bandpass',5500,.8,.12,.28,t+.02,.02)}
-  return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.85,0),radius:1.3,camDir:new T.Vector3(.1,.32,1),floor:0,fill:.88,fillN:1,
+  return base({kind:'pills',group:g,hittables:hit,center:new T.Vector3(0,.62,.45),radius:1.5,camDir:new T.Vector3(.12,.8,1),floor:0,fill:.88,fillN:1,
     onHit(h,k,px,py){let cell=h.object.userData.cell;const left=cells.filter(c=>!c.done);if(!left.length)return 'nosound';
       if(!cell||cell.done){const lp=g.worldToLocal(h.point.clone());cell=left.reduce((b,c)=>Math.hypot(c.x-lp.x,c.y-lp.y)<Math.hypot(b.x-lp.x,b.y-lp.y)?c:b)}
       cell.done=true;cell.crush=1;pop();{cell.bub.geometry=crumple(bubG);cell.bub.material=crumpMat;
@@ -1648,12 +1648,12 @@ function buildPills(){
         for(let j=0;j<rnd(4,7)|0;j++){const sh=new T.Mesh(shardGeo(),shardMat);const a=rnd(0,6.283),rr_=rnd(.02,.07);sh.position.set(cell.x+Math.cos(a)*rr_*.7,cell.y+Math.sin(a)*rr_*1.4,-rnd(.012,.04));sh.rotation.set(rnd(-1.2,1.2),rnd(-1.2,1.2),rnd(0,6.28));g.add(sh)}}
       const hb=new T.Mesh(stadium(.088,.15),holeMat);hb.position.set(cell.x,cell.y,-.0102);hb.rotation.y=Math.PI;g.add(hb);
       const pl=cell.pill;pl.position.z=-.04;g.updateMatrixWorld(true);debris.attach(pl);const n=new T.Vector3(0,0,-1).applyQuaternion(g.quaternion);
-      rolling.push(addPiece(pl,{v:n.multiplyScalar(rnd(.25,.5)).add(new T.Vector3(rnd(-.15,.15),0,0)),w:new T.Vector3(rnd(-6,6),rnd(-3,3),rnd(-6,6)),r:.05,rest:.2,fric:.5,mode:'pill',keepGeo:true,life:1e9,g:9.8}));
+      rolling.push(addPiece(pl,{v:n.multiplyScalar(rnd(1.1,1.6)).add(new T.Vector3(rnd(-.35,.35),-.25,0)),w:new T.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),r:.075,rest:.5,fric:.8,mode:'pill',keepGeo:true,life:1e9,g:9.8}));
       popWord(px,py-16,pick(['톡','톡톡','뽁','약 먹을 시간','PILL','오늘치']),1);this.sp.vsy-=.006*k;
       if(!cells.some(c=>!c.done)){setTimeout(()=>{if(cur&&cur.kind==='pills'){state.pillSet++;clearPieces();setTarget('pills',true)}},2200)}
       return 'nosound'},
-    update(){for(let i=rolling.length-1;i>=0;i--){const p=rolling[i];if(!pieces.includes(p)){rolling.splice(i,1);continue}const m=p.mesh;if(p.settled)continue;if(p.restY==null&&p.v.y<0&&m.position.y<.6){let n_=0;rolling.forEach(o=>{if(o.settled&&Math.hypot(o.mesh.position.x-m.position.x,o.mesh.position.z-m.position.z)<.15)n_=Math.max(n_,o.lvl+1)});p.lvl=n_;p.restY=this.floor+.075+n_*.075}
-        if(p.restY!=null&&m.position.y<=p.restY){m.position.y=p.restY;p.v.set(0,0,0);p.w.set(0,0,0);p.g=0;p.settled=true;m.rotation.set(Math.PI/2,rnd(0,6.283),rnd(-.25,.25),'YXZ');landSound('pill')}}
+    update(){for(let i=rolling.length-1;i>=0;i--){const p=rolling[i];if(!pieces.includes(p)){rolling.splice(i,1);continue}const m=p.mesh;if(p.settled)continue;if(m.position.y-p.r<=this.floor+.02){if(!p.rolled){p.rolled=true;p.v.z+=rnd(1.3,1.8);p.v.x+=rnd(-.5,.5);p.fric=.955}const sp=Math.hypot(p.v.x,p.v.z);
+        if(sp<.05&&Math.abs(p.v.y)<.4){p.v.set(0,0,0);p.w.set(0,0,0);p.g=0;p.settled=true;m.rotation.set(Math.PI/2,rnd(0,6.283),rnd(-.15,.15),'YXZ');m.position.y=this.floor+.075}else p.w.set(p.v.z/p.r*.5,p.w.y*.9,-p.v.x/p.r*.5)}}
       cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
