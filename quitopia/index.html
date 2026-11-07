@@ -237,8 +237,11 @@ button,input{font:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){.band-group{animation-duration:90s}}
 .card,.wd,.install,.wd-pop{background-image:var(--grain-soft,none);background-size:180px 180px}
 /* 블루 면: 마멋과 같은 무광 입체 + 밝은 그레인 */
-.coil{filter:url(#blueMatte)}
-.band,.wd-ok{background-image:var(--grain-blue,none),linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,0) 45%,rgba(8,10,40,.22));background-size:180px 180px,auto}
+.coil.baked path{visibility:hidden}
+.coil-img{position:absolute;z-index:0;pointer-events:none;max-width:none;user-select:none;-webkit-user-drag:none}
+.band,.wd-ok{background-image:var(--grain-blue,none),linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.07) 34%,rgba(255,255,255,0) 52%,rgba(8,10,40,.38));background-size:180px 180px,auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 8px rgba(4,6,30,.4)}
+/* 물건 뒤 광채 */
+.halo{position:absolute;left:50%;top:52%;width:min(78vw,900px);aspect-ratio:1.5;transform:translate(-50%,-50%);z-index:2;pointer-events:none;border-radius:50%;background:radial-gradient(closest-side,rgba(232,236,255,.36),rgba(160,176,255,.2) 40%,rgba(110,128,255,.07) 66%,transparent);opacity:.85}
 </style>
 
 <header class="top wrap-x">
@@ -279,18 +282,22 @@ button,input{font:inherit;color:inherit}
   <div class="stage" id="stage" tabindex="0" role="button" aria-label="두드리기. 클릭, 탭, 또는 아무 키나 누르세요">
     <svg id="mallet" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="mlS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a3d1c"/><stop offset=".28" stop-color="#c47c4a"/><stop offset=".5" stop-color="#b0683a"/><stop offset="1" stop-color="#5e2c12"/></linearGradient><radialGradient id="mlH" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#d48e5c"/><stop offset=".5" stop-color="#a65c30"/><stop offset="1" stop-color="#5a2a10"/></radialGradient></defs><g transform="translate(36 164) rotate(-43.03)"><path d="M10 -9 Q60 -10.5 120 -8 L194 -5.5 Q201 0 194 5.5 L120 8 Q60 10.5 10 9 Z" fill="#1e1006" opacity=".3" transform="translate(4 4)"/><path d="M10 -9 Q60 -10.5 120 -8 L194 -5.5 Q201 0 194 5.5 L120 8 Q60 10.5 10 9 Z" fill="url(#mlS)"/><g fill="none" stroke="#5e2c12" stroke-linecap="round" opacity=".5"><path d="M24 -4 Q80 -6 140 -3.5 T194 -2.5" stroke-width=".7"/><path d="M30 2 Q90 3.5 150 1.5 T192 2" stroke-width=".6"/><path d="M60 -1 Q110 0 176 -.5" stroke-width=".45"/><path d="M40 5 Q100 6 170 4" stroke-width=".45" opacity=".7"/><path d="M50 -6.5 Q120 -6 186 -4" stroke-width=".4" opacity=".7"/></g><path d="M8 -8 L60 -8" stroke="#e8a874" stroke-width="1.6" opacity=".35" stroke-linecap="round"/><circle cx="0" cy="0" r="19" fill="url(#mlH)"/><g fill="none" stroke="#6a3418" opacity=".35"><path d="M-14 -6 Q0 -10 14 -5" stroke-width=".7"/><path d="M-15 2 Q0 -2 15 3" stroke-width=".6"/></g><ellipse cx="-6" cy="-8" rx="7" ry="4" fill="#fff" opacity=".25" transform="rotate(-20 -6 -8)"/></g></svg>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="blueMatte" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-<feGaussianBlur in="SourceAlpha" stdDeviation="11" result="b"/>
-<feDiffuseLighting in="b" surfaceScale="9" diffuseConstant="1" lighting-color="#fff" result="l"><feDistantLight azimuth="235" elevation="52"/></feDiffuseLighting>
-<feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1=".8" k2=".38" k3="0" k4="0" result="sh"/>
-<feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="21" result="n"/>
-<feColorMatrix in="n" type="matrix" values="0 0 0 0 .92  0 0 0 0 .94  0 0 0 0 1  0 0 0 -1 .6" result="g"/>
+<feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b"/>
+<feDiffuseLighting in="b" surfaceScale="10" diffuseConstant="1" lighting-color="#fff" result="l0"><feDistantLight azimuth="235" elevation="45"/></feDiffuseLighting><feGaussianBlur in="l0" stdDeviation="1.8" result="l"/>
+<feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="1" k2=".16" k3="0" k4="0" result="sh"/>
+<feSpecularLighting in="b" surfaceScale="10" specularConstant="1.25" specularExponent="22" lighting-color="#E9EDFF" result="sp0"><feDistantLight azimuth="235" elevation="40"/></feSpecularLighting><feGaussianBlur in="sp0" stdDeviation="2" result="sp"/>
+<feSpecularLighting in="b" surfaceScale="10" specularConstant=".55" specularExponent="9" lighting-color="#8FA0FF" result="sp20"><feDistantLight azimuth="60" elevation="22"/></feSpecularLighting><feGaussianBlur in="sp20" stdDeviation="2" result="sp2"/>
+<feComposite in="sh" in2="sp" operator="arithmetic" k1="0" k2="1" k3=".85" k4="0" result="s1"/>
+<feComposite in="s1" in2="sp2" operator="arithmetic" k1="0" k2="1" k3=".5" k4="0" result="s2"/>
+<feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="21" result="n"/>
+<feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -.7 .4" result="g"/>
 <feComposite in="g" in2="SourceAlpha" operator="in" result="gi"/>
-<feComposite in="gi" in2="sh" operator="over" result="o"/>
+<feComposite in="gi" in2="s2" operator="over" result="o"/>
 <feComposite in="o" in2="SourceAlpha" operator="in"/>
 </filter></svg>
 <svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
     <div class="bigtype" aria-hidden="true"><span class="l1">GO</span><span class="l2">HOME</span><span class="l3">집에 가고 싶다</span></div>
-    <canvas id="scene"></canvas>
+    <div class="halo" id="halo" aria-hidden="true"></div><canvas id="scene"></canvas>
     <canvas id="fx" aria-hidden="true"></canvas>
     <div class="pops" id="pops" aria-hidden="true"></div>
     <div class="combo" id="combo" hidden><b id="comboN">0</b><span>COMBO</span></div>
@@ -599,7 +606,10 @@ function makeEnv(r){const pm=new T.PMREMGenerator(r);const t=pm.fromScene(new T.
 function disposeDeep(root){const seen=new Set();root.traverse(n=>{if(n.geometry&&!seen.has(n.geometry)){seen.add(n.geometry);n.geometry.dispose()}const ms=n.material?(Array.isArray(n.material)?n.material:[n.material]):[];ms.forEach(m=>{if(seen.has(m))return;seen.add(m);for(const k in m){const v=m[k];if(v&&v.isTexture&&!seen.has(v)&&v!==scene.environment){seen.add(v);v.dispose()}}m.dispose()})})}
 const scene=new T.Scene();scene.environment=makeEnv(renderer);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault()},false);canvas.addEventListener('webglcontextrestored',()=>{try{scene.environment=makeEnv(renderer);if(typeof setTarget==='function'&&cur)setTarget(state.id,false)}catch(e){}},false);
-function addLights(s){const k=new T.DirectionalLight(0xffffff,1.1);k.position.set(-3,6,5);s.add(k);const r=new T.DirectionalLight(0xffffff,.9);r.position.set(3,4,-5);s.add(r);s.add(new T.AmbientLight(0xffffff,.12))}
+function addLights(s){const k=new T.DirectionalLight(0xffffff,1.1);k.position.set(-3,6,5);s.add(k);const r=new T.DirectionalLight(0xe4e9ff,1.35);r.position.set(3,4,-5);s.add(r);const r2=new T.DirectionalLight(0xc9d2ff,.8);r2.position.set(-4,2.5,-4);s.add(r2);s.add(new T.AmbientLight(0xffffff,.12))}
+/* 빛 셰이더: 가장자리 프레넬 림 + 은은한 무지개빛 */
+T.MeshStandardMaterial.prototype.onBeforeCompile=function(sh){sh.fragmentShader=sh.fragmentShader.replace('#include <tonemapping_fragment>',`{vec3 rv=normalize(vViewPosition);vec3 rn=normalize(normal);float rf=1.0-clamp(abs(dot(rn,rv)),0.0,1.0);float r3=rf*rf*rf;vec3 ir=0.5+0.5*cos(6.2831*(rf*1.4+rn.x*0.25+vec3(0.0,0.33,0.67)));vec3 rc=mix(vec3(0.84,0.89,1.0),ir,0.3);float up=clamp(rn.y*0.6+0.55,0.0,1.0);gl_FragColor.rgb+=rc*r3*up*1.15*gl_FragColor.a;}
+#include <tonemapping_fragment>`)};
 addLights(scene);
 /* 그림자: 바닥 접지 그림자 + 자기 그림자 */renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
 const KEY=scene.children.find(o=>o.isDirectionalLight);KEY.castShadow=true;KEY.shadow.mapSize.set(MOBILE?1024:2048,MOBILE?1024:2048);Object.assign(KEY.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.5,far:20});KEY.shadow.bias=-.0004;KEY.shadow.normalBias=.02;KEY.shadow.radius=4;
@@ -1619,7 +1629,7 @@ function doHit(px,py,fromKey){
   afterHit();
   if(res!=='nohp'&&isFinite(state.hp)){state.hp--;renderHp();if(state.hp<=0)smash(h.point,px,py)}
 }
-function afterHit(){state.stats.hits++;store.set('stats',state.stats);renderStats();const cb=$('#combo');if(state.combo>=3){cb.hidden=false;$('#comboN').textContent=state.combo}clearTimeout(afterHit.to);afterHit.to=setTimeout(()=>{cb.hidden=true},700);if(state.combo>=10&&state.combo%5===0)shake=Math.max(shake,.05)}
+function afterHit(){try{$('#halo').animate([{opacity:1,transform:'translate(-50%,-50%) scale(1.06)'},{opacity:.85,transform:'translate(-50%,-50%) scale(1)'}],{duration:420,easing:'ease-out'})}catch(e){}state.stats.hits++;store.set('stats',state.stats);renderStats();const cb=$('#combo');if(state.combo>=3){cb.hidden=false;$('#comboN').textContent=state.combo}clearTimeout(afterHit.to);afterHit.to=setTimeout(()=>{cb.hidden=true},700);if(state.combo>=10&&state.combo%5===0)shake=Math.max(shake,.05)}
 function smash(pt,px,py){
   state.breaking=true;state.stats.broken++;store.set('stats',state.stats);renderStats();const mode=cur.t.mat;
   breakSound(mode);shake=reduced?0:.14;flash=mode==='glass'||mode==='oven'||mode==='laptop'||mode==='metal'?.4:.15;if(mode==='metal'&&!reduced)shake=.24;const c=cur;
@@ -1695,6 +1705,9 @@ function clock(){const d=new Date();const n=d.getHours()*3600+d.getMinutes()*60+
   const p=en>st?clamp((n-st)/(en-st),0,1):0;$('#workTxt').textContent=Math.round(p*100)+'%';$('#workBar').style.width=(p*100)+'%'}
 $('#resetBtn').addEventListener('click',()=>{state.stats={date:today(),hits:0,broken:0};store.set('stats',state.stats);renderStats()});
 (function(){const T2=Math.PI*2*6.5,pts=[];for(let t=0;t<=T2;t+=.08){const x=-40+(t/T2)*1280-58*Math.sin(t);const y=200-130*Math.cos(t)+Math.sin(t*.37)*30;pts.push(x.toFixed(1)+' '+y.toFixed(1))}$('#coilPath').setAttribute('d','M'+pts.join(' L'))})();
+/* 블루 물결: 광택 필터를 한 번만 그려서 이미지로 고정(매 프레임 다시 계산하지 않게) */
+function bakeCoil(){try{const el=document.querySelector('.coil'),pa=$('#coilPath'),st=el.parentElement;const r=el.getBoundingClientRect(),q=st.getBoundingClientRect();if(r.width<10||r.height<10)return;const sw=parseFloat(getComputedStyle(pa).strokeWidth)||40;const P=Math.ceil(sw*1.2),W=Math.round(r.width+2*P),H=Math.round(r.height+2*P);const sx=r.width/1200,sy=r.height/400;const d=pa.getAttribute('d').replace(/(-?[\d.]+) (-?[\d.]+)/g,(m,x,y)=>(x*sx+P).toFixed(1)+' '+(y*sy+P).toFixed(1));const f=document.getElementById('blueMatte').outerHTML.replace('x="-5%" y="-5%" width="110%" height="110%"','filterUnits="userSpaceOnUse" x="0" y="0" width="'+W+'" height="'+H+'"');const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${f}</defs><path d="${d}" fill="none" stroke="#4B5CC4" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" filter="url(#blueMatte)"/></svg>`;let im=st.querySelector('.coil-img');if(!im){im=document.createElement('img');im.className='coil-img';im.alt='';im.setAttribute('aria-hidden','true');el.after(im)}im.onload=()=>el.classList.add('baked');Object.assign(im.style,{left:(r.left-q.left-P)+'px',top:(r.top-q.top-P)+'px',width:W+'px',height:H+'px'});im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}catch(e){}}
+bakeCoil();{let bt=0,lw=innerWidth;addEventListener('resize',()=>{if(Math.abs(innerWidth-lw)<2)return;lw=innerWidth;clearTimeout(bt);bt=setTimeout(bakeCoil,250)})}
 (function(){const w=[['e','QUITOPIA'],['k','집에 가자'],['e','GO HOME'],['k','쨍그랑'],['e','SMASH'],['k','칼퇴'],['e','RIP IT'],['k','뽁'],['e','OFF WORK'],['k','이불 속']];const g=w.map(s=>`<span class="${s[0]}">${s[1]}</span>`).join('');$('#band').innerHTML=`<div class="band-group">${g}</div>`.repeat(3)})();
 
 /* boot */
