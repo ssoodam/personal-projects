@@ -258,6 +258,11 @@ button,input{font:inherit;color:inherit}
 .qt-count{position:absolute;right:22px;top:6px;z-index:7;pointer-events:none;font-family:var(--en);font-weight:800;font-size:clamp(56px,8vw,112px);line-height:1;color:transparent;-webkit-text-stroke:2px var(--on-main);opacity:0}
 .qt-count.on{animation:qtCount .95s ease-out forwards}
 @keyframes qtCount{0%{opacity:0;transform:scale(1.5)}15%{opacity:1;transform:scale(1)}75%{opacity:.85}100%{opacity:0;transform:scale(.9)}}
+.srail{display:none;position:absolute;top:0;bottom:0;width:34px;z-index:5;touch-action:pan-y;pointer-events:auto;align-items:center;justify-content:center}
+.srail.l{left:0}.srail.r{right:0}
+.srail i{display:flex;flex-direction:column;align-items:center;gap:8px;width:22px;padding:12px 0;border-radius:999px;background:linear-gradient(180deg,rgba(100,116,218,.38),rgba(75,92,196,.22));border:1px solid rgba(246,249,220,.22);color:var(--on-main,#F6F9DC);font:800 9px/1 Unbounded,sans-serif;letter-spacing:.12em;font-style:normal}
+.srail i b{font-size:13px;line-height:1}.srail i span{writing-mode:vertical-rl;text-orientation:mixed}
+@media (pointer:coarse){.stage.slime-lock .srail{display:flex}}
 .qt-cele{position:fixed;inset:0;z-index:60;pointer-events:none;display:grid;place-items:center}
 .qt-cele canvas{position:absolute;inset:0;width:100%;height:100%}.qt-cele canvas.front{z-index:2}.qt-cele .box{z-index:1}
 .qt-cele .box{position:relative;text-align:center;padding:0 16px;animation:qtPop .75s cubic-bezier(.2,1.5,.4,1) both}
@@ -344,7 +349,7 @@ button,input{font:inherit;color:inherit}
 </filter></svg>
 <svg class="coil" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><path id="coilPath" vector-effect="non-scaling-stroke"/></svg>
     <div class="bigtype" aria-hidden="true"><span class="l1">GO</span><span class="l2">HOME</span><span class="l3">집에 가고 싶다</span></div>
-    <div class="shade" id="shade" aria-hidden="true"></div><div class="halo" id="halo" aria-hidden="true"></div><canvas id="scene"></canvas>
+    <div class="shade" id="shade" aria-hidden="true"></div><div class="halo" id="halo" aria-hidden="true"></div><canvas id="scene"></canvas><div class="srail l" aria-hidden="true"><i><b>↕</b><span>SCROLL</span><b>↕</b></i></div><div class="srail r" aria-hidden="true"><i><b>↕</b><span>SCROLL</span><b>↕</b></i></div>
     <canvas id="fx" aria-hidden="true"></canvas>
     <div class="pops" id="pops" aria-hidden="true"></div>
     <div class="combo" id="combo" hidden><b id="comboN">0</b><span>COMBO</span></div>
@@ -698,6 +703,7 @@ const MAT={
   lighter:{name:'라이터',words:['칙','화르륵','불멍']},
   switch:{name:'스위치',words:['딸깍']},pills:{name:'은박',words:['톡']},
   foam:{name:'폼',words:['꾹','말랑','푹','SQUEEZE','후우','참자…','꾸욱']},
+  head:{name:'뒤통수',words:['딱!','딱','정신 차려','누구야?','아얏','회의 끝났어요','칼퇴합니다','네 알겠습니다…']},
   stapler:{name:'스테이플러',words:['철컥','찰칵','CHUNK','결재 완료','첨부 완료','한 부 더']},
   phone:{name:'플라스틱',words:['따르릉','여보세요?','뚝','RING','부재중','네 팀장님']}
 };
@@ -721,6 +727,7 @@ const TARGETS={
   pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   ball:{id:'ball',kind:'ball',mat:'foam',name:'꾹 참는 스트레스볼',tag:'SQUISHY',hp:Infinity,desc:'스퀴시는 꾹 누르면 천천히 돌아오고, 슬라임은 잡아서 쭈욱 늘어나요. 종류는 TYPE에서 골라요.',spec:'스퀴시 · 슬라임 2종 · 소리 꾹 쭈욱'},
   stapler:{id:'stapler',kind:'stapler',mat:'stapler',name:'결재 스테이플러',tag:'STEEL',hp:Infinity,desc:'철컥 한 번에 결재 하나. 누를 때마다 심이 튀어나와 바닥에 흩어져요. 심이 떨어지면 한 번 더 눌러 채워요.',spec:'재질 크롬 강철 + 플라스틱 · 심 25개 · 소리 철컥'},
+  head:{id:'head',kind:'head',mat:'head',name:'얄미운 뒤통수',tag:'HEAD',hp:Infinity,desc:'“이거 오늘까지 되죠?” 하고 돌아선 바로 그 뒤통수. 진짜 사람 아니고 마네킹이니 마음 놓고 딱. 맞은 자리엔 혹이 부풀어요.',spec:'재질 마네킹 + 가발 · 소리 딱 · 혹 최대 5개'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
@@ -1038,6 +1045,49 @@ function buildSlimeBall(){
       pos.needsUpdate=true;geo.computeVertexNormals()},
     cleanup(){grab=null;window.removeEventListener('pointermove',move)}});
 }
+/* 뒤통수: 마네킹 머리(가발) + 목 + 셔츠 어깨. 치면 앞으로 끄덕, 혹이 부풂 */
+function hairCanvas(){const c=mk(1024,512),x=c.getContext('2d');x.fillStyle='#1c1612';x.fillRect(0,0,1024,512);
+  for(let i=0;i<5200;i++){const u=rnd(0,1024),v0=rnd(0,40),L=rnd(160,480);x.strokeStyle=Math.random()<.5?`rgba(90,70,55,${rnd(.15,.45)})`:`rgba(0,0,0,${rnd(.2,.5)})`;x.lineWidth=rnd(.6,1.8);x.beginPath();x.moveTo(u,v0);x.bezierCurveTo(u+rnd(-30,30),v0+L*.3,u+rnd(-40,40),v0+L*.7,u+rnd(-30,30),v0+L);x.stroke()}
+  for(let i=0;i<500;i++){x.strokeStyle=`rgba(200,170,140,${rnd(.05,.16)})`;x.lineWidth=rnd(.5,1.2);const u=rnd(0,1024),v0=rnd(60,300);x.beginPath();x.moveTo(u,v0);x.lineTo(u+rnd(-8,8),v0+rnd(30,90));x.stroke()}
+  grain(c,6);return c}
+function shirtCanvas(){const c=mk(512,512),x=c.getContext('2d');x.fillStyle='#cdd6ee';x.fillRect(0,0,512,512);for(let i=0;i<512;i+=3){x.fillStyle=`rgba(120,135,180,${rnd(.04,.1)})`;x.fillRect(0,i,512,1);x.fillRect(i,0,1,512)}
+  x.strokeStyle='rgba(75,92,196,.35)';x.lineWidth=2;for(let i=0;i<512;i+=24){x.beginPath();x.moveTo(i,0);x.lineTo(i,512);x.stroke()}grain(c,8);return c}
+function buildHeadBack(){
+  const g=new T.Group();const R=.42;
+  const skin=new T.MeshPhysicalMaterial({color:C(0xe6b596),roughness:.55,metalness:0,sheen:C(0x3a1a10),envMapIntensity:.45});
+  const hairT=tex(hairCanvas());const hairB=tex(hairCanvas(),false);
+  const hairM=new T.MeshStandardMaterial({map:hairT,bumpMap:hairB,bumpScale:.012,color:0xffffff,roughness:.5,metalness:0,envMapIntensity:.5});
+  const shirtM=new T.MeshStandardMaterial({map:tex(shirtCanvas()),roughness:.8,metalness:0,envMapIntensity:.4});
+  // 어깨·몸통
+  const torso=new T.Mesh(new T.SphereGeometry(1,72,40,0,Math.PI*2,0,Math.PI*.5),shirtM);torso.scale.set(.95,.4,.42);torso.position.set(0,.28,0);g.add(torso);const tb=new T.Mesh(new T.CylinderGeometry(.95,.93,.6,72,1,true),shirtM);tb.scale.z=.42/.95;tb.position.set(0,-.02,0);g.add(tb);
+  const collar=new T.Mesh(new T.TorusGeometry(.2,.045,12,40,Math.PI*1.4),shirtM);collar.rotation.set(Math.PI/2,0,Math.PI*.8);collar.position.set(0,.74,0);g.add(collar);
+  const yoke=new T.Mesh(new T.BoxGeometry(1.2,.004,.004),new T.MeshBasicMaterial({color:0x8d98c4}));yoke.position.set(0,.5,.33);yoke.visible=false;g.add(yoke);
+  // 목 + 머리(목을 축으로 끄덕)
+  const neckPivot=new T.Group();neckPivot.position.set(0,.72,0);g.add(neckPivot);
+  const neck=new T.Mesh(new T.CylinderGeometry(.15,.17,.36,28),skin);neck.position.y=.12;neckPivot.add(neck);
+  const head=new T.Group();head.position.set(0,.6,-.02);neckPivot.add(head);
+  const skull=new T.Mesh(new T.SphereGeometry(R,64,48),skin);skull.scale.set(.92,1.1,1.02);head.add(skull);
+  const hair=new T.Mesh(new T.SphereGeometry(R*1.04,72,48,0,Math.PI*2,0,Math.PI*.6),hairM);hair.scale.copy(skull.scale);hair.position.y=.01;head.add(hair);
+  const nape=new T.Mesh(new T.SphereGeometry(R*1.035,48,24,Math.PI*.15,Math.PI*.7,Math.PI*.55,Math.PI*.2),hairM);nape.scale.copy(skull.scale);head.add(nape);
+  [-1,1].forEach(sg=>{const ear=new T.Mesh(new T.SphereGeometry(.09,24,16),skin);ear.scale.set(.42,1,.72);ear.position.set(sg*R*.9,-.04,-.04);ear.rotation.y=sg*.35;head.add(ear)});
+  const bumpM=new T.MeshPhysicalMaterial({color:C(0xec9c86),roughness:.45,metalness:0,clearcoat:.4,clearcoatRoughness:.4,envMapIntensity:.5});
+  const bumps=[];let nod=0,nv=0,tilt=0,tv=0;
+  const hits=[skull,hair,nape,neck,torso];
+  return base({kind:'head',group:g,hittables:hits,center:new T.Vector3(0,1.05,0),radius:.98,camDir:new T.Vector3(.18,.42,1),floor:-3.2,fill:.8,fillN:.86,
+    onHit(h,k,px,py){
+      if(h.object===torso||h.object===neck){sound('soft',k);noise('lowpass',300,1,.08,.4,ac?ac.currentTime:0);popWord(px,py-16,pick(['툭','어깨빵','뭐예요?']),1);this.sp.vx+=rnd(-.01,.01);this.sp.vsy-=.01*k;return 'nosound'}
+      sound('smack',k);nv-=.07*k;tv+=rnd(-.05,.05)*k;
+      const lp=head.worldToLocal(h.point.clone());const n=lp.clone().normalize();
+      let b=bumps.find(q=>q.dir.dot(n)>.985);
+      if(!b&&bumps.length<5){const m=new T.Mesh(new T.SphereGeometry(.07,24,16),bumpM);m.position.copy(n).multiplyScalar(R*1.0);m.position.x*=.92;m.position.y*=1.1;m.position.z*=1.02;m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),n);m.scale.set(.01,.01,.01);head.add(m);b={m,dir:n,s:0,t:.55,pop:0};bumps.push(b)}
+      else if(!b){b=pick(bumps)}
+      b.t=Math.min(1.5,b.t+.22);b.pop=1;
+      glints(px,py,7);popWord(px,py-16,b.t>1.3&&Math.random()<.4?pick(['혹 났다','아이고','머리 울려']):hitWord('head'),1,state.combo>=8&&state.combo%4===0);
+      this.sp.vsy-=.008*k;return 'nosound'},
+    update(dt){nv+=(-nod*70)*dt;nv*=Math.pow(.02,dt);nod+=nv*dt*10;nod=Math.max(-.5,Math.min(.15,nod));neckPivot.rotation.x=nod;
+      tv+=(-tilt*60)*dt;tv*=Math.pow(.03,dt);tilt+=tv*dt*10;neckPivot.rotation.z=tilt;
+      for(const b of bumps){b.s+=(b.t-b.s)*Math.min(1,dt*10);b.pop*=Math.pow(.02,dt);const sc=b.s*(1+b.pop*.25);b.m.scale.set(sc,sc*.75,sc)}}});
+}
 /* 스테이플러: 뒤쪽 경첩으로 팔이 내려가며 철컥, 심이 튀어나옴 */
 function stapleGeo(){const w=.07,h=.028,t=.006;const parts=[[w,t,t,0,h/2],[t,h,t,-w/2,0],[t,h,t,w/2,0]];const geos=parts.map(p=>{const b=new T.BoxGeometry(p[0],p[1],p[2]);b.translate(p[3],p[4],0);return b});
   const pos=[],nrm=[],idx=[];let o=0;geos.forEach(b=>{const bp=b.attributes.position,bn=b.attributes.normal;for(let i=0;i<bp.count;i++){pos.push(bp.getX(i),bp.getY(i),bp.getZ(i));nrm.push(bn.getX(i),bn.getY(i),bn.getZ(i))}b.index.array.forEach(v=>idx.push(v+o));o+=bp.count;b.dispose()});
@@ -1245,8 +1295,8 @@ const mok=new T.Group();const body=new T.Mesh(bodyG,bodyMat);mok.add(body);
   mok.scale.setScalar(1.0);mok.position.set(.16,.7,0);mok.rotation.y=-.4;g.add(mok);
   return base({kind:'moktak',group:g,hittables:[body,handle,neck,cush],center:new T.Vector3(0,.42,0),radius:1.3,camDir:new T.Vector3(.12,.5,1),floor:-.14,fill:.72,fillN:.66,
     onHit(h,k,px,py){if(h.object===cush){sound('soft');this.sp.vsy-=.01*k;return 'nosound'}
-      ringPuff(px,py);this.sp.vsy-=.035*k;this.sp.vy-=.005*k;mok.userData.v=(mok.userData.v||0)+.012*k},
-    update(){const m=mok.userData;m.v=(m.v||0);m.y=(m.y||0)+m.v;m.v-=.004;if(m.y<0){m.y=0;m.v=-m.v*.3;if(Math.abs(m.v)<.002)m.v=0}mok.position.y=.7+m.y;mok.rotation.z=m.y*.8}});
+      ringPuff(px,py);this.sp.vsy-=.035*k;this.sp.vy-=.005*k;{const m=mok.userData;if((m.y||0)<.004)m.v=.0055*Math.min(k,1.4)}},
+    update(){const m=mok.userData;m.v=(m.v||0);m.y=(m.y||0)+m.v;m.v-=.004;if(m.y>.02){m.y=.02;if(m.v>0)m.v=0}if(m.y<0){m.y=0;m.v=-m.v*.3;if(Math.abs(m.v)<.002)m.v=0}mok.position.y=.7+m.y;mok.rotation.z=m.y*.8}});
 }
 /* ---- 오븐 ---- */
 function ledCanvas(t){const c=mk(256,96),x=c.getContext('2d');x.fillStyle='#0b0b0c';x.fillRect(0,0,256,96);x.fillStyle='#ff2a14';x.shadowColor='#ff2000';x.shadowBlur=12;x.font='700 58px Unbounded,"Arial Black",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,52);return c}
@@ -1717,10 +1767,10 @@ function buildLighter(){
   /* 부싯돌 휠: 진짜 톱니 + 반짝이는 측면 */
   const wg=new T.CylinderGeometry(.085,.085,.07,72,1);{const pp=wg.attributes.position;for(let k=0;k<pp.count;k++){const x=pp.getX(k),z=pp.getZ(k),r=Math.hypot(x,z);if(r>.08){const a_=Math.atan2(z,x);const f=Math.cos(a_*36)>0?1.07:.95;pp.setX(k,x*f);pp.setZ(k,z*f)}}wg.computeVertexNormals()}
   const kt=tex(knurlCanvas());kt.wrapS=T.RepeatWrapping;kt.repeat.set(2,1);
-  const wheel=new T.Group();const wm=new T.Mesh(wg,new T.MeshStandardMaterial({color:C(0xb4b8be),bumpMap:kt,bumpScale:.006,metalness:1,roughness:.3,envMapIntensity:1.4,flatShading:true}));wm.rotation.z=Math.PI/2;wheel.add(wm);
-  [-1,1].forEach(sg=>{const sd=new T.Mesh(new T.CylinderGeometry(.072,.072,.018,32),brightM);sd.rotation.z=Math.PI/2;sd.position.x=sg*.05;wheel.add(sd);const ax_=new T.Mesh(new T.CylinderGeometry(.018,.018,.03,12),gun);ax_.rotation.z=Math.PI/2;ax_.position.x=sg*.065;wheel.add(ax_)});
+  const wheel=new T.Group();const wm=new T.Mesh(wg,new T.MeshStandardMaterial({color:C(0xb4b8be),bumpMap:kt,bumpScale:.006,metalness:1,roughness:.3,envMapIntensity:1.4,flatShading:true}));wm.rotation.x=Math.PI/2;wheel.add(wm);
+  [-1,1].forEach(sg=>{const sd=new T.Mesh(new T.CylinderGeometry(.072,.072,.018,32),brightM);sd.rotation.x=Math.PI/2;sd.position.z=sg*.05;wheel.add(sd);const ax_=new T.Mesh(new T.CylinderGeometry(.018,.018,.03,12),gun);ax_.rotation.x=Math.PI/2;ax_.position.z=sg*.065;wheel.add(ax_)});
   wheel.position.set(W*.12,top+.44,-.02);g.add(wheel);
-  const ear=new T.Mesh(roundedBox(.02,.16,.14,.008,2),gun);[-1,1].forEach(sg=>{const e=ear.clone();e.position.set(W*.12+sg*.075,top+.36,-.02);g.add(e)});
+  const ear=new T.Mesh(roundedBox(.14,.16,.02,.008,2),gun);[-1,1].forEach(sg=>{const e=ear.clone();e.position.set(W*.12,top+.36,-.02+sg*.075);g.add(e)});
   /* 가스 레버: 검정 플라스틱 + 미끄럼 방지 홈 */
   const lever=new T.Group();const lv=new T.Mesh(roundedBox(.17,.12,.2,.04,4),black);lever.add(lv);const tip=new T.Mesh(roundedBox(.08,.1,.12,.035,4),black);tip.position.set(.04,.09,0);lever.add(tip);
   for(let k=0;k<3;k++){const gr=new T.Mesh(new T.BoxGeometry(.07,.006,.11),new T.MeshStandardMaterial({color:0x2a2b30,roughness:.5}));gr.position.set(.04,.141,-.03+k*.03);lever.add(gr)}
@@ -1753,7 +1803,7 @@ function buildLighter(){
     onHit(h,k,px,py){down();popWord(px,py-16,st.lvl>0?pick(['화르륵','불멍','타닥','FIRE']):pick(['칙','딸깍','치익','틱']),1);return 'nosound'},
     onDown(){},onUp(){up()},
     update(dt){st.press+= ((st.hold?1:0)-st.press)*.35;{const nw=performance.now()/1000;st.sl=(st.sl||0)*.96+st.press*.02;surf.rotation.z=Math.sin(nw*7)*.05*st.sl+this.sp.x*.3;surf.rotation.x=Math.cos(nw*5.3)*.03*st.sl}lever.position.y=top+.16-.045*st.press;lever.rotation.z=-.08*st.press;
-      st.spin*=.9;wheel.rotation.x-=st.spin*.35;
+      st.spin*=.9;wheel.rotation.z-=st.spin*.35;
       if(st.lit){st.t+=dt;const target=Math.min(1,.3+st.t*.45);st.lvl+=(target-st.lvl)*.08;if(st.hg&&ac){const t=ac.currentTime;st.hg.gain.setTargetAtTime(.006+.012*st.lvl,t,.3);st.rg.gain.setTargetAtTime(.04+.07*st.lvl,t,.3);st.roarF.frequency.setTargetAtTime(280+180*st.lvl,t,.3)}}
       else st.lvl+=(0-st.lvl)*.3;
       const L=st.lvl;flame.visible=L>.02;const now=performance.now()/1000;
@@ -1869,7 +1919,7 @@ function buildPills(){
       cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
-function build(t){return t.kind==='ball'?buildStressBall():t.kind==='stapler'?buildStapler():t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
+function build(t){return t.kind==='head'?buildHeadBack():t.kind==='ball'?buildStressBall():t.kind==='stapler'?buildStapler():t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
 
 /* small effects */
 function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(bevBox(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
@@ -1938,6 +1988,7 @@ function sound(kind,k=1){
       noise('highpass',6500,1.5,.008,.6*v,c,.0002);tone('sine',rnd(3300,3700),0,.05,.1*v,c,.0002);break}
     case 'staplerUp':if(stapPlay('rel',v))break;noise('bandpass',rnd(2400,2900),2.5,.012,.3*v,t,.0004);tone('triangle',rnd(900,1050),0,.02,.08*v,t,.0004);tone('sine',rnd(3100,3500),0,.14,.035*v,t+.004);break;
     case 'staplerEmpty':noise('bandpass',1400,1.5,.04,.6*v,t);tone('sine',rnd(220,260),120,.06,.4*v,t);break;
+    case 'smack':noise('bandpass',rnd(1700,2500),.9,.04,1.3*v,t,.0003);noise('highpass',3800,.8,.014,.9*v,t,.0002);tone('sine',rnd(170,210),95,.08,.55*v,t,.001);tone('sine',rnd(430,520),300,.05,.22*v,t,.001);break;
     case 'frame':tone('sine',230,120,.08,.45,t);noise('bandpass',800,1,.05,.35,t);break;
   }
 }
@@ -1969,7 +2020,7 @@ function fitCam(o=cur,camera=cam,aspect=SW/SH,narrow=SW<700){const vf=camera.fov
 function setTarget(id,drop){
   if(cur){if(cur.onUp)cur.onUp();if(cur.cleanup)cur.cleanup();scene.remove(cur.group);const og=cur.group;setTimeout(()=>{try{disposeDeep(og)}catch(e){}},0)}
   state.id=id;store.set('target',id);const t=getT(id);cur=build(t);cur.t=t;polish(cur.group);scene.add(cur.group);shadowFloor.visible=cur.floor>-3;shadowFloor.position.y=cur.floor+.002;cur.base=cur.group.position.clone();
-  state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');stage.style.touchAction=t.kind==='ball'&&state.ballType==='slime'?'none':'';if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
+  state.hp=state.max=t.hp;state.breaking=false;stage.classList.toggle('word-mode',t.kind==='word');stage.classList.toggle('mk',t.kind==='moktak');{const lock=t.kind==='ball'&&state.ballType==='slime';canvas.style.touchAction=lock?'none':'';stage.classList.toggle('slime-lock',lock);if(lock&&matchMedia('(pointer:coarse)').matches&&!setTarget.slHint){setTarget.slHint=1;setTimeout(()=>qtToast('스크롤은 양옆 ↕ 막대에서'),600)}}if(t.kind!=='moktak')malletEl.classList.remove('on');fitCam();
   if(drop&&!reduced){cur.sp.y=1.6;cur.sp.vy=0}
   $('#tName').textContent=t.name;$('#tDesc').textContent=t.desc;$('#tSpec').textContent=t.kind==='keyboard'?`키캡 ${CAPS[state.cap].name}(${CAPS[state.cap].en}) · 무선 · 소리 ${CAP_WORDS[state.cap][0]}`:t.spec;$('#capSet').hidden=t.kind!=='keyboard';$('#ballSet').hidden=t.kind!=='ball';if(t.kind==='ball'){const B=BALLS[state.ballType]||BALLS.squishy;$('#tDesc').textContent=B.desc;$('#tSpec').textContent=B.spec}renderHp();
   document.querySelectorAll('.card').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.id===id)));
@@ -2116,7 +2167,7 @@ state.vibe=!!store.get('vibe',false);const vibeBtn=$('#vibeBtn');
 function renderVibe(){vibeBtn.setAttribute('aria-pressed',String(state.vibe));vibeBtn.textContent=state.vibe?'VIBE ON':'VIBE OFF'}renderVibe();
 state.ce=store.get('ce',true)!==false;const ceBtn=$('#ceBtn');function renderCe(){ceBtn.setAttribute('aria-pressed',String(state.ce));ceBtn.textContent=state.ce?'퇴근 알림 ON':'퇴근 알림 OFF'}renderCe();
 ceBtn.addEventListener('click',()=>{state.ce=!state.ce;store.set('ce',state.ce);renderCe();qtToast(state.ce?'퇴근 카운트다운·축하를 켰어요':'퇴근 카운트다운·축하를 껐어요')});
-vibeBtn.addEventListener('click',()=>{state.vibe=!state.vibe;store.set('vibe',state.vibe);renderVibe();if(state.vibe){if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}else qtToast('이 기기·브라우저는 진동을 지원하지 않아요')}});
+vibeBtn.addEventListener('click',()=>{state.vibe=!state.vibe;store.set('vibe',state.vibe);renderVibe();if(state.vibe){if(navigator.vibrate){try{navigator.vibrate(30)}catch(e){}if(/Android/i.test(navigator.userAgent))qtToast('진동이 안 느껴지면 휴대폰을 무음이 아닌 진동·소리 모드로 바꿔 주세요')}else qtToast('이 기기·브라우저는 진동을 지원하지 않아요')}});
 /* ================= 퇴근 이벤트 ================= */
 const CE={fired:{},last:null};
 function ceOnce(k){const key=today()+'@'+tEnd.value+'#'+k;if(CE.fired[key])return false;CE.fired[key]=1;return true}
