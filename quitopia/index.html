@@ -728,7 +728,6 @@ const TARGETS={
   pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   ball:{id:'ball',kind:'ball',mat:'foam',name:'꾹 참는 스트레스볼',tag:'SQUISHY',hp:Infinity,desc:'스퀴시는 꾹 누르면 천천히 돌아오고, 슬라임은 잡아서 쭈욱 늘어나요. 종류는 TYPE에서 골라요.',spec:'스퀴시 · 슬라임 2종 · 소리 꾹 쭈욱'},
   stapler:{id:'stapler',kind:'stapler',mat:'stapler',name:'결재 스테이플러',tag:'STEEL',hp:Infinity,desc:'철컥 한 번에 결재 하나. 누를 때마다 심이 튀어나와 바닥에 흩어져요. 심이 떨어지면 한 번 더 눌러 채워요.',spec:'재질 크롬 강철 + 플라스틱 · 심 25개 · 소리 철컥'},
-  head:{id:'head',kind:'head',mat:'head',name:'얄미운 뒤통수',tag:'HEAD',hp:Infinity,desc:'“이거 오늘까지 되죠?” 하고 돌아선 바로 그 뒤통수. 진짜 사람 아니고 마네킹이니 마음 놓고 딱. 맞은 자리엔 혹이 부풀어요. 머리 스타일은 TYPE에서 골라요.',spec:'포니테일·정장 2종 · 소리 딱 · 혹 최대 5개'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
 function customTarget(){const c=state.custom;const len=[...c.text].length;return {id:'custom',kind:'word',mat:c.tex,name:'“'+c.text+'”',tag:'YOURS',hp:TEX_HP[c.tex],desc:TEX_DESC[c.tex],spec:'재질 '+MAT[c.tex].name+' · '+len+'글자 · 소리 '+MAT[c.tex].words[0],text:c.text,tex:c.tex}}
