@@ -730,7 +730,7 @@ const TARGETS={
   switch:{id:'switch',kind:'switch',mat:'switch',name:'퇴근 스위치',tag:'TOGGLE',hp:Infinity,desc:'딸깍 하나 끌 때마다 사무실 불이 하나씩 꺼져요. 다섯 개 다 끄면 퇴근 인정.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
   pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   ball:{id:'ball',kind:'ball',mat:'foam',name:'꾹 참는 스트레스볼',tag:'SQUISHY',hp:Infinity,desc:'스퀴시는 꾹 누르면 천천히 돌아오고, 슬라임은 잡아서 쭈욱 늘어나요. 종류는 TYPE에서 골라요.',spec:'스퀴시 · 슬라임 2종 · 소리 꾹 쭈욱'},
-  cookie:{id:'cookie',kind:'cookie',mat:'cookie',name:'점심 오픈런 두쫀쿠',tag:'CHEWY',hp:Infinity,desc:'점심시간을 통째로 바쳐 줄 서서 산 그 쿠키. 꾹 누르면 쫀득하게 들어가고 코코아 가루가 후드득, 속은 카다이프가 바사삭. 계속 누르면 쩍 갈라져요.',spec:'재질 마시멜로 + 카다이프 + 피스타치오 · 소리 쫀득 바사삭'},
+  cookie:{id:'cookie',kind:'cookie',mat:'cookie',name:'점심 오픈런 두쫀쿠',tag:'CHEWY',hp:Infinity,desc:'점심시간을 통째로 바쳐 줄 서서 산 그 쿠키. 꾹 누르면 쫀득하게 들어가고 코코아 가루가 후드득, 속은 카다이프가 바사삭. 단면 보이는 반쪽을 누르면 바사삭.',spec:'재질 마시멜로 + 카다이프 + 피스타치오 · 소리 쫀득 바사삭'},
   stapler:{id:'stapler',kind:'stapler',mat:'stapler',name:'결재 스테이플러',tag:'STEEL',hp:Infinity,desc:'철컥 한 번에 결재 하나. 누를 때마다 심이 튀어나와 바닥에 흩어져요. 심이 떨어지면 한 번 더 눌러 채워요.',spec:'재질 크롬 강철 + 플라스틱 · 심 25개 · 소리 철컥'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
@@ -2058,9 +2058,10 @@ function buildCookie(){
     const NS=460;const st=new T.InstancedMesh(strandGeo,mStrand,NS);const o=new T.Object3D();
     for(let i=0;i<NS;i++){const a=rnd(0,6.2832),rr=RM*1.02*Math.sqrt(Math.random());const h=HM*Math.sqrt(Math.max(0,1-(rr/RM)**2));o.position.set(Math.cos(a)*rr,h+rnd(-.006,.02),Math.sin(a)*rr);o.rotation.set(rnd(-.5,.5),rnd(0,6.28),rnd(-.6,.6));o.scale.set(rnd(.05,.17),rnd(.7,1.3),rnd(.7,1.3));o.updateMatrix();st.setMatrixAt(i,o.matrix)}
     f.add(st);f.userData.parts=[disc,mound];return f}
-  const bot=new T.Group();bot.position.y=FY;const botM=new T.Mesh(halfGeo(false),mCoat.clone());botM.material.vertexColors=false;botM.material.color=C(0xcfc3bb);botM.material.onBeforeCompile=noRim;botM.rotation.y=-Math.PI/2;bot.add(botM);const bf=face();bot.add(bf);
-  const topP=new T.Group();const topM=new T.Mesh(halfGeo(true),botM.material);topM.rotation.y=-Math.PI/2;topP.add(topM);const tf=face();tf.scale.y=-1;topP.add(tf);
-  bot.visible=topP.visible=false;g.add(bot,topP);
+  const mHalf=mCoat.clone();mHalf.vertexColors=false;mHalf.color=C(0xcfc3bb);mHalf.onBeforeCompile=noRim;
+  /* 단면이 보이는 반쪽: 통 쿠키 위에 비스듬히 얹음(레퍼런스 사진 구도) */
+  const topP=new T.Group();const topM=new T.Mesh(halfGeo(true),mHalf);topM.rotation.y=-Math.PI/2;topP.add(topM);const tf=face();tf.scale.y=-1;topP.add(tf);
+  topP.position.set(.02,FY+R*SQ+.36,-.04);topP.rotation.set(-2.12,.12,.04);g.add(topP);
   /* 코코아 가루 입자(바닥에 쌓임) */
   const NP=2600;const pg=new T.BufferGeometry();const pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pv=new Float32Array(NP*3),ps=new Uint8Array(NP);let pi=0;
   for(let i=0;i<NP;i++){pp[i*3+1]=-50}
@@ -2076,24 +2077,20 @@ function buildCookie(){
   /* 카다이프 부스러기 */
   const NC=90;const crumbs=new T.InstancedMesh(strandGeo,mStrand,NC);crumbs.frustumCulled=false;const cr=[];const co=new T.Object3D();for(let i=0;i<NC;i++){cr.push({p:new T.Vector3(0,-50,0),v:new T.Vector3(),r:new T.Euler(),w:new T.Vector3(),L:.1,live:false});co.position.set(0,-50,0);co.updateMatrix();crumbs.setMatrixAt(i,co.matrix)}g.add(crumbs);let ci=0;
   function crumbAt(p,n,up){for(let i=0;i<n;i++){const c=cr[ci];ci=(ci+1)%NC;c.p.copy(p).add(new T.Vector3(rnd(-.12,.12),rnd(0,.04),rnd(-.12,.12)));c.v.set(rnd(-.9,.9),rnd(.6,1.6)*up,rnd(-.5,1.1));c.r.set(rnd(0,6),rnd(0,6),rnd(0,6));c.w.set(rnd(-14,14),rnd(-14,14),rnd(-14,14));c.L=rnd(.04,.12);c.live=true}}
-  let presses=0,split=0,splitT=0,splitHits=0,sqT=0;const hits=[m];
+  let split=0,splitT=1,sqT=0;const hits=[m,topM,...tf.userData.parts];
   const TOPF={p:new T.Vector3(.02,R*1.02,-R*.78),rx:-1.95,ry:.12};
-  function doSplit(self,h){split=1;splitT=0;splitHits=0;held=null;heldD=null;dents.length=0;m.visible=false;bot.visible=topP.visible=true;topP.position.set(0,FY,0);topP.rotation.set(0,0,0);
-    hits.length=0;hits.push(botM,...bf.userData.parts,topM,...tf.userData.parts);
-    cookieSnd('split');const pc2=new T.Vector3(0,FY+.05,0);crumbAt(pc2,46,1.2);for(let i=0;i<14;i++)dustAt(new T.Vector3(rnd(-1,1),rnd(-.2,1),rnd(-1,1)).normalize(),8,1.6);self.sp.vsy-=.12;shake=Math.max(shake,.06)}
-  return base({kind:'cookie',group:g,hittables:hits,center:new T.Vector3(0,.5,0),radius:1.0,camDir:new T.Vector3(.1,.55,1),floor:0,fill:.66,fillN:.72,
+  return base({kind:'cookie',group:g,hittables:hits,center:new T.Vector3(0,.78,0),radius:1.22,camDir:new T.Vector3(.1,.45,1),floor:0,fill:.66,fillN:.72,
     onHit(h,k,px,py,fromKey){
-      if(split){if(splitT<.5)return 'nosound';splitHits++;const lp=g.worldToLocal(h.point.clone());crumbAt(lp,10,1);cookieSnd('crunch',k);this.sp.vsy-=.06*k;this.sp.vsx+=.03*k;
+      if(h.object!==m){const lp=g.worldToLocal(h.point.clone());crumbAt(lp,10,1);cookieSnd('crunch',k);this.sp.vsy-=.06*k;this.sp.vsx+=.03*k;
         for(let i=0;i<30;i++)emit(lp.x+rnd(-.1,.1),lp.y+rnd(0,.05),lp.z+rnd(-.1,.1),rnd(-.5,.5),rnd(.2,.8),rnd(-.4,.6),false);
         popWord(px,py-16,pick(['바사삭','과사삭','CRUNCH','파사삭','와사삭','쫀득']),1,state.combo>=8&&state.combo%4===0);
-        if(splitHits>=7){const self=this;setTimeout(()=>{if(cur===self)setTarget(state.id,true)},420);popWord(px,py-50,'한 개 더!',1.1,true)}return 'nosound'}
-      const lp=m.worldToLocal(h.point.clone()).normalize();presses++;
+return 'nosound'}
+      const lp=m.worldToLocal(h.point.clone()).normalize();
       const d={x:lp.x,y:lp.y,z:lp.z,a:0,to:Math.min(.42,.24+.06*k),s:.07+Math.random()*.03,hold:true,t:0};dents.push(d);if(dents.length>5)dents.shift();
       if(held)held.hold=false;held=fromKey?null:d;heldD=held?lp:null;if(fromKey){d.hold=false;d.t=.12}
       for(let i=0;i<N;i++){const c=dir[i*3]*lp.x+dir[i*3+1]*lp.y+dir[i*3+2]*lp.z;if(c>.8)wipe[i]=Math.min(.95,wipe[i]+.55*Math.exp(-(1-c)/.03))}
       dustAt(lp,Math.round(60+40*k),1);this.sp.vsy-=.05*k;this.sp.vsx+=.03*k;
       cookieSnd('press',k);popWord(px,py-16,hitWord('cookie'),1,state.combo>=8&&state.combo%4===0);
-      if(presses>=12&&!fromKey||presses>=14){const self=this;setTimeout(()=>{if(cur===self&&!split){doSplit(self,h);popWord(px,py-46,'쩍!',1.4,true)}},fromKey?60:380)}
       return 'nosound'},
     onUp(){if(held){held.hold=false;held=null;heldD=null;cookieSnd('up',1)}},
     update(dt){
