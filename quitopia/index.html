@@ -2119,7 +2119,7 @@ function buildCookie(){
     if(tgt==='m'){const gl=m.worldToLocal(p.clone());for(let i=0;i<N;i++){place(dir[i*3],dir[i*3+1],dir[i*3+2],R*r0[i],tmp);Wm[i]=Math.exp(-((tmp[0]-gl.x)**2+(tmp[1]-gl.y)**2+(tmp[2]-gl.z)**2)/.2)}}
     else{const gl=topM.worldToLocal(p.clone());for(let i=0;i<tpos.count;i++)Wc[i]=Math.exp(-((tBase[i*3]-gl.x)**2+(tBase[i*3+1]-gl.y)**2+(tBase[i*3+2]-gl.z)**2)/.32);S.gf.copy(tf.userData.parts[1].worldToLocal(p.clone()))}}
   const locD=(obj)=>obj.worldToLocal(_q.copy(S.gW).add(S.D)).sub(obj.worldToLocal(S.gW.clone()));
-  function srelease(){window.removeEventListener('pointermove',smove);if(!S.tgt)return;S.tgt=null;S.rt=0;const L=S.D.length();if(on()&&L>.08){const t=ac.currentTime+.005,v=Math.min(1,L+.2);const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type='lowpass';f.Q.value=.7;f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(220,t+1);const g2=ac.createGain();g2.gain.setValueAtTime(.0001,t);g2.gain.exponentialRampToValueAtTime(.32*v,t+.15);g2.gain.exponentialRampToValueAtTime(.0001,t+1.1);s.connect(f);f.connect(g2);g2.connect(master);s.start(t,Math.random());s.stop(t+1.2)}}
+  function srelease(){window.removeEventListener('pointermove',smove);if(!S.tgt)return;S.tgt=null;S.rt=0;const L=S.D.length();if(L>.08)sound('foamUp',.7)}
   const TOPF={p:new T.Vector3(.02,R*1.02,-R*.78),rx:-1.95,ry:.12};
   return base({kind:'cookie',soft:true,group:g,hittables:hits,center:new T.Vector3(0,.78,0),radius:1.22,camDir:new T.Vector3(.1,.45,1),floor:0,fill:.66,fillN:.72,
     onHit(h,k,px,py,fromKey){
