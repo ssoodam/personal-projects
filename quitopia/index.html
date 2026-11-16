@@ -107,6 +107,8 @@ button,input{font:inherit;color:inherit}
 .sndg #muteBtn{grid-area:m}.sndg input[type=range]{grid-area:v;width:100%;min-width:150px}.sndg #vibeBtn{grid-area:b}.sndg #ceBtn{grid-area:c}
 .sndg #vibeBtn,.sndg #ceBtn{width:100%;min-width:104px;padding:3px 10px;font-size:10px;text-align:center;white-space:nowrap}
 .szl{font:800 11px/1 Unbounded,sans-serif;letter-spacing:.08em;color:var(--cream,#F6F9DC)}
+.top-r.wrapped{width:100%}.top-r.wrapped>.sz{margin-left:auto}
+.specrow{display:flex;align-items:center;justify-content:space-between;gap:12px}.specrow .spec{flex:1;min-width:0}.specrow .sz{flex:none;pointer-events:auto;gap:8px}.specrow .sz input[type=range]{width:96px}
 .pal{display:flex;gap:6px}
 .pal button{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
 .pal button[aria-pressed="true"]{border-color:var(--ink)}
@@ -323,7 +325,7 @@ button,input{font:inherit;color:inherit}
     <p class="eyebrow">NOW HITTING</p>
     <h2 id="tName">내 자리 책상</h2>
     <p class="desc" id="tDesc"></p>
-    <p class="spec" id="tSpec"></p>
+    <div class="specrow" id="specRow"><p class="spec" id="tSpec"></p></div>
     <div class="meter">
       <div class="meter-l"><span>DURABILITY</span><span id="hpTxt">-</span></div>
       <div class="bar"><i id="hpBar" style="width:100%"></i></div>
@@ -706,6 +708,7 @@ const MAT={
   foam:{name:'폼',words:['꾹','말랑','푹','SQUEEZE','후우','참자…','꾸욱']},
   head:{name:'뒤통수',words:['딱!','딱','정신 차려','누구야?','아얏','회의 끝났어요','칼퇴합니다','네 알겠습니다…']},
   stapler:{name:'스테이플러',words:['철컥','찰칵','CHUNK','결재 완료','첨부 완료','한 부 더']},
+  cookie:{name:'마시멜로',words:['쫀득','바사삭','꾹','과사삭','CRUNCH','쫀득쫀득','후드득']},
   phone:{name:'플라스틱',words:['따르릉','여보세요?','뚝','RING','부재중','네 팀장님']}
 };
 const BREAK_WORD={keyboard:'ALT+F4!',laptop:'FATAL ERROR!',oven:'KABOOM!',phone:'HUNG UP!',wood:'SMASHED!',glass:'SHATTERED!',paper:'RIPPED!',jelly:'SQUASHED!',metal:'KABOOM!'};
@@ -727,6 +730,7 @@ const TARGETS={
   switch:{id:'switch',kind:'switch',mat:'switch',name:'퇴근 스위치',tag:'TOGGLE',hp:Infinity,desc:'딸깍 하나 끌 때마다 사무실 불이 하나씩 꺼져요. 다섯 개 다 끄면 퇴근 인정.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
   pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   ball:{id:'ball',kind:'ball',mat:'foam',name:'꾹 참는 스트레스볼',tag:'SQUISHY',hp:Infinity,desc:'스퀴시는 꾹 누르면 천천히 돌아오고, 슬라임은 잡아서 쭈욱 늘어나요. 종류는 TYPE에서 골라요.',spec:'스퀴시 · 슬라임 2종 · 소리 꾹 쭈욱'},
+  cookie:{id:'cookie',kind:'cookie',mat:'cookie',name:'점심 오픈런 두쫀쿠',tag:'CHEWY',hp:Infinity,desc:'점심시간을 통째로 바쳐 줄 서서 산 그 쿠키. 꾹 누르면 쫀득하게 들어가고 코코아 가루가 후드득, 속은 카다이프가 바사삭. 계속 누르면 쩍 갈라져요.',spec:'재질 마시멜로 + 카다이프 + 피스타치오 · 소리 쫀득 바사삭'},
   stapler:{id:'stapler',kind:'stapler',mat:'stapler',name:'결재 스테이플러',tag:'STEEL',hp:Infinity,desc:'철컥 한 번에 결재 하나. 누를 때마다 심이 튀어나와 바닥에 흩어져요. 심이 떨어지면 한 번 더 눌러 채워요.',spec:'재질 크롬 강철 + 플라스틱 · 심 25개 · 소리 철컥'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
@@ -1990,7 +1994,133 @@ function buildPills(){
       cells.forEach(c=>{if(c.crush>0){c.crush=Math.max(0,c.crush-.08);c.bub.scale.set(1+.04*c.crush,1+.03*c.crush,.62*(1-.25*c.crush))}})}});
 }
 
-function build(t){return t.kind==='head'?buildHeadBack():t.kind==='ball'?buildStressBall():t.kind==='stapler'?buildStapler():t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
+/* ================= 두쫀쿠: 코코아 가루 마시멜로(스퀴시) + 카다이프·피스타치오 속(바사삭) ================= */
+const COOKTX={};
+function cocoaCanvas(){const W=1024,H=512,c=mk(W,H),x=c.getContext('2d');x.fillStyle='#5a311b';x.fillRect(0,0,W,H);
+  const blob=(px,py,r,col,a)=>{for(const ox of [-W,0,W]){const rg=x.createRadialGradient(px+ox,py,0,px+ox,py,r);rg.addColorStop(0,`rgba(${col},${a})`);rg.addColorStop(1,`rgba(${col},0)`);x.fillStyle=rg;x.fillRect(px+ox-r,py-r,r*2,r*2)}};
+  for(let i=0;i<260;i++)blob(rnd(0,W),rnd(0,H),rnd(16,80),pick(['150,104,78','166,124,98','104,62,40','62,32,16']),rnd(.18,.42));
+  for(let i=0;i<70000;i++){const s=rnd(.7,2.4);x.fillStyle=pick(['rgba(176,134,104,.5)','rgba(138,96,70,.55)','rgba(74,40,22,.5)','rgba(200,166,138,.3)','rgba(112,72,50,.5)']);x.fillRect(rnd(0,W),rnd(0,H),s,s)}
+  grain(c,16);return c}
+function cocoaBumpCanvas(){const S=512,c=mk(S,S),x=c.getContext('2d');x.fillStyle='#808080';x.fillRect(0,0,S,S);
+  for(let i=0;i<26000;i++){const s=rnd(.8,2.6),v=Math.round(rnd(60,200));x.fillStyle=`rgb(${v},${v},${v})`;x.fillRect(rnd(0,S),rnd(0,S),s,s)}
+  for(let i=0;i<90;i++){const px=rnd(0,S),py=rnd(0,S),r=rnd(6,22);const rg=x.createRadialGradient(px,py,0,px,py,r);rg.addColorStop(0,'rgba(40,40,40,.35)');rg.addColorStop(1,'rgba(40,40,40,0)');x.fillStyle=rg;x.fillRect(px-r,py-r,r*2,r*2)}
+  return c}
+function fillingCanvas(){const S=1024,c=mk(S,S),x=c.getContext('2d'),m=S/2;x.clearRect(0,0,S,S);
+  /* 바깥: 코코아 가루 테두리 → 진한 초코 마시멜로 벽 → 안쪽 피스타치오 */
+  x.fillStyle='#7a4424';x.beginPath();x.arc(m,m,m,0,6.2832);x.fill();
+  let g=x.createRadialGradient(m,m,m*.6,m,m,m*.97);g.addColorStop(0,'#24100a');g.addColorStop(.7,'#2e170e');g.addColorStop(1,'#3e2014');x.fillStyle=g;x.beginPath();x.arc(m,m,m*.965,0,6.2832);x.fill();
+  for(let i=0;i<5000;i++){const a=rnd(0,6.2832),r=m*rnd(.6,.96);x.fillStyle=pick(['rgba(30,14,8,.35)','rgba(96,56,36,.3)','rgba(20,10,6,.25)']);x.fillRect(m+Math.cos(a)*r,m+Math.sin(a)*r,rnd(1,3),rnd(1,3))}
+  g=x.createRadialGradient(m*.94,m*.9,0,m,m,m*.7);g.addColorStop(0,'#c9c25a');g.addColorStop(.55,'#a9a43c');g.addColorStop(.9,'#857f2a');g.addColorStop(1,'#5a4a1e');x.fillStyle=g;x.beginPath();
+  for(let i=0;i<=72;i++){const a=i/72*6.2832,r=m*(.66+Math.sin(a*5+1)*.025+Math.sin(a*11)*.015);i?x.lineTo(m+Math.cos(a)*r,m+Math.sin(a)*r):x.moveTo(m+Math.cos(a)*r,m+Math.sin(a)*r)}x.fill();
+  for(let i=0;i<900;i++){const a=rnd(0,6.2832),r=m*.64*Math.sqrt(Math.random());x.fillStyle=pick(['rgba(120,140,40,.5)','rgba(90,110,30,.45)','rgba(220,214,120,.4)']);x.beginPath();x.arc(m+Math.cos(a)*r,m+Math.sin(a)*r,rnd(2,6),0,6.2832);x.fill()}
+  x.lineCap='round';for(let i=0;i<700;i++){const a=rnd(0,6.2832),r=m*.66*Math.sqrt(Math.random()),px=m+Math.cos(a)*r,py=m+Math.sin(a)*r,d=rnd(0,6.2832),L=rnd(18,70);
+    x.strokeStyle=pick(['#e0ad48','#d29a34','#f0c66a','#b97f24','#e8bb58']);x.lineWidth=rnd(1.6,3.4);x.beginPath();x.moveTo(px,py);x.quadraticCurveTo(px+Math.cos(d+.4)*L*.5,py+Math.sin(d+.4)*L*.5,px+Math.cos(d)*L,py+Math.sin(d)*L);x.stroke()}
+  grain(c,10);return c}
+function dotTex(){const c=mk(32,32),x=c.getContext('2d');const g=x.createRadialGradient(16,16,0,16,16,16);g.addColorStop(0,'#fff');g.addColorStop(.55,'#fff');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,32,32);return tex(c,false)}
+function cookieSnd(kind,v){if(!on())return;const t=ac.currentTime+.005;
+  /* 바사삭: 짧은 대역 잡음을 촘촘히 → 카다이프 부서지는 소리(쨍하지 않게 3.6kHz 이하) */
+  const crunch=(n,span,vol,lo=1500,hi=3400)=>{for(let i=0;i<n;i++)noise('bandpass',rnd(lo,hi),rnd(1.6,3),rnd(.008,.02),rnd(.18,.5)*vol,t+Math.pow(Math.random(),1.4)*span,.0008)};
+  if(kind==='press'){noise('lowpass',rnd(320,420),.9,.2,.85*v,t,.02);tone('sine',rnd(80,96),48,.16,.32*v,t,.014);crunch(9,.17,.55*v);crackle(t+.02,.14,rnd(2000,2600),.22*v,.45);noise('highpass',4200,.6,.09,.05*v,t+.03,.02)}
+  else if(kind==='up'){noise('lowpass',300,.8,.38,.14*v,t,.1);noise('bandpass',rnd(1100,1400),.6,.3,.05*v,t+.05,.1)}
+  else if(kind==='crunch'){noise('lowpass',rnd(500,650),.8,.08,.35*v,t,.004);crunch(14,.22,.75*v,1300,3600);crackle(t,.2,2300,.32*v,.55);crackle(t+.04,.16,1200,.22*v,.45)}
+  else if(kind==='split'){noise('lowpass',260,.9,.3,.8,t,.02);tone('sine',120,50,.22,.35,t,.01);squelch(t+.04,.35);crunch(26,.42,.9,1200,3500);crackle(t+.02,.4,2200,.4,.6);crackle(t+.06,.32,1000,.3,.5)}}
+function buildCookie(){
+  const g=new T.Group();const R=.6,SQ=.8,FY=R*SQ*.8;
+  if(!COOKTX.a){COOKTX.a=tex(cocoaCanvas());COOKTX.b=tex(cocoaBumpCanvas(),false);COOKTX.b.wrapS=COOKTX.b.wrapT=T.RepeatWrapping;COOKTX.b.repeat.set(5,3);COOKTX.f=tex(fillingCanvas());COOKTX.d=dotTex()}
+  /* 울퉁불퉁 손으로 빚은 모양 */
+  const lump=(dx,dy,dz)=>1+.04*Math.sin(dx*3.1+1.3)*Math.sin(dz*2.7+.4)+.02*Math.sin(dy*4.2+dx*2.2)+.012*Math.sin(dz*6.1-dy*3.3);
+  const place=(dx,dy,dz,r,o)=>{let x=dx*r*1.05,y=dy*r*SQ,z=dz*r*1.05;if(y<-FY)y=-FY+(y+FY)*.1;o[0]=x;o[1]=y;o[2]=z;return o};
+  const tmp=[0,0,0];
+  const mCoat=new T.MeshPhysicalMaterial({color:0xffffff,vertexColors:true,map:COOKTX.a,roughness:1,metalness:0,bumpMap:COOKTX.b,bumpScale:.007,sheen:C(0x5a4438),envMapIntensity:.28});const noRim=function(){};mCoat.onBeforeCompile=noRim;
+  /* 통 쿠키 */
+  const geo=new T.SphereGeometry(R,128,96);geo.rotateZ(Math.PI/2);const pos=geo.attributes.position;const N=pos.count;const dir=new Float32Array(N*3),r0=new Float32Array(N),wipe=new Float32Array(N);
+  for(let i=0;i<N;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),l=Math.hypot(x,y,z)||1;dir[i*3]=x/l;dir[i*3+1]=y/l;dir[i*3+2]=z/l;r0[i]=lump(z/l,y/l,-x/l)}
+  const col=new Float32Array(N*3).fill(1);geo.setAttribute('color',new T.BufferAttribute(col,3));
+  const m=new T.Mesh(geo,mCoat);m.position.y=FY;g.add(m);
+  const dents=[];let held=null,heldD=null;
+  function shape(){for(let i=0;i<N;i++){const dx=dir[i*3],dy=dir[i*3+1],dz=dir[i*3+2];let r=r0[i],b=0,sh=1;
+      for(const d of dents){const c=dx*d.x+dy*d.y+dz*d.z;const w=Math.exp(-(1-c)/d.s);r-=d.a*w;b+=d.a*(1-w)*.13;sh-=d.a*Math.exp(-(1-c)/(d.s*.7))*.9}
+      sh=Math.max(.5,sh)*(1-wipe[i]*.42);col[i*3]=sh;col[i*3+1]=sh*(1-wipe[i]*.08);col[i*3+2]=sh*(1-wipe[i]*.12);
+      place(dx,dy,dz,R*(r+b),tmp);pos.setXYZ(i,tmp[0],tmp[1],tmp[2])}pos.needsUpdate=true;geo.attributes.color.needsUpdate=true;geo.computeVertexNormals()}
+  shape();
+  /* 반쪽 두 개(쩍 갈라졌을 때) */
+  function halfGeo(top){const hg=new T.SphereGeometry(R,96,40,0,Math.PI*2,top?0:Math.PI/2,Math.PI/2);const p=hg.attributes.position;
+    for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),l=Math.hypot(x,y,z)||1;place(x/l,y/l,z/l,R*lump(x/l,y/l,z/l),tmp);p.setXYZ(i,tmp[0],tmp[1],tmp[2])}hg.computeVertexNormals();return hg}
+  const mFill=new T.MeshStandardMaterial({map:COOKTX.f,roughness:.92,metalness:0,envMapIntensity:.12});mFill.userData.noSmudge=true;mFill.onBeforeCompile=noRim;
+  const mCream=new T.MeshPhysicalMaterial({color:C(0x6c7420),roughness:.36,metalness:0,clearcoat:.5,clearcoatRoughness:.35,envMapIntensity:.45});
+  const mStrand=new T.MeshStandardMaterial({color:C(0xd0922e),roughness:.45,metalness:.05,envMapIntensity:.7});
+  const strandGeo=new T.CylinderGeometry(.0058,.0058,1,5);strandGeo.rotateZ(Math.PI/2);
+  function face(){const f=new T.Group();
+    const dg=new T.CircleGeometry(R,96);const dp=dg.attributes.position;for(let i=0;i<dp.count;i++){const x=dp.getX(i),y=dp.getY(i),l=Math.hypot(x,y);if(l<1e-5)continue;const a=Math.atan2(y,x);const e=R*1.05*lump(-Math.sin(a),0,-Math.cos(a));dp.setXY(i,x/R*e,y/R*e)}
+    const disc=new T.Mesh(dg,mFill);disc.rotation.x=-Math.PI/2;disc.position.y=.001;f.add(disc);
+    const RM=R*.64,HM=R*.2;const mg=new T.SphereGeometry(1,64,20,0,Math.PI*2,0,Math.PI/2);const mp=mg.attributes.position;for(let i=0;i<mp.count;i++){const x=mp.getX(i),y=mp.getY(i),z=mp.getZ(i);const a=Math.atan2(z,x),w=1+.05*Math.sin(a*5+1)+.03*Math.sin(a*11);mp.setXYZ(i,x*RM*w,y*HM*(1+.15*Math.sin(x*9+z*7)),z*RM*w)}mg.computeVertexNormals();
+    const mound=new T.Mesh(mg,mCream);f.add(mound);
+    const NS=460;const st=new T.InstancedMesh(strandGeo,mStrand,NS);const o=new T.Object3D();
+    for(let i=0;i<NS;i++){const a=rnd(0,6.2832),rr=RM*1.02*Math.sqrt(Math.random());const h=HM*Math.sqrt(Math.max(0,1-(rr/RM)**2));o.position.set(Math.cos(a)*rr,h+rnd(-.006,.02),Math.sin(a)*rr);o.rotation.set(rnd(-.5,.5),rnd(0,6.28),rnd(-.6,.6));o.scale.set(rnd(.05,.17),rnd(.7,1.3),rnd(.7,1.3));o.updateMatrix();st.setMatrixAt(i,o.matrix)}
+    f.add(st);f.userData.parts=[disc,mound];return f}
+  const bot=new T.Group();bot.position.y=FY;const botM=new T.Mesh(halfGeo(false),mCoat.clone());botM.material.vertexColors=false;botM.material.color=C(0xcfc3bb);botM.material.onBeforeCompile=noRim;botM.rotation.y=-Math.PI/2;bot.add(botM);const bf=face();bot.add(bf);
+  const topP=new T.Group();const topM=new T.Mesh(halfGeo(true),botM.material);topM.rotation.y=-Math.PI/2;topP.add(topM);const tf=face();tf.scale.y=-1;topP.add(tf);
+  bot.visible=topP.visible=false;g.add(bot,topP);
+  /* 코코아 가루 입자(바닥에 쌓임) */
+  const NP=2600;const pg=new T.BufferGeometry();const pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pv=new Float32Array(NP*3),ps=new Uint8Array(NP);let pi=0;
+  for(let i=0;i<NP;i++){pp[i*3+1]=-50}
+  const browns=[[.42,.2,.09],[.5,.26,.12],[.33,.15,.07],[.58,.33,.17],[.27,.12,.05]].map(c=>c.map(v=>Math.pow(v,2.2)));
+  pg.setAttribute('position',new T.BufferAttribute(pp,3));pg.setAttribute('color',new T.BufferAttribute(pc,3));
+  const pts=new T.Points(pg,new T.PointsMaterial({size:.022,map:COOKTX.d,vertexColors:true,alphaTest:.45,sizeAttenuation:true}));pts.frustumCulled=false;g.add(pts);
+  function emit(x,y,z,vx,vy,vz,landed){const i=pi;pi=(pi+1)%NP;pp[i*3]=x;pp[i*3+1]=y;pp[i*3+2]=z;pv[i*3]=vx;pv[i*3+1]=vy;pv[i*3+2]=vz;ps[i]=landed?2:1;const c=pick(browns);const k=rnd(.8,1.15);pc[i*3]=c[0]*k;pc[i*3+1]=c[1]*k;pc[i*3+2]=c[2]*k}
+  for(let i=0;i<520;i++){const a=rnd(0,6.2832),rr=R*.75+Math.abs(rnd(-1,1)*rnd(0,1))*R*.85;emit(Math.cos(a)*rr,.002,Math.sin(a)*rr*.95,0,0,0,true)}
+  pg.attributes.color.needsUpdate=true;
+  const _l=new T.Vector3();
+  function dustAt(lp,n,spd){/* lp: 통 쿠키 m 기준 방향 → 그룹 좌표 표면점 */const r=R*1.02;for(let i=0;i<n;i++){const jx=lp.x+rnd(-.22,.22),jy=lp.y+rnd(-.22,.22),jz=lp.z+rnd(-.22,.22),l=Math.hypot(jx,jy,jz)||1;const nx=jx/l,ny=jy/l,nz=jz/l;
+      /* m은 y축 -90° 회전: 로컬(x,z) → 그룹(-z... ) */const gx=nx,gz=nz;place(gx,ny,gz,r,tmp);const s=rnd(.15,.55)*spd;emit(tmp[0],tmp[1]+FY,tmp[2],gx*s+rnd(-.1,.1),ny*s*.5+rnd(0,.35),gz*s+rnd(-.1,.1),false)}}
+  /* 카다이프 부스러기 */
+  const NC=90;const crumbs=new T.InstancedMesh(strandGeo,mStrand,NC);crumbs.frustumCulled=false;const cr=[];const co=new T.Object3D();for(let i=0;i<NC;i++){cr.push({p:new T.Vector3(0,-50,0),v:new T.Vector3(),r:new T.Euler(),w:new T.Vector3(),L:.1,live:false});co.position.set(0,-50,0);co.updateMatrix();crumbs.setMatrixAt(i,co.matrix)}g.add(crumbs);let ci=0;
+  function crumbAt(p,n,up){for(let i=0;i<n;i++){const c=cr[ci];ci=(ci+1)%NC;c.p.copy(p).add(new T.Vector3(rnd(-.12,.12),rnd(0,.04),rnd(-.12,.12)));c.v.set(rnd(-.9,.9),rnd(.6,1.6)*up,rnd(-.5,1.1));c.r.set(rnd(0,6),rnd(0,6),rnd(0,6));c.w.set(rnd(-14,14),rnd(-14,14),rnd(-14,14));c.L=rnd(.04,.12);c.live=true}}
+  let presses=0,split=0,splitT=0,splitHits=0,sqT=0;const hits=[m];
+  const TOPF={p:new T.Vector3(.02,R*1.02,-R*.78),rx:-1.95,ry:.12};
+  function doSplit(self,h){split=1;splitT=0;splitHits=0;held=null;heldD=null;dents.length=0;m.visible=false;bot.visible=topP.visible=true;topP.position.set(0,FY,0);topP.rotation.set(0,0,0);
+    hits.length=0;hits.push(botM,...bf.userData.parts,topM,...tf.userData.parts);
+    cookieSnd('split');const pc2=new T.Vector3(0,FY+.05,0);crumbAt(pc2,46,1.2);for(let i=0;i<14;i++)dustAt(new T.Vector3(rnd(-1,1),rnd(-.2,1),rnd(-1,1)).normalize(),8,1.6);self.sp.vsy-=.12;shake=Math.max(shake,.06)}
+  return base({kind:'cookie',group:g,hittables:hits,center:new T.Vector3(0,.5,0),radius:1.0,camDir:new T.Vector3(.1,.55,1),floor:0,fill:.66,fillN:.72,
+    onHit(h,k,px,py,fromKey){
+      if(split){if(splitT<.5)return 'nosound';splitHits++;const lp=g.worldToLocal(h.point.clone());crumbAt(lp,10,1);cookieSnd('crunch',k);this.sp.vsy-=.06*k;this.sp.vsx+=.03*k;
+        for(let i=0;i<30;i++)emit(lp.x+rnd(-.1,.1),lp.y+rnd(0,.05),lp.z+rnd(-.1,.1),rnd(-.5,.5),rnd(.2,.8),rnd(-.4,.6),false);
+        popWord(px,py-16,pick(['바사삭','과사삭','CRUNCH','파사삭','와사삭','쫀득']),1,state.combo>=8&&state.combo%4===0);
+        if(splitHits>=7){const self=this;setTimeout(()=>{if(cur===self)setTarget(state.id,true)},420);popWord(px,py-50,'한 개 더!',1.1,true)}return 'nosound'}
+      const lp=m.worldToLocal(h.point.clone()).normalize();presses++;
+      const d={x:lp.x,y:lp.y,z:lp.z,a:0,to:Math.min(.42,.24+.06*k),s:.07+Math.random()*.03,hold:true,t:0};dents.push(d);if(dents.length>5)dents.shift();
+      if(held)held.hold=false;held=fromKey?null:d;heldD=held?lp:null;if(fromKey){d.hold=false;d.t=.12}
+      for(let i=0;i<N;i++){const c=dir[i*3]*lp.x+dir[i*3+1]*lp.y+dir[i*3+2]*lp.z;if(c>.8)wipe[i]=Math.min(.95,wipe[i]+.55*Math.exp(-(1-c)/.03))}
+      dustAt(lp,Math.round(60+40*k),1);this.sp.vsy-=.05*k;this.sp.vsx+=.03*k;
+      cookieSnd('press',k);popWord(px,py-16,hitWord('cookie'),1,state.combo>=8&&state.combo%4===0);
+      if(presses>=12&&!fromKey||presses>=14){const self=this;setTimeout(()=>{if(cur===self&&!split){doSplit(self,h);popWord(px,py-46,'쩍!',1.4,true)}},fromKey?60:380)}
+      return 'nosound'},
+    onUp(){if(held){held.hold=false;held=null;heldD=null;cookieSnd('up',1)}},
+    update(dt){
+      if(!split&&dents.length){for(let j=dents.length-1;j>=0;j--){const d=dents[j];d.t+=dt;
+          if(d.hold){d.to=Math.min(.55,d.to+dt*.13);d.a+=(d.to-d.a)*Math.min(1,dt*12)}
+          else if(d.t<.12)d.a+=(d.to-d.a)*Math.min(1,dt*16);
+          else{d.a*=Math.pow(.3,dt);if(d.a<.002)dents.splice(j,1)}}
+        if(held){this.sp.sy+=(-.06-this.sp.sy)*.16;this.sp.sx+=(.03-this.sp.sx)*.16;this.sp.vsy=this.sp.vsx=0;sqT+=dt;if(heldD&&sqT>.05){sqT=0;dustAt(heldD,3,.5)}}
+        shape()}
+      if(split&&splitT<1){splitT=Math.min(1,splitT+dt*1.6);const e=1-Math.pow(1-splitT,3),arc=Math.sin(Math.min(1,splitT*1.15)*Math.PI)*.42;
+        topP.position.set(TOPF.p.x*e,FY+(TOPF.p.y-FY)*e+arc,TOPF.p.z*e);topP.rotation.set(TOPF.rx*e,TOPF.ry*e,0);if(splitT>=1){this.sp.vsy-=.06}}
+      /* 가루: 중력 + 쿠키 몸통에 닿으면 미끄러져 내려감 + 바닥에 쌓임 */
+      let moved=false;const a=R*1.06,b=R*SQ*1.01;
+      for(let i=0;i<NP;i++){if(ps[i]!==1)continue;moved=true;const j=i*3;pv[j+1]-=3.2*dt;pv[j]*=.985;pv[j+2]*=.985;pp[j]+=pv[j]*dt;pp[j+1]+=pv[j+1]*dt;pp[j+2]+=pv[j+2]*dt;
+        if(!split){const ex=pp[j]/a,ey=(pp[j+1]-FY)/b,ez=pp[j+2]/a,q=ex*ex+ey*ey+ez*ez;if(q<1&&pp[j+1]>.02){const s=1/Math.sqrt(q);pp[j]*=s;pp[j+1]=FY+(pp[j+1]-FY)*s;pp[j+2]*=s;
+            let nx=ex/a,ny=ey/b,nz=ez/a;const nl=Math.hypot(nx,ny,nz);nx/=nl;ny/=nl;nz/=nl;const vn=pv[j]*nx+pv[j+1]*ny+pv[j+2]*nz;if(vn<0){pv[j]-=nx*vn*1.05;pv[j+1]-=ny*vn*1.05;pv[j+2]-=nz*vn*1.05}pv[j]*=.92;pv[j+1]*=.92;pv[j+2]*=.92}}
+        if(pp[j+1]<=.002){pp[j+1]=.002+Math.random()*.004;ps[i]=2;if(Math.random()<.04&&on()&&Math.random()<.3)noise('highpass',rnd(4500,6000),.7,.01,.02,ac.currentTime,.002)}}
+      if(moved)pg.attributes.position.needsUpdate=true;
+      pg.attributes.color.needsUpdate=true;
+      let cm=false;for(let i=0;i<NC;i++){const c=cr[i];if(!c.live)continue;cm=true;c.v.y-=4.5*dt;c.p.addScaledVector(c.v,dt);c.r.x+=c.w.x*dt;c.r.y+=c.w.y*dt;c.r.z+=c.w.z*dt;
+        if(c.p.y<=.006){c.p.y=.006;if(c.v.y<-.6){c.v.y*=-.3;c.v.x*=.5;c.v.z*=.5;c.w.multiplyScalar(.4);if(on()&&Math.random()<.4)noise('bandpass',rnd(2500,3400),2,.008,.06,ac.currentTime,.0006)}else{c.v.set(0,0,0);c.live=false;c.r.x=Math.PI/2*Math.round(c.r.x/(Math.PI/2))}}
+        co.position.copy(c.p);co.rotation.copy(c.r);if(!c.live){co.rotation.set(0,c.r.y,0)}co.scale.set(c.L,1,1);co.updateMatrix();crumbs.setMatrixAt(i,co.matrix)}
+      if(cm)crumbs.instanceMatrix.needsUpdate=true},
+    cleanup(){held=null;heldD=null}});
+}
+
+function build(t){return t.kind==='cookie'?buildCookie():t.kind==='head'?buildHeadBack():t.kind==='ball'?buildStressBall():t.kind==='stapler'?buildStapler():t.kind==='switch'?buildSwitches():t.kind==='pills'?buildPills():t.kind==='lighter'?buildLighter():t.kind==='desk'?buildDesk():t.kind==='glass'?buildWindow():t.kind==='paper'?buildPaper():t.kind==='jelly'?buildJelly():t.kind==='drum'?buildDrum():t.kind==='bubble'?buildBubble():t.kind==='moktak'?buildMoktak():t.kind==='oven'?buildOven():t.kind==='phone'?buildPhone():t.kind==='laptop'?buildLaptop():t.kind==='keyboard'?buildKeyboard():buildWord(t)}
 
 /* small effects */
 function chipBoxes(pt,mat,n,s){for(let i=0;i<n;i++){const m=new T.Mesh(bevBox(s*rnd(.6,1.6),s*rnd(.2,.5),s*rnd(.3,.8)),mat);m.position.copy(pt);addPiece(m,{v:new T.Vector3(rnd(-1.8,1.8),rnd(1.5,4),rnd(-.5,2)),w:new T.Vector3(rnd(-15,15),rnd(-15,15),rnd(-15,15)),r:.01,life:rnd(1,1.8),mode:'chip'})}}
@@ -2181,6 +2311,9 @@ $('#wordsForm').addEventListener('submit',e=>{e.preventDefault();popWords=$('#po
   $('#popSaved').textContent=popWords.length?popWords.length+'개 저장했어요. 두드려 보세요!':'비어 있어서 기본 소리말을 써요.';if(popWords.length)popWord(SW/2,SH*.45,pick(popWords),1.3,true)});
 $('#popReset').addEventListener('click',()=>{popWords=[];store.set('popWords',popWords);$('#popInput').value='';$('#popSaved').textContent='기본 소리말로 되돌렸어요.'});
 /* sound + clock + decor */
+{const szEl=document.querySelector('.snd.sz'),topR=document.querySelector('.top-r'),specRow=$('#specRow'),logo=document.querySelector('.logo'),mq=matchMedia('(max-width:700px)');
+  const placeSz=()=>{if(mq.matches){if(szEl.parentNode!==specRow)specRow.appendChild(szEl);topR.classList.remove('wrapped')}else{if(szEl.parentNode!==topR)topR.appendChild(szEl);topR.classList.remove('wrapped');if(topR.getBoundingClientRect().top>logo.getBoundingClientRect().bottom-4)topR.classList.add('wrapped')}};
+  placeSz();addEventListener('resize',placeSz);if(document.fonts)document.fonts.ready.then(placeSz)}
 const muteBtn=$('#muteBtn'),vol=$('#vol'),sizeIn=$('#size');state.size=+(store.get('size')||0)||0;sizeIn.value=state.size;sizeIn.addEventListener('input',()=>{state.size=+sizeIn.value;store.set('size',state.size);if(cur)fitCam()});
 function renderSnd(){muteBtn.setAttribute('aria-pressed',String(state.muted));muteBtn.textContent=state.muted?'MUTED':'SOUND ON';vol.value=state.vol}
 muteBtn.addEventListener('click',()=>{state.muted=!state.muted;store.set('muted',state.muted);ensureAudio();applyVol();renderSnd()});
