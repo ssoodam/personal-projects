@@ -2119,9 +2119,9 @@ function buildCookie(){
     if(tgt==='m'){const gl=m.worldToLocal(p.clone());for(let i=0;i<N;i++){place(dir[i*3],dir[i*3+1],dir[i*3+2],R*r0[i],tmp);Wm[i]=Math.exp(-((tmp[0]-gl.x)**2+(tmp[1]-gl.y)**2+(tmp[2]-gl.z)**2)/.2)}}
     else{const gl=topM.worldToLocal(p.clone());for(let i=0;i<tpos.count;i++)Wc[i]=Math.exp(-((tBase[i*3]-gl.x)**2+(tBase[i*3+1]-gl.y)**2+(tBase[i*3+2]-gl.z)**2)/.32);S.gf.copy(tf.userData.parts[1].worldToLocal(p.clone()))}}
   const locD=(obj)=>obj.worldToLocal(_q.copy(S.gW).add(S.D)).sub(obj.worldToLocal(S.gW.clone()));
-  function srelease(){window.removeEventListener('pointermove',smove);if(!S.tgt)return;S.tgt=null;const L=S.D.length();if(on()&&L>.08){const t=ac.currentTime+.005;slimeSquish(t,Math.min(1.2,.5+L),false);noise('lowpass',360,1,.12,.4*Math.min(1,L+.3),t+.05,.003)}}
+  function srelease(){window.removeEventListener('pointermove',smove);if(!S.tgt)return;S.tgt=null;S.rt=0;const L=S.D.length();if(on()&&L>.08){const t=ac.currentTime+.005,v=Math.min(1,L+.2);const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type='lowpass';f.Q.value=.7;f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(220,t+1);const g2=ac.createGain();g2.gain.setValueAtTime(.0001,t);g2.gain.exponentialRampToValueAtTime(.32*v,t+.15);g2.gain.exponentialRampToValueAtTime(.0001,t+1.1);s.connect(f);f.connect(g2);g2.connect(master);s.start(t,Math.random());s.stop(t+1.2)}}
   const TOPF={p:new T.Vector3(.02,R*1.02,-R*.78),rx:-1.95,ry:.12};
-  return base({kind:'cookie',group:g,hittables:hits,center:new T.Vector3(0,.78,0),radius:1.22,camDir:new T.Vector3(.1,.45,1),floor:0,fill:.66,fillN:.72,
+  return base({kind:'cookie',soft:true,group:g,hittables:hits,center:new T.Vector3(0,.78,0),radius:1.22,camDir:new T.Vector3(.1,.45,1),floor:0,fill:.66,fillN:.72,
     onHit(h,k,px,py,fromKey){
       if(h.object!==m){const onFill=h.object!==topM;const ml=tf.userData.parts[1].worldToLocal(h.point.clone());
         if(hd.hold&&hd.fill)sandStop();hd.x=ml.x;hd.z=ml.z;hd.c=topM.worldToLocal(h.point.clone());hd.to=Math.min(.85,.5+.12*k);hd.hold=!fromKey;hd.t=fromKey?.12:0;hd.live=true;hd.fill=onFill;
@@ -2132,13 +2132,14 @@ function buildCookie(){
       const d={x:lp.x,y:lp.y,z:lp.z,a:0,to:Math.min(.42,.24+.06*k),s:.07+Math.random()*.03,hold:true,t:0};dents.push(d);if(dents.length>5)dents.shift();
       if(held)held.hold=false;held=fromKey?null:d;heldD=held?lp:null;if(fromKey){d.hold=false;d.t=.12}else sgrab(h.point,'m');
       for(let i=0;i<N;i++){const c=dir[i*3]*lp.x+dir[i*3+1]*lp.y+dir[i*3+2]*lp.z;if(c>.8)wipe[i]=Math.min(.95,wipe[i]+.55*Math.exp(-(1-c)/.03))}
-      dustAt(lp,Math.round(60+40*k),1);this.sp.vsy-=.05*k;this.sp.vsx+=.03*k;
+      dustAt(lp,Math.round(60+40*k),1);
       cookieSnd('press',k);popWord(px,py-16,hitWord('cookie'),1,state.combo>=8&&state.combo%4===0);
       return 'nosound'},
     onUp(){srelease();if(hd.hold){hd.hold=false;if(hd.fill)sandStop();else cookieSnd('up',1)}if(held){held.hold=false;held=null;heldD=null;cookieSnd('up',1)}},
     update(dt){
-      let sDone=false;if(S.tgt){S.D.lerp(S.Dt,Math.min(1,dt*14));S.Dv.set(0,0,0);const L=S.D.length();if(on()&&Math.abs(L-S.lastL)>.06&&performance.now()-S.lastSnd>110){S.lastSnd=performance.now();slimeSquish(ac.currentTime+.003,.3,Math.random()<.4)}S.lastL=L}
-      else if(S.act){S.Dv.addScaledVector(S.D,-90*dt);S.Dv.multiplyScalar(Math.pow(.02,dt));S.D.addScaledVector(S.Dv,dt);if(S.D.lengthSq()<1e-6&&S.Dv.lengthSq()<1e-5){S.D.set(0,0,0);S.Dv.set(0,0,0);sDone=S.act;S.act=null}}
+      if(!held){this.sp.vsy=this.sp.vsx=this.sp.vy=this.sp.vx=0}
+      let sDone=false;if(S.tgt){S.D.lerp(S.Dt,Math.min(1,dt*14));S.Dv.set(0,0,0);const L=S.D.length();if(on()&&Math.abs(L-S.lastL)>.06&&performance.now()-S.lastSnd>140){S.lastSnd=performance.now();noise('lowpass',rnd(380,520),.8,.16,.1,ac.currentTime+.003,.04)}S.lastL=L}
+      else if(S.act){S.rt=(S.rt||0)+dt;const sp=Math.min(1,S.rt*2.5);S.D.multiplyScalar(Math.pow(.06,dt*sp));if(S.D.lengthSq()<2e-6){S.D.set(0,0,0);S.Dv.set(0,0,0);sDone=S.act;S.act=null}}
       const sL=S.D.length();SM.on=S.act==='m';if(SM.on){SM.d.copy(locD(m));SM.thin=Math.min(.5,sL*.45)}
       if(!split&&(dents.length||SM.on||sDone==='m')){for(let j=dents.length-1;j>=0;j--){const d=dents[j];d.t+=dt;
           if(SM.on&&sL>.06)d.a*=Math.pow(.03,dt);else if(d.hold){d.to=Math.min(.55,d.to+dt*.13);d.a+=(d.to-d.a)*Math.min(1,dt*12)}
