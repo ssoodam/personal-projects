@@ -730,7 +730,7 @@ const TARGETS={
   switch:{id:'switch',kind:'switch',mat:'switch',name:'퇴근 스위치',tag:'TOGGLE',hp:Infinity,desc:'딸깍 하나 끌 때마다 사무실 불이 하나씩 꺼져요. 다섯 개 다 끄면 퇴근 인정.',spec:'재질 호두나무·메이플 · 니켈 토글 · 소리 딸깍'},
   pills:{id:'pills',kind:'pills',mat:'pills',name:'오후 3시 비타민',tag:'BLISTER',hp:Infinity,desc:'오후 3시, 기력 0%일 때 한 판. 누르면 톡 빠져나와 바닥에 굴러요. 다 꺼내면 새 판이 와요.',spec:'재질 알루미늄 호일 · PVC · 소리 뽁 톡톡'},
   ball:{id:'ball',kind:'ball',mat:'foam',name:'꾹 참는 스트레스볼',tag:'SQUISHY',hp:Infinity,desc:'스퀴시는 꾹 누르면 천천히 돌아오고, 슬라임은 잡아서 쭈욱 늘어나요. 종류는 TYPE에서 골라요.',spec:'스퀴시 · 슬라임 2종 · 소리 꾹 쭈욱'},
-  cookie:{id:'cookie',kind:'cookie',mat:'cookie',name:'점심 오픈런 두쫀쿠',tag:'CHEWY',hp:Infinity,desc:'점심시간을 통째로 바쳐 줄 서서 산 그 쿠키. 꾹 누르면 쫀득하게 들어가고 코코아 가루가 후드득, 속은 카다이프가 바사삭. 단면 보이는 반쪽을 누르면 바사삭.',spec:'재질 마시멜로 + 카다이프 + 피스타치오 · 소리 쫀득 바사삭'},
+  cookie:{id:'cookie',kind:'cookie',mat:'cookie',name:'점심 오픈런 두쫀쿠',tag:'CHEWY',hp:Infinity,desc:'점심시간을 통째로 바쳐 줄 서서 산 그 쿠키. 꾹 누르면 쫀득하게 들어가고 코코아 가루가 후드득, 속은 카다이프가 바사삭. 단면 보이는 반쪽을 누르면 바사삭, 피스타치오가 진득하게 주르륵.',spec:'재질 마시멜로 + 카다이프 + 피스타치오 · 소리 쫀득 바사삭'},
   stapler:{id:'stapler',kind:'stapler',mat:'stapler',name:'결재 스테이플러',tag:'STEEL',hp:Infinity,desc:'철컥 한 번에 결재 하나. 누를 때마다 심이 튀어나와 바닥에 흩어져요. 심이 떨어지면 한 번 더 눌러 채워요.',spec:'재질 크롬 강철 + 플라스틱 · 심 25개 · 소리 철컥'},
   phone:{id:'phone',kind:'phone',mat:'phone',name:'부재중 37통 전화기',tag:'PLASTIC',hp:18,desc:'받으면 일이 생기는 그 전화. 수화기가 들썩이다 결국 산산조각 나요. 오늘은 부재중으로 둬요.',spec:'재질 ABS 플라스틱 · 내선 1004 · 소리 따르릉'}
 };
@@ -2061,7 +2061,7 @@ function buildCookie(){
   const mHalf=mCoat.clone();mHalf.vertexColors=false;mHalf.color=C(0xcfc3bb);mHalf.onBeforeCompile=noRim;
   /* 단면이 보이는 반쪽: 통 쿠키 위에 비스듬히 얹음(레퍼런스 사진 구도) */
   const topP=new T.Group();const topM=new T.Mesh(halfGeo(true),mHalf);topM.rotation.y=-Math.PI/2;topP.add(topM);const tf=face();tf.scale.y=-1;topP.add(tf);
-  topP.position.set(.02,FY+R*SQ+.36,-.04);topP.rotation.set(-2.12,.12,.04);g.add(topP);
+  topP.position.set(.02,FY+R*SQ+.27,-.04);topP.rotation.set(-2.12,.12,.04);topP.scale.set(1.04,1,.76);g.add(topP);
   /* 코코아 가루 입자(바닥에 쌓임) */
   const NP=2600;const pg=new T.BufferGeometry();const pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pv=new Float32Array(NP*3),ps=new Uint8Array(NP);let pi=0;
   for(let i=0;i<NP;i++){pp[i*3+1]=-50}
@@ -2077,13 +2077,30 @@ function buildCookie(){
   /* 카다이프 부스러기 */
   const NC=90;const crumbs=new T.InstancedMesh(strandGeo,mStrand,NC);crumbs.frustumCulled=false;const cr=[];const co=new T.Object3D();for(let i=0;i<NC;i++){cr.push({p:new T.Vector3(0,-50,0),v:new T.Vector3(),r:new T.Euler(),w:new T.Vector3(),L:.1,live:false});co.position.set(0,-50,0);co.updateMatrix();crumbs.setMatrixAt(i,co.matrix)}g.add(crumbs);let ci=0;
   function crumbAt(p,n,up){for(let i=0;i<n;i++){const c=cr[ci];ci=(ci+1)%NC;c.p.copy(p).add(new T.Vector3(rnd(-.12,.12),rnd(0,.04),rnd(-.12,.12)));c.v.set(rnd(-.9,.9),rnd(.6,1.6)*up,rnd(-.5,1.1));c.r.set(rnd(0,6),rnd(0,6),rnd(0,6));c.w.set(rnd(-14,14),rnd(-14,14),rnd(-14,14));c.L=rnd(.04,.12);c.live=true}}
+  /* 피스타치오 필링: 잼처럼 진득하게 늘어지다 뚝 떨어져 고임 */
+  const dripG=new T.SphereGeometry(1,20,14),strG=new T.CylinderGeometry(1,1,1,10);strG.translate(0,-.5,0);const drips=[];
+  const _a=new T.Vector3();
+  function addDrip(){if(drips.filter(d=>d.ph<2).length>=4){const d=drips.find(d=>d.ph===0);if(d)d.rate*=1.6;return}
+    const a=rnd(-.5,.5);const lp=new T.Vector3(Math.sin(a)*R*.52,-R*.1,-Math.cos(a)*R*.56);
+    const blob=new T.Mesh(dripG,mCream),str=new T.Mesh(strG,mCream);blob.scale.setScalar(.001);str.scale.set(.001,.001,.001);g.add(blob,str);
+    drips.push({lp,blob,str,ph:0,L:0,rate:rnd(.035,.06),r:rnd(.045,.065),maxL:rnd(.16,.28),v:0,p:new T.Vector3(),t:0});
+    if(drips.length>26){const o=drips.shift();g.remove(o.blob,o.str)}}
+  function stepDrips(dt){for(const d of drips){if(d.ph===3)continue;_a.copy(d.lp).applyMatrix4(topP.matrix);
+      if(d.ph===0){d.L+=d.rate*dt*(1+d.L*4);const rr=d.r*Math.min(1,.4+d.L*6);d.p.set(_a.x,_a.y-d.L,_a.z);d.blob.position.copy(d.p);d.blob.scale.set(rr,rr*(1+d.L*2.2),rr);
+        d.str.position.copy(_a);d.str.scale.set(rr*.55,Math.max(.001,d.L),rr*.55);if(d.L>=d.maxL){d.ph=1;d.v=0}}
+      else if(d.ph===1){d.t+=dt;d.v-=3.6*dt;d.p.y+=d.v*dt;d.blob.position.copy(d.p);const sl=Math.max(.001,d.L*(1-d.t*5));d.str.scale.y=sl;if(sl<=.002)d.str.visible=false;
+        d.blob.scale.set(d.r*.9,d.r*1.25,d.r*.9);
+        const ex=d.p.x/(R*1.06),ey=(d.p.y-FY)/(R*SQ),ez=d.p.z/(R*1.06);const onC=ex*ex+ey*ey+ez*ez<1&&d.p.y>FY;
+        if(onC||d.p.y<=d.r*.3){d.ph=2;d.t=0;d.str.visible=false;if(onC){const s=1/Math.sqrt(ex*ex+ey*ey+ez*ez);d.p.set(d.p.x*s,FY+(d.p.y-FY)*s,d.p.z*s)}else d.p.y=d.r*.25;
+          if(on()){const t=ac.currentTime;tone('sine',rnd(240,300),120,.08,.12,t,.004);noise('lowpass',500,1,.05,.08,t,.003)}}}
+      else if(d.ph===2){d.t+=dt;const k=Math.min(1,d.t*4);d.blob.position.copy(d.p);d.blob.scale.set(d.r*(1+.7*k),d.r*(1.2-.85*k),d.r*(1+.7*k));
+        /* 쿠키 위에 떨어지면 아주 천천히 흘러내림 */if(d.p.y>.02&&d.t<3){const nx=d.p.x,nz=d.p.z,l=Math.hypot(nx,nz)||1;d.p.x+=nx/l*.012*dt;d.p.z+=nz/l*.012*dt;d.p.y-=.03*dt}if(d.t>3)d.ph=3}}}
   let split=0,splitT=1,sqT=0;const hits=[m,topM,...tf.userData.parts];
   const TOPF={p:new T.Vector3(.02,R*1.02,-R*.78),rx:-1.95,ry:.12};
   return base({kind:'cookie',group:g,hittables:hits,center:new T.Vector3(0,.78,0),radius:1.22,camDir:new T.Vector3(.1,.45,1),floor:0,fill:.66,fillN:.72,
     onHit(h,k,px,py,fromKey){
-      if(h.object!==m){const lp=g.worldToLocal(h.point.clone());crumbAt(lp,10,1);cookieSnd('crunch',k);this.sp.vsy-=.06*k;this.sp.vsx+=.03*k;
-        for(let i=0;i<30;i++)emit(lp.x+rnd(-.1,.1),lp.y+rnd(0,.05),lp.z+rnd(-.1,.1),rnd(-.5,.5),rnd(.2,.8),rnd(-.4,.6),false);
-        popWord(px,py-16,pick(['바사삭','과사삭','CRUNCH','파사삭','와사삭','쫀득']),1,state.combo>=8&&state.combo%4===0);
+      if(h.object!==m){addDrip();cookieSnd('crunch',k);this.sp.vsy-=.06*k;this.sp.vsx+=.03*k;
+        popWord(px,py-16,pick(['바사삭','과사삭','꾸덕','진득','주르륵','CRUNCH']),1,state.combo>=8&&state.combo%4===0);
 return 'nosound'}
       const lp=m.worldToLocal(h.point.clone()).normalize();
       const d={x:lp.x,y:lp.y,z:lp.z,a:0,to:Math.min(.42,.24+.06*k),s:.07+Math.random()*.03,hold:true,t:0};dents.push(d);if(dents.length>5)dents.shift();
@@ -2113,7 +2130,7 @@ return 'nosound'}
       let cm=false;for(let i=0;i<NC;i++){const c=cr[i];if(!c.live)continue;cm=true;c.v.y-=4.5*dt;c.p.addScaledVector(c.v,dt);c.r.x+=c.w.x*dt;c.r.y+=c.w.y*dt;c.r.z+=c.w.z*dt;
         if(c.p.y<=.006){c.p.y=.006;if(c.v.y<-.6){c.v.y*=-.3;c.v.x*=.5;c.v.z*=.5;c.w.multiplyScalar(.4);if(on()&&Math.random()<.4)noise('bandpass',rnd(2500,3400),2,.008,.06,ac.currentTime,.0006)}else{c.v.set(0,0,0);c.live=false;c.r.x=Math.PI/2*Math.round(c.r.x/(Math.PI/2))}}
         co.position.copy(c.p);co.rotation.copy(c.r);if(!c.live){co.rotation.set(0,c.r.y,0)}co.scale.set(c.L,1,1);co.updateMatrix();crumbs.setMatrixAt(i,co.matrix)}
-      if(cm)crumbs.instanceMatrix.needsUpdate=true},
+      if(cm)crumbs.instanceMatrix.needsUpdate=true;stepDrips(dt)},
     cleanup(){held=null;heldD=null}});
 }
 
